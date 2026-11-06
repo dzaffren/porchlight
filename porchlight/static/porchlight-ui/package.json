@@ -22,5 +22,11 @@
     "jsdom": "31.0.0",
     "vite": "8.3.6",
     "vitest": "5.1.0"
+  },
+  "overrides": {
+    "prosemirror-view": "1.42.9",
+    "@forge/manifest": {
+      "glob": "14.0.4"
+    }
   }
 }
