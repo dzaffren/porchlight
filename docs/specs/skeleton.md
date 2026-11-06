@@ -308,6 +308,20 @@ Chunk A runs `forge create` first and owns the manifest. B and C start once A ha
 
 Recorded as D12, D13, D14, D15.
 
+## Review
+
+2026-11-07 · 10 raw findings, 9 survived, 9 fixed.
+
+- A03 Software Supply Chain Failures · `porchlight/package-lock.json:214` · npm override lifts glob under @forge/manifest to 14.0.4 · `c2a8cfa`
+- A03 Software Supply Chain Failures · `.github/workflows/ci.yml:91` · Forge CLI pinned in the lockfile, token on the deploy step only · `ad663e2`
+- A03 Software Supply Chain Failures · `porchlight/static/porchlight-ui/package.json:13` · npm overrides lift prosemirror-view to 1.42.9 and glob to 14.0.4 · `9d1d8da`
+- A03 Software Supply Chain Failures · `porchlight/static/porchlight-ui/package.json:14` · install and page build run without the token · `ad663e2`
+- correctness · `porchlight/static/porchlight-ui/src/NoteList.jsx:49` · a card rests as soon as a newer note is saved · `d43f278`
+- correctness · `porchlight/static/porchlight-ui/src/NotesPage.jsx:67` · a save keeps the load error, and the load keeps notes saved during it · `e41c575`
+- correctness · `porchlight/static/porchlight-ui/src/MotionSwitch.jsx:25` · a rule for data-motion reduced outside the media query · `cc20b84`
+- coverage · `porchlight/static/porchlight-ui/src/api.js:48` · tests for the bulk user lookup and the other bridge calls · `1ae287e`
+- quality · `porchlight/playwright.config.js:18` · the comment names e2e/login.mjs · `f174b86`
+
 ## Open items
 
 | ID | What | Type | Raised at | Owner | Status | Answer |
@@ -327,6 +341,8 @@ Recorded as D12, D13, D14, D15.
 | O13 | The plan said every SQL value is bound with `?`. On Forge SQL, `LIMIT ?` fails with "ERROR 1210: Incorrect arguments to LIMIT", because bound values arrive as text. | flag | build | user | Decided alone | Chose: write `LIMIT 100` into the statement from the fixed constant `LIST_LIMIT`; typed text is still always bound. The fake database now refuses `LIMIT ?`. Other: none that works on Forge SQL. Undo: not needed. 2026-11-07 |
 | O14 | The plan said Playwright saves a login from a browser it launches (O3). Atlassian sends a Google-linked account to Google, and Google refuses sign-in in a Playwright-launched browser. | flag | build | user | Decided alone | Chose: `e2e/login.mjs` starts Chrome as a normal program with its own profile in the git-ignored `e2e/.auth/`, the user signs in by hand, and Playwright attaches and saves Atlassian cookies only. Other: a separate test account with a password. Undo: revert 03caa30 and 6e04f2a's login change, and create a password-only test user. 2026-11-07 |
 | O15 | No scenario covers the list failing to load, or a name lookup failing. | flag | build | user | Decided alone | Chose: the list shows "Couldn't load notes. Reload the page to try again."; a card whose author name cannot be found shows "A teammate". Other: a blank list. Undo: remove the `error` branch in `NotesPage.jsx` and the fallback in `NoteList.jsx`. 2026-11-07 |
+| O16 | The review's touch-target check failed: buttons are 32px tall (`--pl-control-height`), under the 44 by 44 px floor. | flag | review | user | Decided alone | Chose: keep 32px. The brief's device floor is desktop, and Atlassian's own buttons are 32px. Other: raise `--pl-control-height` to 44px in `docs/design/design-system/tokens/tokens.css`. Undo: change that token and re-run the drift check. 2026-11-07 |
+| O17 | `@atlaskit/editor-prosemirror` pins prosemirror-view 1.41.5, which has a high XSS advisory. The page never loads that code. | flag | review | user | Decided alone | Chose: an npm override forces 1.42.9 in `static/porchlight-ui/package.json`. Other: leave the pin and accept the advisory, because nothing in dist uses it. Undo: remove the `prosemirror-view` override and re-lock. 2026-11-07 |
 
 _Never delete this section or its rows. See references/ledger.md._
 
