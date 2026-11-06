@@ -17,7 +17,7 @@
 // Run: npm run e2e:login   (a .mjs file, so Node reads it as an ES module)
 import { chromium } from '@playwright/test';
 import { spawn } from 'node:child_process';
-import { existsSync, mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const SITE = process.env.PL_SITE ?? 'https://dzaffren.atlassian.net';
@@ -99,9 +99,16 @@ while (!onJira(context)) {
 }
 
 // Give Jira a moment to finish setting its cookies, then save the session.
+// Only cookies are saved: an Atlassian login lives in cookies. (Playwright's full
+// storageState() also visits every site the login touched to copy local storage,
+// which breaks on a Chrome window that Playwright did not start.)
 await wait(3000);
-await context.storageState({ path: STATE_FILE });
-console.log('Saved the login to e2e/.auth/state.json. Chrome closes now.');
+// Keep Atlassian's cookies only. The Google sign-in also leaves Google cookies in this
+// profile; the test does not need them, so they never go into state.json.
+const isAtlassian = (domain) => /(^|\.)atlassian\.(net|com)$/.test(domain.replace(/^\./, ''));
+const cookies = (await context.cookies()).filter((cookie) => isAtlassian(cookie.domain));
+writeFileSync(STATE_FILE, JSON.stringify({ cookies, origins: [] }, null, 2));
+console.log(`Saved ${cookies.length} login cookies to e2e/.auth/state.json. Chrome closes now.`);
 
 await browser.close();
 chrome.kill();

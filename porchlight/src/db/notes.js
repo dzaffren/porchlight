@@ -77,12 +77,14 @@ export async function insertNoteOnce({ clientKey, body, authorAccountId }) {
  * @returns {Promise<Array<{ id: string, body: string, authorAccountId: string, createdAt: string }>>}
  */
 export async function listNewestNotes() {
+  // LIMIT is written into the SQL, not bound with "?": Forge SQL sends bound values as
+  // text, and the database refuses text after LIMIT ("Incorrect arguments to LIMIT").
+  // This is safe because LIST_LIMIT is a fixed number in this file, never user input.
   const result = await sql
     .prepare(
       `SELECT id, body, author_account_id, created_at FROM notes
-       ORDER BY created_at DESC, id DESC LIMIT ?`,
+       ORDER BY created_at DESC, id DESC LIMIT ${LIST_LIMIT}`,
     )
-    .bindParams(LIST_LIMIT)
     .execute();
 
   return result.rows.map(toNote);

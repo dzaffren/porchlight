@@ -187,6 +187,7 @@ describe('listNotes', () => {
     await listNotes(request(AISHA));
 
     const select = fake.statements.find((s) => s.query.includes('ORDER BY created_at DESC'));
-    expect(select.params).toEqual([100]);
+    expect(select.query).toMatch(/LIMIT 100$/);
+    expect(select.params).toEqual([]);
   });
 });

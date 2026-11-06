@@ -60,6 +60,12 @@ async function run(query, params = []) {
   }
   const q = oneLine(query);
 
+  // Forge SQL sends bound values as text, and the database refuses text after LIMIT.
+  // Learned from the first deploy: "ERROR 1210 (HY000): Incorrect arguments to LIMIT".
+  if (/\bLIMIT \?/i.test(q)) {
+    throw new Error('ERROR 1210 (HY000): Incorrect arguments to LIMIT');
+  }
+
   // --- statements Forge's MigrationRunner sends ---
   if (q.startsWith('CREATE TABLE IF NOT EXISTS __migrations')) {
     fake.tables.add('__migrations');
@@ -113,9 +119,10 @@ async function run(query, params = []) {
       .map(({ client_key, ...rest }) => ({ ...rest })); // eslint-disable-line no-unused-vars
     return { rows };
   }
-  if (q.startsWith('SELECT id, body, author_account_id, created_at FROM notes ORDER BY created_at DESC, id DESC LIMIT ?')) {
+  const listQuery = q.match(/^SELECT id, body, author_account_id, created_at FROM notes ORDER BY created_at DESC, id DESC LIMIT (\d+)$/);
+  if (listQuery) {
     requireNotesTable();
-    const [limit] = params;
+    const limit = Number(listQuery[1]);
     const rows = [...fake.notes]
       .sort((a, b) => (a.created_at === b.created_at ? b.id - a.id : a.created_at < b.created_at ? 1 : -1))
       .slice(0, limit)
