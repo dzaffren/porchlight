@@ -15,7 +15,7 @@ export default defineConfig({
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {
     baseURL: process.env.PL_SITE ?? 'https://dzaffren.atlassian.net',
-    // The login saved by e2e/login.js. Git-ignored: it is a live session for your account.
+    // The login saved by e2e/login.mjs (npm run e2e:login). Git-ignored: it is a live session for your account.
     storageState: 'e2e/.auth/state.json',
     // Google Chrome already on this laptop, so Playwright downloads no browser.
     channel: process.env.PL_BROWSER_CHANNEL ?? 'chrome',

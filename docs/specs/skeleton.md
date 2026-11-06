@@ -281,7 +281,7 @@ erDiagram
 | Note over 2,000 characters is not saved | `test/unit/validate.test.js` (2,000 passes, 2,001 fails) + `Composer.test.jsx` (text kept) | `npm test` |
 | Save fails | `Composer.test.jsx` (invoke rejects → message, text kept) + `test/unit/notes.test.js` (same `clientKey` twice → one row) | `npm test` |
 
-**E2E:** `e2e/skeleton.spec.js` opens the dev site's Porchlight page with the saved session, saves a note with a unique timestamp, reloads, and finds it at the top of the list with the author's name. Run with `npx playwright test` after `forge deploy`. The harness does not exist yet; setting it up, including `e2e/login.js` that saves the session to `e2e/.auth/` (git-ignored), is part of this slice.
+**E2E:** `e2e/skeleton.spec.js` opens the dev site's Porchlight page with the saved session, saves a note with a unique timestamp, reloads, and finds it at the top of the list with the author's name. Run with `npx playwright test` after `forge deploy`. The harness does not exist yet; setting it up, including `e2e/login.mjs` that saves the session to `e2e/.auth/` (git-ignored), is part of this slice.
 
 ### Chunks
 
