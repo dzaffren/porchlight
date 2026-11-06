@@ -145,14 +145,37 @@ body {
 .pl-warming .pl-chip:nth-child(n+4)::after { animation-delay: calc(var(--pl-dur-warm) + var(--pl-chip-stagger) * 3); }
 @keyframes pl-chip-light { 0% { opacity: 0; } 30% { opacity: 1; } 100% { opacity: 0; } }
 
-/* Icons: line art, 1.5px stroke. A part marked style="fill: var(--pl-icon-lit, none)" glows when lit. */
+/* Icons: line art, 1.5px stroke. A part with class pl-ico-lit glows when lit. */
 .pl-glyph { width: 24px; height: 24px; color: var(--ds-text-subtle); flex: none; }
+/* Sprite parts. Classes, never style attributes: Forge Custom UI blocks inline styles (D15).
+   These are single-class selectors on purpose: they must match inside a <use> copy of the symbol. */
+.pl-ico-cap { fill: currentColor; }
+.pl-ico-lit { fill: var(--pl-icon-lit, none); }
+.pl-ico-solid { stroke: none; }
+/* The sprite is placed in the page once, out of sight. Not display:none, which would hide its gradients. */
+.pl-sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
 .pl-glyph--sm { width: var(--pl-icon-size); height: var(--pl-icon-size); }
 .pl-glyph--lit { color: var(--ds-text); --pl-icon-lit: var(--pl-glow); filter: drop-shadow(0 0 4px var(--pl-glow-halo)); }
 .pl-btn .pl-glyph--lit { color: inherit; }   /* inside a button, the lantern frame takes the button's text colour */
 
 /* Illustrations: line art in currentColor; lit parts use var(--pl-glow). */
 .pl-illo { display: block; width: 100%; height: auto; color: var(--ds-text-subtlest); }
+/* The empty-state porch scene (#porch-scene in the sprite). */
+.pl-scene-stop { stop-color: var(--pl-glow); }
+.pl-scene-stop-hot { stop-color: var(--pl-glow-hot); }
+.pl-scene-moon { fill: var(--ds-text-subtle); stroke: none; }
+.pl-scene-stars { fill: var(--ds-text-subtle); stroke: none; }
+.pl-scene-line { stroke: var(--ds-border-bold); }
+.pl-scene-pool { fill: url(#pl-scene-pool); stroke: none; }
+.pl-scene-path { fill: var(--pl-glow-soft); stroke: none; }
+.pl-scene-bush { fill: var(--ds-surface-raised); stroke: var(--ds-border-bold); }
+.pl-scene-raised { fill: var(--ds-surface-raised); }
+.pl-scene-sunken { fill: var(--ds-surface-sunken); }
+.pl-scene-unlit { fill: var(--pl-unlit); }
+.pl-scene-knob { fill: currentColor; stroke: none; }
+.pl-scene-halo { fill: url(#pl-scene-lamp); stroke: none; }
+.pl-scene-glass { fill: var(--pl-glow); }
+.pl-scene-flame { fill: var(--pl-glow-hot); stroke: none; }
 
 /* ---------- Side panel: details over the 3D street ----------
    Slides in from the right when a house is chosen. Glass over the scene, readable at AA. */
