@@ -1,0 +1,89 @@
+// Every SQL statement Porchlight runs against the notes table lives in this file.
+//
+// All of them are "parameterised": the SQL text is fixed, and the values go in through
+// bindParams(). The database treats those values as plain data, so text a person typed
+// (even text that looks like SQL) can never change what the query does.
+import { sql } from '@forge/sql';
+
+// The list shows at most this many notes. Pagination is a later slice.
+export const LIST_LIMIT = 100;
+
+/**
+ * Turn the DATETIME the database returns into an ISO 8601 string in UTC,
+ * like "2026-11-06T09:00:00.000Z", which the page can format for the reader.
+ * The column is stored in UTC, so a value without a time zone is read as UTC.
+ *
+ * @param {string|Date} value
+ * @returns {string}
+ */
+function toIsoUtc(value) {
+  if (value instanceof Date) {
+    return value.toISOString();
+  }
+  const text = String(value);
+  const hasZone = /(Z|[+-]\d\d:?\d\d)$/.test(text);
+  return new Date(hasZone ? text : `${text.replace(' ', 'T')}Z`).toISOString();
+}
+
+/**
+ * Convert one database row into the shape the page uses.
+ * BIGINT ids can come back as numbers or strings, so the id is always sent as a string.
+ */
+function toNote(row) {
+  return {
+    id: String(row.id),
+    body: row.body,
+    authorAccountId: row.author_account_id,
+    createdAt: toIsoUtc(row.created_at),
+  };
+}
+
+/**
+ * Save a note, at most once per client key, and return the saved note.
+ *
+ * "ON DUPLICATE KEY UPDATE id = id" means: if a row with this client_key already
+ * exists, change nothing. So a retried save (same key) never makes a second row.
+ * The SELECT afterwards returns the row either way, new or already saved.
+ *
+ * @param {{ clientKey: string, body: string, authorAccountId: string }} note
+ * @returns {Promise<{ id: string, body: string, authorAccountId: string, createdAt: string } | null>}
+ *   null when the key belongs to another author's note.
+ */
+export async function insertNoteOnce({ clientKey, body, authorAccountId }) {
+  await sql
+    .prepare(
+      `INSERT INTO notes (client_key, body, author_account_id) VALUES (?, ?, ?)
+       ON DUPLICATE KEY UPDATE id = id`,
+    )
+    .bindParams(clientKey, body, authorAccountId)
+    .execute();
+
+  // Look the row up by key AND author, so nobody can read back a row by guessing a key.
+  const result = await sql
+    .prepare(
+      `SELECT id, body, author_account_id, created_at FROM notes
+       WHERE client_key = ? AND author_account_id = ?`,
+    )
+    .bindParams(clientKey, authorAccountId)
+    .execute();
+
+  return result.rows.length > 0 ? toNote(result.rows[0]) : null;
+}
+
+/**
+ * The newest notes first, from every author.
+ * Ties (two notes in the same second) are broken by id, so the later save comes first.
+ *
+ * @returns {Promise<Array<{ id: string, body: string, authorAccountId: string, createdAt: string }>>}
+ */
+export async function listNewestNotes() {
+  const result = await sql
+    .prepare(
+      `SELECT id, body, author_account_id, created_at FROM notes
+       ORDER BY created_at DESC, id DESC LIMIT ?`,
+    )
+    .bindParams(LIST_LIMIT)
+    .execute();
+
+  return result.rows.map(toNote);
+}

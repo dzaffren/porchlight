@@ -1,17 +1,43 @@
 modules:
+  # The page people open from Jira's Apps menu.
+  # It is Custom UI: our own React build in static/porchlight-ui/dist (decision D2).
   jira:globalPage:
-    - key: porchlight-hello-world-global-page
+    - key: porchlight-page
       resource: main
       resolver:
         function: resolver
-      render: native
-      title: porchlight
+      title: Porchlight
+
   function:
+    # Answers invoke('listNotes') and invoke('saveNote') from the page.
     - key: resolver
       handler: index.handler
+    # Creates and updates the database tables.
+    - key: migrate
+      handler: index.migrate
+
+  # Forge runs migrations from a trigger. The resolvers also run them on their
+  # first call, so the app works before the first hourly run (spec ledger O7).
+  scheduledTrigger:
+    - key: porchlight-migrate-hourly
+      function: migrate
+      interval: hour
+
+  # One Forge SQL database for each installation of the app.
+  sql:
+    - key: main
+      engine: mysql
+
 resources:
   - key: main
-    path: src/frontend/index.jsx
+    path: static/porchlight-ui/dist
+
+permissions:
+  scopes:
+    # Look up the authors' display names as the viewer (decision D12).
+    - read:jira-user
+  # No content.styles permission: inline styles stay blocked (decision D15).
+
 app:
   runtime:
     name: nodejs24.x
