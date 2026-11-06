@@ -7,6 +7,9 @@
   "scripts": {
     "lint": "eslint src test",
     "test": "vitest run",
+    "test:ui": "npm --prefix static/porchlight-ui test",
+    "test:all": "npm test && npm run test:ui",
+    "build:ui": "npm --prefix static/porchlight-ui run build",
     "test:watch": "vitest"
   },
   "devDependencies": {
