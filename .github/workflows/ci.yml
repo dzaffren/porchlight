@@ -14,9 +14,6 @@ on:
 permissions:
   contents: read
 
-env:
-  FORGE_CLI_VERSION: 15.0.0
-
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -48,11 +45,11 @@ jobs:
       - name: Build the page
         run: npm run build:ui
 
+      # The Forge CLI is a pinned dev dependency (package-lock.json), so npx runs that exact version.
       - name: Check the manifest
         run: |
-          npm install --global @forge/cli@${FORGE_CLI_VERSION}
-          forge settings set usage-analytics false
-          forge lint
+          npx forge settings set usage-analytics false
+          npx forge lint
 
   deploy:
     # Only main, only after the checks pass, and one deploy at a time.
@@ -65,10 +62,6 @@ jobs:
     defaults:
       run:
         working-directory: porchlight
-    env:
-      # Stored as GitHub repository secrets (spec ledger O5). Never written into a file.
-      FORGE_EMAIL: ${{ secrets.FORGE_EMAIL }}
-      FORGE_API_TOKEN: ${{ secrets.FORGE_API_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 
@@ -86,8 +79,12 @@ jobs:
           npm ci --prefix static/porchlight-ui
           npm run build:ui
 
+      # Only this step sees the token, so install scripts and the page build never do.
       - name: Deploy to development
+        env:
+          # Stored as GitHub repository secrets (spec ledger O5). Never written into a file.
+          FORGE_EMAIL: ${{ secrets.FORGE_EMAIL }}
+          FORGE_API_TOKEN: ${{ secrets.FORGE_API_TOKEN }}
         run: |
-          npm install --global @forge/cli@${FORGE_CLI_VERSION}
-          forge settings set usage-analytics false
-          forge deploy --non-interactive -e development
+          npx forge settings set usage-analytics false
+          npx forge deploy --non-interactive -e development
