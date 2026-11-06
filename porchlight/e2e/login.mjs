@@ -1,7 +1,7 @@
 // One-time login for the e2e test (spec ledger O3).
 //
 // Atlassian's login has two-step checks and bot checks, so a robot cannot log in on
-// its own. Instead this opens a real Edge window: you log in by hand, and the script
+// its own. Instead this opens a real Chrome window: you log in by hand, and the script
 // saves the logged-in session to e2e/.auth/state.json for the test to reuse.
 //
 // That file is a live session for your account. It is git-ignored; never commit or share it.
@@ -14,12 +14,12 @@ const SITE = process.env.PL_SITE ?? 'https://dzaffren.atlassian.net';
 const STATE_FILE = 'e2e/.auth/state.json';
 const FIVE_MINUTES = 5 * 60 * 1000;
 
-const browser = await chromium.launch({ channel: process.env.PL_BROWSER_CHANNEL ?? 'msedge', headless: false });
+const browser = await chromium.launch({ channel: process.env.PL_BROWSER_CHANNEL ?? 'chrome', headless: false });
 const context = await browser.newContext();
 const page = await context.newPage();
 
 await page.goto(`${SITE}/jira`);
-console.log('Log in to Atlassian in the Edge window. This script waits up to 5 minutes.');
+console.log('Log in to Atlassian in the Chrome window. This script waits up to 5 minutes.');
 
 // Logged in = back on the site, on a Jira page (not on id.atlassian.com).
 await page.waitForURL((url) => url.origin === SITE && url.pathname.startsWith('/jira'), { timeout: FIVE_MINUTES });
