@@ -24,6 +24,6 @@ export default defineConfig({
   server: { fs: { allow: [repoRoot] } },
   test: {
     environment: 'jsdom',
-    include: ['src/**/*.test.jsx'],
+    include: ['src/**/*.test.{js,jsx}'],
   },
 });
