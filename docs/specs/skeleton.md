@@ -306,33 +306,7 @@ Chunk A runs `forge create` first and owns the manifest. B and C start once A ha
 
 ### Decisions to record
 
-## D12 · 2026-11-02 · Look up author names from Jira when listing notes
-
-Why: a note must show "Aisha Rahman", and a name stored at save time goes stale when someone renames themselves or leaves.
-Rejected: storing the display name in the notes table at save time (stale names; stores more personal data than needed).
-Source: docs/specs/skeleton.md
-Status: active
-
-## D13 · 2026-11-02 · A client key makes every save safe to retry
-
-Why: scenario 5 needs a retried save to list the note once, even when the first request reached the database but the reply was lost.
-Rejected: only disabling the Save button while saving (does not cover a lost reply), checking for an identical body from the same author (blocks two genuinely identical notes).
-Source: docs/specs/skeleton.md
-Status: active
-
-## D15 · 2026-11-02 · Keep Forge's strict style policy; no inline styles anywhere
-
-Why: Custom UI blocks inline `style` attributes by default, and the design system's sprite and porch scene used them; moving them into classes keeps the app's security policy strict.
-Rejected: adding `permissions.content.styles: unsafe-inline` (loosens the policy for the whole app, and developers report it does not cover every case).
-Source: docs/specs/skeleton.md
-Status: active
-
-## D14 · 2026-11-02 · The page imports the design system from docs/design, never a copy
-
-Why: one design system per product; a copy inside the app would drift from the one the drift check and previews use.
-Rejected: copying tokens and styles into `static/porchlight-ui/` (two sources of truth), publishing the design system as an npm package (overkill for one app).
-Source: docs/specs/skeleton.md
-Status: active
+Recorded as D12, D13, D14, D15.
 
 ## Open items
 
