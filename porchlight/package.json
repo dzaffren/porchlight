@@ -10,9 +10,12 @@
     "test:ui": "npm --prefix static/porchlight-ui test",
     "test:all": "npm test && npm run test:ui",
     "build:ui": "npm --prefix static/porchlight-ui run build",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "e2e:login": "node e2e/login.mjs",
+    "e2e": "playwright test"
   },
   "devDependencies": {
+    "@playwright/test": "1.65.0",
     "eslint": "^8.56.0",
     "vitest": "5.1.0"
   },
