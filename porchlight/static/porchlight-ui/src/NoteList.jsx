@@ -47,7 +47,12 @@ export function NoteCard({ note, authorName, fresh }) {
   const [resting, setResting] = useState(!fresh);
 
   useEffect(() => {
-    if (!fresh) return undefined;
+    // No longer the newest note (another one was saved): rest now. Without this, a
+    // second quick save would clear the timer below and leave this card glowing.
+    if (!fresh) {
+      setResting(true);
+      return undefined;
+    }
     const timer = setTimeout(() => setResting(true), WARM_MS);
     return () => clearTimeout(timer);
   }, [fresh]);
