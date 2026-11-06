@@ -15,6 +15,7 @@
     "e2e": "playwright test"
   },
   "devDependencies": {
+    "@forge/cli": "15.0.0",
     "@playwright/test": "1.65.0",
     "eslint": "^8.56.0",
     "vitest": "5.1.0"
@@ -23,5 +24,10 @@
     "@forge/resolver": "2.0.2",
     "@forge/sql": "4.0.9"
   },
-  "description": "Porchlight: leave the light on for the next person. A Forge app for Jira."
+  "description": "Porchlight: leave the light on for the next person. A Forge app for Jira.",
+  "overrides": {
+    "@forge/manifest": {
+      "glob": "14.0.4"
+    }
+  }
 }
