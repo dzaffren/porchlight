@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Porchlight Skeleton</title>
+<link rel="stylesheet" href="../design-system/styles.css">
+<style>
+  /* Layout only. Every component and value comes from the Porchlight design system. */
+  body { background: var(--ds-surface-sunken); }
+  .frame { max-width: 760px; margin: 0 auto; padding: var(--ds-space-400) var(--ds-space-200) var(--ds-space-600); display: grid; gap: var(--ds-space-300); }
+  .states { position: sticky; top: 0; z-index: 2; display: flex; flex-wrap: wrap; gap: var(--ds-space-100); align-items: center; justify-content: center;
+    padding: var(--ds-space-150) var(--ds-space-200); background: var(--pl-scrim); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid var(--ds-border); }
+  .states .pl-meta { margin-right: var(--ds-space-100); }
+  .states [aria-pressed="true"] { background: var(--pl-unlit); border-color: var(--ds-border-bold); color: var(--ds-text-strong); }
+  .title { display: flex; gap: var(--ds-space-150); align-items: center; }
+  .composer { background: var(--ds-surface); border: 1px solid var(--ds-border); border-radius: var(--ds-radius-300); padding: var(--ds-space-200); display: grid; gap: var(--ds-space-150); }
+  .composer__foot { display: flex; justify-content: space-between; align-items: center; gap: var(--ds-space-150); }
+  .list { display: grid; gap: var(--ds-space-150); }
+  .list__head { display: flex; justify-content: space-between; align-items: baseline; }
+  .list__head h2 { margin: 0; font-size: var(--ds-font-size-title); line-height: var(--ds-line-title); color: var(--ds-text-strong); }
+  .who { display: flex; gap: var(--ds-space-100); align-items: center; }
+  .toast-slot { position: fixed; left: 50%; bottom: var(--ds-space-300); transform: translateX(-50%); }
+  .pl-card__body { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .pl-motion { top: auto; bottom: var(--ds-space-200); left: auto; right: var(--ds-space-200); transform: none; }
+</style>
+</head>
+<body>
+  <!-- State switcher: for reviewing the design only. Not part of the product. -->
+  <nav class="states" aria-label="Preview states">
+    <span class="pl-meta">Preview state</span>
+    <button class="pl-btn pl-btn--subtle" type="button" data-state="notes" aria-pressed="true">With notes</button>
+    <button class="pl-btn pl-btn--subtle" type="button" data-state="empty" aria-pressed="false">First visit</button>
+    <button class="pl-btn pl-btn--subtle" type="button" data-state="loading" aria-pressed="false">Loading</button>
+    <button class="pl-btn pl-btn--subtle" type="button" data-state="toolong" aria-pressed="false">Too long</button>
+    <button class="pl-btn pl-btn--subtle" type="button" data-state="fail" aria-pressed="false">Save fails</button>
+  </nav>
+
+  <main class="frame">
+    <header class="pl-page-header">
+      <div>
+        <h1 class="title"><svg class="pl-glyph pl-glyph--lit" aria-hidden="true"><use href="#lamp"/></svg>Porchlight</h1>
+        <p>Leave a note for the next person. Everyone on the team can read it.</p>
+      </div>
+    </header>
+
+    <form class="composer" id="composer" novalidate>
+      <div class="pl-field" id="field">
+        <label class="pl-field__label" for="note">Note for the next person</label>
+        <textarea class="pl-textarea" id="note" aria-describedby="help" placeholder="What should the next person know?"></textarea>
+        <span class="pl-field__help" id="help"><span id="help-text">Anyone on the team can read this.</span><span id="count">0 / 2,000</span></span>
+      </div>
+      <div id="save-error" hidden></div>
+      <div class="composer__foot">
+        <span class="pl-meta">Saved as <strong>Aisha Rahman</strong></span>
+        <button class="pl-btn pl-btn--primary" id="save" type="submit"><svg class="pl-glyph pl-glyph--sm pl-glyph--lit" aria-hidden="true"><use href="#lamp"/></svg><span>Save note</span></button>
+      </div>
+    </form>
+
+    <section class="list" aria-labelledby="list-title">
+      <div class="list__head"><h2 id="list-title">Notes</h2><span class="pl-meta" id="list-count"></span></div>
+      <div class="list" id="notes" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <div class="toast-slot" id="toast-slot" aria-live="polite"></div>
+  <button class="pl-btn pl-btn--subtle pl-motion" id="motion" type="button" aria-pressed="false">Motion</button>
+
+<script data-sprite="../design-system/assets/icons.svg">
+  // Load the icon sprite into the page once, so every <use href="#id"> resolves locally.
+  fetch(document.currentScript.dataset.sprite).then((r) => r.text()).then((svg) => {
+    const box = document.createElement("div"); box.setAttribute("aria-hidden", "true");
+    box.style.cssText = "position:absolute;width:0;height:0;overflow:hidden"; box.innerHTML = svg; document.body.prepend(box);
+  });
+</script>
+<script>
+  // ---------- Demo data (the real page reads notes from Forge SQL) ----------
+  const SEED = [
+    { author: "Daniel Tan", initials: "DT", text: "Month-end load test runs at 3x normal volume for 2 hours, matching last December's peak.", when: "Yesterday, 16:40" },
+    { author: "Aisha Rahman", initials: "AR", text: "Payments retry 3 times because the bank API times out under load.", when: "28 Oct 2026, 10:12" },
+    { author: "Priya Nair", initials: "PN", text: "Refunds over 30 days need finance sign-off. Agreed with the finance lead in October.", when: "21 Oct 2026, 09:05" },
+  ];
+  const MAX = 2000;
+  let notes = [], failNext = false;
+
+  const $ = (id) => document.getElementById(id);
+  const fmt = (n) => n.toLocaleString("en-GB");
+
+  // ---------- Rendering: every note is a lit card (captured, with its author as the source) ----------
+  function noteCard(n) {
+    const card = document.createElement("article");
+    card.className = "pl-card pl-card--lit pl-card--rest";   // saved notes rest: no halo
+    card.innerHTML = `<span class="pl-card__glow" aria-hidden="true"></span>
+      <div class="pl-card__head"><span class="who"><span class="pl-avatar"></span><strong class="author"></strong></span><span class="pl-meta when"></span></div>
+      <p class="pl-card__body"></p>`;
+    // textContent, never innerHTML, for anything a person typed.
+    card.querySelector(".pl-avatar").textContent = n.initials;
+    card.querySelector(".author").textContent = n.author;
+    card.querySelector(".when").textContent = n.when;
+    card.querySelector(".pl-card__body").textContent = n.text;
+    return card;
+  }
+  function renderList() {
+    const box = $("notes"); box.replaceChildren();
+    $("list-count").textContent = notes.length ? `${notes.length} ${notes.length === 1 ? "note" : "notes"} · newest first` : "";
+    if (!notes.length) {
+      box.innerHTML = `<div class="pl-empty">
+        <svg class="pl-empty__art" viewBox="0 0 320 200" aria-hidden="true"><use href="#porch-scene"/></svg>
+        <p class="pl-empty__title">No notes yet</p>
+        <p>Leave the first one for the next person.</p></div>`;
+      return;
+    }
+    notes.forEach((n) => box.appendChild(noteCard(n)));
+  }
+  function renderLoading() {
+    $("list-count").textContent = "";
+    $("notes").innerHTML = [70, 90, 55].map((w) =>
+      `<div class="pl-card" aria-hidden="true"><span class="pl-skeleton" style="width: 30%"></span><span class="pl-skeleton" style="width: ${w}%"></span></div>`).join("") +
+      `<span class="pl-meta" role="status">Loading notes…</span>`;
+  }
+
+  // ---------- The composer: count, validate, save ----------
+  const note = $("note"), field = $("field"), helpText = $("help-text"), count = $("count"), saveBtn = $("save"), saveError = $("save-error");
+  function setFieldError(msg) {
+    field.classList.toggle("pl-field--error", Boolean(msg));
+    note.setAttribute("aria-invalid", msg ? "true" : "false");
+    helpText.textContent = msg || "Anyone on the team can read this.";
+  }
+  function updateCount() {
+    const n = note.value.length;
+    count.textContent = `${fmt(n)} / 2,000`;
+    if (n > MAX) setFieldError(`Notes can be up to 2,000 characters. This one is ${fmt(n)}.`);
+    else if (field.classList.contains("pl-field--error") && n <= MAX) setFieldError("");
+  }
+  note.addEventListener("input", updateCount);
+
+  function showToast() {
+    const slot = $("toast-slot");
+    slot.innerHTML = `<div class="pl-toast" role="status"><span class="pl-toast__lamp" aria-hidden="true"></span>Note saved. The light's on.</div>`;
+    setTimeout(() => { slot.replaceChildren(); }, 3200);
+  }
+  $("composer").addEventListener("submit", (e) => {
+    e.preventDefault();
+    saveError.hidden = true;
+    const text = note.value.trim();
+    if (!text) { setFieldError("Write something first."); note.focus(); return; }
+    if (note.value.length > MAX) { updateCount(); note.focus(); return; }
+    saveBtn.disabled = true;
+    saveBtn.querySelector("span").textContent = "Saving";
+    saveBtn.querySelector("svg").outerHTML = `<span class="pl-spinner" aria-hidden="true"></span>`;
+    setTimeout(() => {
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = `<svg class="pl-glyph pl-glyph--sm pl-glyph--lit" aria-hidden="true"><use href="#lamp"/></svg><span>Save note</span>`;
+      if (failNext) {
+        failNext = false;   // the retry will work, and the note is listed once
+        saveError.hidden = false;
+        saveError.innerHTML = `<div class="pl-message pl-message--error" role="alert"><svg class="pl-glyph pl-glyph--sm" aria-hidden="true"><use href="#gap"/></svg><p><strong>Couldn't save your note.</strong> Try again. Your text is still in the box.</p></div>`;
+        return;
+      }
+      notes.unshift({ author: "Aisha Rahman", initials: "AR", text, when: "Just now" });
+      note.value = ""; updateCount(); renderList();
+      const fresh = $("notes").firstElementChild;   // the new note warms up, then rests
+      fresh.classList.remove("pl-card--rest");                // a new note glows while new...
+      fresh.classList.add("pl-card--lighting", "pl-warming");
+      setTimeout(() => fresh.classList.add("pl-card--rest"), 3600);   // ...then rests after warming and 3 breaths
+      showToast();
+    }, 700);
+  });
+
+  // ---------- Preview states ----------
+  function setState(s) {
+    document.querySelectorAll("[data-state]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.state === s)));
+    saveError.hidden = true; setFieldError(""); failNext = false;
+    notes = s === "empty" ? [] : SEED.slice();
+    note.value = "";
+    if (s === "toolong") note.value = ("Payments retry 3 times because the bank API times out under load. ").repeat(30).slice(0, 2001);
+    if (s === "fail") { note.value = "Year-end batch job runs on 31 Dec at 23:00."; failNext = true; }
+    updateCount();
+    if (s === "loading") renderLoading(); else renderList();
+  }
+  document.querySelectorAll("[data-state]").forEach((b) => b.addEventListener("click", () => setState(b.dataset.state)));
+  setState(new URLSearchParams(location.search).get("state") || "notes");   // ?state=empty etc. for review links
+
+  // ---------- Motion switch: follows the system unless the viewer chooses ----------
+  const sysReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let saved = null; try { saved = localStorage.getItem("pl-motion"); } catch (e) { /* follow the system */ }
+  let reduced = saved ? saved === "reduced" : sysReduced;
+  const motionBtn = $("motion");
+  const applyMotion = () => { document.documentElement.dataset.motion = reduced ? "reduced" : "full"; motionBtn.textContent = reduced ? "Motion: reduced" : "Motion: full"; motionBtn.setAttribute("aria-pressed", String(!reduced)); };
+  motionBtn.addEventListener("click", () => { reduced = !reduced; applyMotion(); try { localStorage.setItem("pl-motion", reduced ? "reduced" : "full"); } catch (e) { /* not remembered */ } });
+  applyMotion();
+</script>
+</body>
+</html>

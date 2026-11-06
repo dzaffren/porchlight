@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Porchlight Primitives</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  /* Preview layout only; the primitives themselves live in styles.css. */
+  body { background: var(--ds-surface-sunken); }
+  .pv { max-width: 1080px; margin: 0 auto; padding: var(--ds-space-400) var(--ds-space-200); display: grid; gap: var(--ds-space-400); }
+  .pv-sec { background: var(--ds-surface); border: 1px solid var(--ds-border); border-radius: var(--ds-radius-200); padding: var(--ds-space-300); display: grid; gap: var(--ds-space-200); }
+  .pv-sec h2 { margin: 0; font-size: var(--ds-font-size-title); line-height: var(--ds-line-title); }
+  .pv-sec > p { margin: 0; color: var(--ds-text-subtle); }
+  .pv-row { display: flex; flex-wrap: wrap; gap: var(--ds-space-150); align-items: center; }
+  .pv-two { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--ds-space-200); }
+  .pv-cap { font-size: var(--ds-font-size-small); color: var(--ds-text-subtlest); text-transform: uppercase; letter-spacing: 0.04em; font-weight: var(--ds-weight-bold); }
+</style>
+</head>
+<body>
+<div class="pv">
+  <header class="pl-page-header">
+    <div>
+      <h1>Porchlight</h1>
+      <p>The primitive set, v1. Dark only (D8). Lit window direction (D6). Amber means captured and sourced; an unlit window is a gap; red is an error only.</p>
+    </div>
+    <a class="pl-btn pl-btn--primary" href="street/index.html"><svg class="pl-glyph pl-glyph--sm" aria-hidden="true"><use href="#lamp"/></svg>Open the street full screen</a>
+  </header>
+
+  <section class="pv-sec" aria-labelledby="s-street">
+    <h2 id="s-street">Signature · the street of windows (tier 3)</h2>
+    <p>The team at night. Each house is a teammate; each window is one area of their work. Lit = captured, dark = a gap. Every porch light is on. Click a house (or use the dock, or the arrow keys and Enter) and the camera flies in; the panel shows that person's work. Press Capture on a dark window to light it. Esc flies back. Without WebGL, the 2D street shows.</p>
+    <iframe id="street" src="street/index.html" title="Porchlight street of windows" style="width:100%; height: 620px; border: 1px solid var(--ds-border); border-radius: var(--ds-radius-200);"></iframe>
+  </section>
+
+  <section class="pv-sec" aria-labelledby="s-warm">
+    <h2 id="s-warm">Illumination · warm up, then rest</h2>
+    <p>When knowledge is captured, the window warms from dark to amber (600ms), breathes gently three times, then rests. Light then runs to each source, one by one.</p>
+    <div class="pv-two">
+      <article class="pl-card pl-card--unlit" id="warm-card">
+        <span class="pl-card__glow" aria-hidden="true"></span>
+        <div class="pl-card__head"><p class="pl-card__title">Why the settlement file is checked twice</p><span class="pl-meta">Not captured yet</span></div>
+        <p class="pl-card__body">Only Aisha Rahman has worked on this.</p>
+        <div class="pl-card__sources">
+          <a class="pl-chip" href="#"><svg class="pl-glyph pl-glyph--sm" aria-hidden="true"><use href="#ticket"/></svg>PAY-131</a>
+          <a class="pl-chip" href="#"><svg class="pl-glyph pl-glyph--sm" aria-hidden="true"><use href="#pull-request"/></svg>PR &#35;322</a>
+          <a class="pl-chip" href="#"><svg class="pl-glyph pl-glyph--sm" aria-hidden="true"><use href="#interview"/></svg>Interview · Aisha Rahman</a>
+        </div>
+      </article>
+      <div style="display:grid; gap: var(--ds-space-150); align-content: start">
+        <button class="pl-btn pl-btn--primary" id="warm-btn" type="button"><svg class="pl-glyph pl-glyph--sm" aria-hidden="true"><use href="#lamp"/></svg>Capture it</button>
+        <button class="pl-btn pl-btn--subtle" id="warm-reset" type="button">Reset</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="pv-sec" aria-labelledby="s-icons">
+    <h2 id="s-icons">Icons · line art, 1.5px stroke</h2>
+    <p>Our own set. The lamp, window and house have a part that glows when lit.</p>
+    <div class="pv-row">
+      <span class="pv-row"><svg class="pl-glyph pl-glyph--lit" aria-hidden="true"><use href="#lamp"/></svg>lamp</span>
+      <span class="pv-row"><svg class="pl-glyph pl-glyph--lit" aria-hidden="true"><use href="#window"/></svg>window (lit)</span>
+      <span class="pv-row"><svg class="pl-glyph" aria-hidden="true"><use href="#gap"/></svg>gap</span>
+      <span class="pv-row"><svg class="pl-glyph pl-glyph--lit" aria-hidden="true"><use href="#house"/></svg>teammate</span>
+      <span class="pv-row"><svg class="pl-glyph" aria-hidden="true"><use href="#ticket"/></svg>ticket</span>
+      <span class="pv-row"><svg class="pl-glyph" aria-hidden="true"><use href="#pull-request"/></svg>pull request</span>
+      <span class="pv-row"><svg class="pl-glyph" aria-hidden="true"><use href="#page"/></svg>page</span>
+      <span class="pv-row"><svg class="pl-glyph" aria-hidden="true"><use href="#interview"/></svg>interview</span>
+      <span class="pv-row"><svg class="pl-glyph pl-glyph--lit" aria-hidden="true"><use href="#handover"/></svg>handover</span>
+    </div>
+  </section>
+
+  <section class="pv-sec" aria-labelledby="s-illo">
+    <h2 id="s-illo">Illustrations · scenes in the same line art</h2>
+    <div class="pv-two">
+      <figure style="margin:0; display:grid; gap: var(--ds-space-100)">
+        <svg class="pl-illo" viewBox="0 0 320 180" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">
+          <path d="M20 160h280"/><path d="M90 160V80l70-50 70 50v80"/><rect x="140" y="104" width="40" height="56"/>
+          <path d="M200 70v-14M194 56h12"/><rect x="194" y="76" width="12" height="16" rx="1"/>
+          <circle cx="200" cy="84" r="22" style="fill: var(--pl-glow-soft); stroke: none"/>
+          <rect x="196" y="79" width="8" height="10" style="fill: var(--pl-glow); stroke: none"/>
+          <path d="M120 160l-14 10h108l-14-10"/><rect x="104" y="96" width="22" height="22"/><rect x="194" y="112" width="22" height="22"/>
+        </svg>
+        <figcaption class="pl-meta">Porch · empty states ("No notes yet")</figcaption>
+      </figure>
+      <figure style="margin:0; display:grid; gap: var(--ds-space-100)">
+        <svg class="pl-illo" viewBox="0 0 320 180" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">
+          <path d="M20 160h280"/><rect x="130" y="40" width="60" height="120"/>
+          <path d="M130 40l40 10v110l-40 0z" style="fill: var(--pl-glow-soft)"/>
+          <path d="M150 160l-50 12M170 160l70 12" style="stroke: var(--pl-glow)"/>
+          <circle cx="92" cy="104" r="9"/><path d="M78 160c0-24 6-40 14-40s14 16 14 40"/>
+          <circle cx="232" cy="104" r="9"/><path d="M218 160c0-24 6-40 14-40s14 16 14 40"/>
+          <rect x="106" y="126" width="16" height="12" rx="1" style="fill: var(--pl-glow)"/>
+        </svg>
+        <figcaption class="pl-meta">Doorway · handover ("Aisha is handing over to Daniel")</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="pv-sec" aria-labelledby="s-btn">
+    <h2 id="s-btn">Button</h2>
+    <p>Primary is a lit window you can press. Secondary and subtle stay neutral.</p>
+    <div class="pv-row">
+      <button class="pl-btn pl-btn--primary" type="button">Save note</button>
+      <button class="pl-btn pl-btn--secondary" type="button">Ask Aisha</button>
+      <button class="pl-btn pl-btn--subtle" type="button">Cancel</button>
+      <button class="pl-btn pl-btn--primary" type="button" disabled><span class="pl-spinner" aria-hidden="true"></span>Saving</button>
+      <button class="pl-btn pl-btn--secondary" type="button" disabled>Disabled</button>
+    </div>
+  </section>
+
+  <section class="pv-sec" aria-labelledby="s-field">
+    <h2 id="s-field">Field: text area, input, select</h2>
+    <div class="pv-two">
+      <div class="pl-field">
+        <label class="pl-field__label" for="n1">Note for the next person</label>
+        <textarea class="pl-textarea" id="n1">Year-end batch job runs on 31 Dec at 23:00.</textarea>
+        <span class="pl-field__help"><span>Anyone on the team can read this.</span><span>44 / 2,000</span></span>
+      </div>
+      <div class="pl-field pl-field--error">
+        <label class="pl-field__label" for="n2">Note for the next person</label>
+        <textarea class="pl-textarea" id="n2" aria-invalid="true" aria-describedby="n2h">Payments retry 3 times because the bank API times out under load. The retry window…</textarea>
+        <span class="pl-field__help" id="n2h"><span>Notes can be up to 2,000 characters. This one is 2,001.</span><span>2,001 / 2,000</span></span>
+      </div>
+      <div class="pl-field">
+        <label class="pl-field__label" for="p1">Teammate</label>
+        <select class="pl-select" id="p1"><option>Aisha Rahman</option><option>Daniel Tan</option><option>Priya Nair</option></select>
+      </div>
+      <div class="pl-field">
+        <label class="pl-field__label" for="s1">Search their work</label>
+        <input class="pl-input" id="s1" type="search" value="retry">
+      </div>
+    </div>
+  </section>
+
+  <section class="pv-sec" aria-labelledby="s-card">
+    <h2 id="s-card">Knowledge card</h2>
+    <p>Lit: captured, with sources. Unlit: a gap only one person can fill. Try "Light it".</p>
+    <div class="pv-two">
+      <article class="pl-card pl-card--lit">
+        <span class="pl-card__glow" aria-hidden="true"></span>
+        <div class="pl-card__head"><p class="pl-card__title">Why payments retry 3 times</p><span class="pl-meta">14 Nov 2026</span></div>
+        <p class="pl-card__body">The bank's payment API times out under load at month end. Three retries, 2 seconds apart, cleared every timeout in testing.</p>
+        <div class="pl-card__sources">
+          <a class="pl-chip" href="#"><svg class="pl-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2.5" y="2.5" width="11" height="11" rx="2"/><path d="M5.5 8h5M5.5 5.5h5M5.5 10.5h3"/></svg>PAY-142</a>
+          <a class="pl-chip" href="#"><svg class="pl-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="4.5" cy="4" r="1.5"/><circle cx="4.5" cy="12" r="1.5"/><circle cx="11.5" cy="12" r="1.5"/><path d="M4.5 5.5v5M11.5 10.5V8a2 2 0 0 0-2-2H7"/></svg>PR &#35;318</a>
+          <a class="pl-chip" href="#"><svg class="pl-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 3.5h10v7H7l-3 2.5v-2.5H3z"/></svg>Interview · Aisha Rahman</a>
+        </div>
+      </article>
+      <article class="pl-card pl-card--unlit" id="gap">
+        <span class="pl-card__glow" aria-hidden="true"></span>
+        <div class="pl-card__head"><p class="pl-card__title">Why the year-end batch runs at 23:00</p><span class="pl-meta">Not captured yet</span></div>
+        <p class="pl-card__body">Only Aisha Rahman has worked on this. She leaves on 30 Nov 2026.</p>
+        <div class="pv-row">
+          <button class="pl-btn pl-btn--primary" type="button" id="light">Light it</button>
+          <button class="pl-btn pl-btn--secondary" type="button">Ask Aisha</button>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="pv-sec" aria-labelledby="s-list">
+    <h2 id="s-list">List row, lozenge, avatar, source key</h2>
+    <p>Aisha Rahman's open work, as catch-up-view will show it. Status colours appear only for real status.</p>
+    <ul class="pl-list pl-list--stagger">
+      <li class="pl-row"><a class="pl-key" href="#">PAY-142</a><span class="pl-lozenge pl-lozenge--progress">In progress</span><a class="pl-row__summary" href="#">Retry failed bank payments before marking them failed</a><span class="pl-avatar" aria-label="Aisha Rahman">AR</span><span class="pl-meta">2 days ago</span></li>
+      <li class="pl-row"><a class="pl-key" href="#">PAY-150</a><span class="pl-lozenge pl-lozenge--blocked">Blocked</span><a class="pl-row__summary" href="#">Move year-end batch to the new scheduler</a><span class="pl-avatar" aria-label="Aisha Rahman">AR</span><span class="pl-meta">5 days ago</span></li>
+      <li class="pl-row"><a class="pl-key" href="#">PAY-131</a><span class="pl-lozenge pl-lozenge--todo">To do</span><a class="pl-row__summary" href="#">Add settlement-file checksum check</a><span class="pl-avatar" aria-label="Aisha Rahman">AR</span><span class="pl-meta">12 Nov 2026</span></li>
+      <li class="pl-row"><a class="pl-key" href="#">PAY-118</a><span class="pl-lozenge pl-lozenge--done">Done</span><a class="pl-row__summary" href="#">Log bank API timeouts with request ID</a><span class="pl-avatar" aria-label="Aisha Rahman">AR</span><span class="pl-meta">3 Nov 2026</span></li>
+    </ul>
+  </section>
+
+  <section class="pv-sec" aria-labelledby="s-states">
+    <h2 id="s-states">Empty, loading, error, toast</h2>
+    <div class="pv-two">
+      <div class="pl-empty">
+        <svg class="pl-empty__art" viewBox="0 0 320 200" aria-hidden="true"><use href="#porch-scene"/></svg>
+        <p class="pl-empty__title">No notes yet</p>
+        <p>Leave the first one for the next person.</p>
+      </div>
+      <div style="display:grid; gap: var(--ds-space-200); align-content: start">
+        <div aria-label="Loading notes" style="display:grid; gap: var(--ds-space-100)">
+          <span class="pv-cap">Loading</span>
+          <span class="pl-skeleton" style="width: 70%"></span>
+          <span class="pl-skeleton" style="width: 90%"></span>
+          <span class="pl-skeleton" style="width: 55%"></span>
+        </div>
+        <div class="pl-message pl-message--error" role="alert">
+          <svg class="pl-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M8 5v3.5M8 11h.01"/></svg>
+          <p><strong>Couldn't save your note.</strong> Try again. Your text is still in the box.</p>
+        </div>
+        <div><div class="pl-toast" role="status"><span class="pl-toast__lamp" aria-hidden="true"></span>Note saved. The light's on.</div></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+  // "Light it": turn the gap card into a lit card, showing the tier 2 lighting-up motion.
+  document.getElementById("light").addEventListener("click", (e) => {
+    const card = document.getElementById("gap");
+    card.classList.replace("pl-card--unlit", "pl-card--lit");
+    card.classList.add("pl-card--lighting", "pl-warming");
+    card.querySelector(".pl-meta").textContent = "Captured today";
+    card.querySelector(".pl-card__body").textContent = "Aisha: the bank's settlement file lands at 22:30; 23:00 leaves a 30-minute buffer.";
+    e.currentTarget.textContent = "Lit";
+    e.currentTarget.disabled = true;
+  });
+
+  // "Capture it": the full illumination sequence. Warm up, breathe three times, rest; then sources light in turn.
+  const warmCard = document.getElementById("warm-card");
+  document.getElementById("warm-btn").addEventListener("click", () => {
+    warmCard.classList.remove("pl-warming");
+    void warmCard.offsetWidth;   // restart the animation if it already ran
+    warmCard.classList.replace("pl-card--unlit", "pl-card--lit");
+    warmCard.classList.add("pl-warming");
+    warmCard.querySelector(".pl-meta").textContent = "Captured today";
+    warmCard.querySelector(".pl-card__body").textContent = "Aisha: the bank once sent a truncated file at year-end; the second check catches a short file before posting.";
+  });
+  document.getElementById("warm-reset").addEventListener("click", () => {
+    warmCard.classList.remove("pl-warming", "pl-card--lit");
+    warmCard.classList.add("pl-card--unlit");
+    warmCard.querySelector(".pl-meta").textContent = "Not captured yet";
+    warmCard.querySelector(".pl-card__body").textContent = "Only Aisha Rahman has worked on this.";
+  });
+
+</script>
+<script data-sprite="assets/icons.svg">
+  // Load the icon sprite into this page once, so every <use href="#id"> resolves locally.
+  fetch(document.currentScript.dataset.sprite).then((r) => r.text()).then((svg) => {
+    const box = document.createElement("div");
+    box.setAttribute("aria-hidden", "true");
+    box.style.cssText = "position:absolute;width:0;height:0;overflow:hidden";
+    box.innerHTML = svg; document.body.prepend(box);
+  });
+</script>
+</body>
+</html>

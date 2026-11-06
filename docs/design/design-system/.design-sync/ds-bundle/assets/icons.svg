@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <!-- Porchlight icon set. 24 grid, 1.5 stroke, round caps. Parts filled with the pl-icon-lit token glow when lit. -->
+  <symbol id="lamp" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 2v2.5"/><path d="M8 7l4-2.5L16 7"/><path d="M8.5 7h7v9h-7z" style="fill: var(--pl-icon-lit, none)"/>
+    <path d="M8.5 7h7v9h-7z"/><path d="M10 18h4"/><path d="M12 16v2"/>
+  </symbol>
+  <symbol id="window" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="5" y="4" width="14" height="16" rx="1" style="fill: var(--pl-icon-lit, none)"/>
+    <rect x="5" y="4" width="14" height="16" rx="1"/><path d="M12 4v16M5 12h14"/>
+  </symbol>
+  <symbol id="house" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3.5 11L12 4l8.5 7"/><path d="M5.5 9.5V20h13V9.5"/><rect x="10" y="12" width="4" height="4" style="fill: var(--pl-icon-lit, none)"/><rect x="10" y="12" width="4" height="4"/>
+  </symbol>
+  <symbol id="ticket" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="4" y="4" width="16" height="16" rx="2.5"/><path d="M8 9h8M8 12h8M8 15h5"/>
+  </symbol>
+  <symbol id="pull-request" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="6.5" cy="5.5" r="2"/><circle cx="6.5" cy="18.5" r="2"/><circle cx="17.5" cy="18.5" r="2"/><path d="M6.5 7.5v9M17.5 16.5V10a3 3 0 0 0-3-3h-4"/><path d="M12 5l-2 2 2 2"/>
+  </symbol>
+  <symbol id="page" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6 3.5h8l4 4V20.5H6z"/><path d="M14 3.5v4h4"/><path d="M9 12h6M9 15h6M9 18h4"/>
+  </symbol>
+  <symbol id="interview" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 5h11v8H9l-3.5 3v-3H4z"/><path d="M15 9h5v8h-1.5v2.5L15.5 17H11v-4"/>
+  </symbol>
+  <symbol id="handover" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="5.5" cy="7" r="2.5"/><circle cx="18.5" cy="7" r="2.5"/><path d="M2.5 19c0-3 1.5-5 3-5s3 2 3 5M15.5 19c0-3 1.5-5 3-5s3 2 3 5"/>
+    <path d="M9 11h6" /><path d="M13 9l2 2-2 2"/><circle cx="12" cy="11" r="1.2" style="fill: var(--pl-icon-lit, none)"/>
+  </symbol>
+  <symbol id="gap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2.5 2.5">
+    <rect x="5" y="4" width="14" height="16" rx="1"/>
+  </symbol>
+</svg>

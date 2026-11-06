@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <!-- Porchlight icon set. 24 grid, 1.5 stroke, round caps. Parts filled with the pl-icon-lit token glow when lit. -->
+  <!-- Porch lantern: hook, peaked cap, glass with a flame, base. The flame keeps it readable at 16px.
+       Unlit: frame only. Lit (.pl-glyph--lit): warm glass and a flame. -->
+  <symbol id="lamp" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 2.25v2"/>
+    <path d="M7.25 8 12 4.25 16.75 8z" style="fill: currentColor; fill-opacity: .18"/>
+    <rect x="8.25" y="8" width="7.5" height="8.75" rx="1" style="fill: var(--pl-icon-lit, none); fill-opacity: .3"/>
+    <path d="M12 10.1c-1.15 1.2-1.7 2.2-1.7 3.05a1.7 1.7 0 0 0 3.4 0c0-.85-.55-1.85-1.7-3.05z" style="fill: var(--pl-icon-lit, none); stroke: none"/>
+    <path d="M7.25 16.75h9.5"/>
+    <path d="M12 16.75v2.5M10.25 20.75h3.5"/>
+  </symbol>
+  <symbol id="window" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="5" y="4" width="14" height="16" rx="1" style="fill: var(--pl-icon-lit, none)"/>
+    <rect x="5" y="4" width="14" height="16" rx="1"/><path d="M12 4v16M5 12h14"/>
+  </symbol>
+  <symbol id="house" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3.5 11L12 4l8.5 7"/><path d="M5.5 9.5V20h13V9.5"/><rect x="10" y="12" width="4" height="4" style="fill: var(--pl-icon-lit, none)"/><rect x="10" y="12" width="4" height="4"/>
+  </symbol>
+  <symbol id="ticket" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="4" y="4" width="16" height="16" rx="2.5"/><path d="M8 9h8M8 12h8M8 15h5"/>
+  </symbol>
+  <symbol id="pull-request" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="6.5" cy="5.5" r="2"/><circle cx="6.5" cy="18.5" r="2"/><circle cx="17.5" cy="18.5" r="2"/><path d="M6.5 7.5v9M17.5 16.5V10a3 3 0 0 0-3-3h-4"/><path d="M12 5l-2 2 2 2"/>
+  </symbol>
+  <symbol id="page" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6 3.5h8l4 4V20.5H6z"/><path d="M14 3.5v4h4"/><path d="M9 12h6M9 15h6M9 18h4"/>
+  </symbol>
+  <symbol id="interview" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 5h11v8H9l-3.5 3v-3H4z"/><path d="M15 9h5v8h-1.5v2.5L15.5 17H11v-4"/>
+  </symbol>
+  <symbol id="handover" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="5.5" cy="7" r="2.5"/><circle cx="18.5" cy="7" r="2.5"/><path d="M2.5 19c0-3 1.5-5 3-5s3 2 3 5M15.5 19c0-3 1.5-5 3-5s3 2 3 5"/>
+    <path d="M9 11h6" /><path d="M13 9l2 2-2 2"/><circle cx="12" cy="11" r="1.2" style="fill: var(--pl-icon-lit, none)"/>
+  </symbol>
+  <symbol id="gap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2.5 2.5">
+    <rect x="5" y="4" width="14" height="16" rx="1"/>
+  </symbol>
+  <!-- Empty-state scene: a house at night, windows not lit yet, the porch lantern on and waiting. 320 x 200. -->
+  <symbol id="porch-scene" viewBox="0 0 320 200" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <defs>
+      <radialGradient id="pl-scene-lamp" cx="0.5" cy="0.5" r="0.5">
+        <stop offset="0" style="stop-color: var(--pl-glow-hot); stop-opacity: .95"/>
+        <stop offset=".18" style="stop-color: var(--pl-glow); stop-opacity: .55"/>
+        <stop offset=".5" style="stop-color: var(--pl-glow); stop-opacity: .16"/>
+        <stop offset="1" style="stop-color: var(--pl-glow); stop-opacity: 0"/>
+      </radialGradient>
+      <radialGradient id="pl-scene-pool" cx="0.5" cy="0.5" r="0.5">
+        <stop offset="0" style="stop-color: var(--pl-glow); stop-opacity: .5"/>
+        <stop offset="1" style="stop-color: var(--pl-glow); stop-opacity: 0"/>
+      </radialGradient>
+    </defs>
+    <!-- sky -->
+    <path d="M262 22a13 13 0 1 0 12 20 10.5 10.5 0 1 1-12-20z" style="fill: var(--ds-text-subtle); fill-opacity: .55; stroke: none"/>
+    <g style="fill: var(--ds-text-subtle); stroke: none">
+      <circle cx="40" cy="30" r="1.2" opacity=".7"/><circle cx="74" cy="52" r=".9" opacity=".5"/><circle cx="118" cy="20" r="1.1" opacity=".6"/>
+      <circle cx="212" cy="18" r=".9" opacity=".5"/><circle cx="292" cy="70" r="1.1" opacity=".6"/><circle cx="24" cy="78" r=".8" opacity=".4"/>
+    </g>
+    <!-- ground and path -->
+    <path d="M12 172h296" style="stroke: var(--ds-border-bold)"/>
+    <ellipse cx="160" cy="176" rx="74" ry="11" style="fill: url(#pl-scene-pool); stroke: none"/>
+    <path d="M146 177h28l18 21h-64z" style="fill: var(--pl-glow-soft); stroke: none"/>
+    <!-- bushes and fence -->
+    <path d="M62 172c-2-11 6-17 13-14 3-7 15-7 17 2 8-1 11 7 7 12z" style="fill: var(--ds-surface-raised); stroke: var(--ds-border-bold)"/>
+    <path d="M232 172c-3-9 4-14 10-11 4-6 13-4 14 3 6 0 8 5 5 8z" style="fill: var(--ds-surface-raised); stroke: var(--ds-border-bold)"/>
+    <path d="M22 172v-14M30 172v-14M38 172v-14M46 172v-14M18 162h32M274 172v-14M282 172v-14M290 172v-14M298 172v-14M270 162h32" style="stroke: var(--ds-border-bold)"/>
+    <!-- house -->
+    <rect x="196" y="50" width="14" height="26" style="fill: var(--ds-surface-sunken)"/>
+    <rect x="96" y="88" width="128" height="84" style="fill: var(--ds-surface-raised)"/>
+    <path d="M84 90 160 40l76 50z" style="fill: var(--ds-surface-sunken)"/>
+    <path d="M150 64h20v14h-20z" style="fill: var(--pl-unlit)"/><path d="M160 64v14"/>
+    <!-- windows: not lit yet -->
+    <rect x="108" y="98" width="26" height="24" rx="1.5" style="fill: var(--pl-unlit)"/><path d="M121 98v24M108 110h26"/>
+    <rect x="186" y="98" width="26" height="24" rx="1.5" style="fill: var(--pl-unlit)"/><path d="M199 98v24M186 110h26"/>
+    <!-- door, step and porch roof -->
+    <rect x="147" y="122" width="26" height="50" rx="2" style="fill: var(--ds-surface-sunken)"/>
+    <path d="M153 134a7 7 0 0 1 14 0" style="stroke: var(--ds-border-bold)"/><circle cx="168" cy="150" r="1.4" style="fill: currentColor; stroke: none"/>
+    <path d="M141 172h38v5h-38z" style="fill: var(--ds-surface-raised)"/>
+    <path d="M136 112h48l4 6h-56z" style="fill: var(--ds-surface-sunken)"/>
+    <path d="M139 118v54M181 118v54"/>
+    <!-- the porch lantern: on -->
+    <circle cx="192" cy="141" r="52" style="fill: url(#pl-scene-lamp); stroke: none"/>
+    <path d="M181 135h11v-4"/>
+    <path d="M187 136 192 132l5 4z" style="fill: var(--ds-surface-sunken)"/>
+    <rect x="187.5" y="136" width="9" height="11" rx="1" style="fill: var(--pl-glow)"/>
+    <path d="M192 138.4c-1.1 1.1-1.6 2-1.6 2.8a1.6 1.6 0 0 0 3.2 0c0-.8-.5-1.7-1.6-2.8z" style="fill: var(--pl-glow-hot); stroke: none"/>
+    <path d="M187 147h10"/>
+  </symbol>
+</svg>

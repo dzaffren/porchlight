@@ -1,0 +1,208 @@
+/* Porchlight primitives. Every value is a token from tokens/tokens.css.
+   Rule: amber = captured and sourced · unlit = a gap · red = an error only. */
+@import url("tokens/tokens.css");
+
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--ds-surface); color: var(--ds-text);
+  font: var(--ds-weight-regular) var(--ds-font-size-body)/var(--ds-line-body) var(--ds-font-body);
+}
+.pl-icon { width: var(--pl-icon-size); height: var(--pl-icon-size); flex: none; }
+
+/* ---------- Page header ---------- */
+.pl-page-header { display: flex; flex-wrap: wrap; gap: var(--ds-space-200); align-items: end; justify-content: space-between; padding-bottom: var(--ds-space-200); border-bottom: 1px solid var(--ds-border); }
+.pl-page-header h1 { margin: 0; font-size: var(--ds-font-size-display); line-height: var(--ds-line-display); font-weight: var(--ds-weight-bold); }
+.pl-page-header p { margin: var(--ds-space-050) 0 0; color: var(--ds-text-subtle); max-width: 64ch; }
+
+/* ---------- Button ---------- */
+.pl-btn {
+  font: inherit; font-weight: var(--ds-weight-medium); min-height: var(--pl-control-height);
+  padding: 0 var(--ds-space-150); border-radius: var(--ds-radius-100); border: 1px solid transparent;
+  display: inline-flex; align-items: center; gap: var(--ds-space-100); cursor: pointer; text-decoration: none;
+  transition: transform var(--pl-dur-fast) var(--pl-ease-out), opacity var(--pl-dur-fast) var(--pl-ease-out);
+}
+.pl-btn:active { transform: scale(0.97); }
+.pl-btn:focus-visible { outline: 2px solid var(--ds-focus); outline-offset: 2px; }
+.pl-btn[disabled], .pl-btn[aria-disabled="true"] { cursor: not-allowed; opacity: 0.45; }
+.pl-btn--primary { background: var(--pl-glow-soft); color: var(--pl-accent); border-color: var(--pl-glow-halo); }
+.pl-btn--primary:hover { background: var(--pl-glow-halo); box-shadow: 0 0 12px var(--pl-glow-halo); }
+.pl-btn--secondary { background: transparent; color: var(--ds-text); border-color: var(--ds-border-bold); }
+.pl-btn--secondary:hover { background: var(--pl-unlit); }
+.pl-btn--subtle { background: transparent; color: var(--ds-text-subtle); }
+.pl-btn--subtle:hover { background: var(--pl-unlit); color: var(--ds-text); }
+.pl-spinner { width: 14px; height: 14px; border-radius: 50%; border: 2px solid currentColor; border-right-color: transparent; animation: pl-spin 700ms linear infinite; }
+@keyframes pl-spin { to { transform: rotate(360deg); } }
+
+/* ---------- Field: input, textarea, select ---------- */
+.pl-field { display: grid; gap: var(--ds-space-050); }
+.pl-field__label { font-size: var(--ds-font-size-small); line-height: var(--ds-line-small); font-weight: var(--ds-weight-bold); color: var(--ds-text-subtle); }
+.pl-input, .pl-textarea, .pl-select {
+  font: inherit; color: var(--ds-text); background: var(--ds-surface);
+  border: 1px solid var(--ds-border-bold); border-radius: var(--ds-radius-100);
+  padding: 0 var(--ds-space-100); min-height: var(--pl-input-height); width: 100%;
+}
+.pl-textarea { padding: var(--ds-space-100); min-height: calc(var(--pl-input-height) * 3); resize: vertical; }
+.pl-input:hover, .pl-textarea:hover, .pl-select:hover { border-color: var(--ds-text-subtlest); }
+.pl-input:focus-visible, .pl-textarea:focus-visible, .pl-select:focus-visible { outline: 2px solid var(--ds-focus); outline-offset: 0; border-color: transparent; }
+.pl-field__help { font-size: var(--ds-font-size-small); line-height: var(--ds-line-small); color: var(--ds-text-subtlest); display: flex; justify-content: space-between; gap: var(--ds-space-100); font-variant-numeric: tabular-nums; }
+.pl-field--error .pl-input, .pl-field--error .pl-textarea { border-color: var(--ds-danger-border); }
+.pl-field--error .pl-field__help { color: var(--ds-danger-text); }
+
+/* ---------- Avatar (initials) ---------- */
+.pl-avatar { width: var(--pl-avatar-size); height: var(--pl-avatar-size); border-radius: var(--ds-radius-round); background: var(--ds-status-neutral-bg); color: var(--ds-text-subtle); font-size: var(--ds-font-size-small); font-weight: var(--ds-weight-bold); display: inline-grid; place-items: center; flex: none; }
+
+/* ---------- Source chip: where a claim came from ---------- */
+.pl-chip {
+  font: var(--ds-weight-medium) var(--ds-font-size-small)/var(--ds-line-small) var(--ds-font-code);
+  color: var(--ds-text-subtle); background: var(--ds-surface); border: 1px solid var(--ds-border);
+  padding: var(--ds-space-025) var(--ds-space-100); border-radius: var(--ds-radius-100);
+  display: inline-flex; align-items: center; gap: var(--ds-space-050); text-decoration: none;
+}
+.pl-chip:hover { color: var(--ds-text); border-color: var(--ds-border-bold); }
+.pl-chip:focus-visible { outline: 2px solid var(--ds-focus); outline-offset: 2px; }
+
+/* ---------- Lozenge: real status only ---------- */
+.pl-lozenge { font-size: 11px; line-height: var(--ds-line-small); font-weight: var(--ds-weight-bold); text-transform: uppercase; letter-spacing: 0.03em; padding: 0 var(--ds-space-050); border-radius: var(--ds-radius-100); white-space: nowrap; }
+.pl-lozenge--todo { background: var(--ds-status-neutral-bg); color: var(--ds-status-neutral-text); }
+.pl-lozenge--progress { background: var(--ds-status-progress-bg); color: var(--ds-status-progress-text); }
+.pl-lozenge--done { background: var(--ds-status-done-bg); color: var(--ds-status-done-text); }
+.pl-lozenge--blocked { background: var(--ds-status-blocked-bg); color: var(--ds-status-blocked-text); }
+
+/* ---------- Meta text: dates, counts ---------- */
+.pl-meta { font-size: var(--ds-font-size-small); line-height: var(--ds-line-small); color: var(--ds-text-subtlest); font-variant-numeric: tabular-nums; }
+.pl-key { font-family: var(--ds-font-code); font-size: var(--ds-font-size-small); color: var(--ds-text-subtle); }
+
+/* ---------- Knowledge card: lit window / dark window ---------- */
+.pl-card { position: relative; isolation: isolate; border-radius: var(--ds-radius-200); padding: var(--ds-space-200); border: 1px solid var(--ds-border); background: var(--ds-surface-sunken); display: grid; gap: var(--ds-space-150); }
+.pl-card__glow { position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: -1; opacity: 0; background: var(--pl-glow-soft); box-shadow: inset 0 0 0 1px var(--pl-glow-halo); transition: opacity var(--pl-dur-slow) var(--pl-ease-out); }
+/* The outer halo is its own layer, so it can fade out by opacity alone. A resting lit card keeps its warm fill
+   and amber edge but drops the halo: lists stay calm, and the halo means "just captured". */
+.pl-card::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: -1; opacity: 0; box-shadow: 0 0 28px var(--pl-glow-halo); transition: opacity var(--pl-dur-slow) var(--pl-ease-out); }
+.pl-card--lit::after { opacity: 1; }
+.pl-card--lit.pl-card--rest::after { opacity: 0; transition-duration: 1200ms; }
+.pl-card--lit .pl-card__glow { opacity: 1; }
+.pl-card--lit .pl-card__title { color: var(--pl-accent); }
+.pl-card--unlit { background: var(--pl-unlit); }
+.pl-card--unlit .pl-card__body { opacity: 0.8; }
+.pl-card__head { display: flex; justify-content: space-between; gap: var(--ds-space-100); align-items: baseline; }
+.pl-card__title { margin: 0; font-weight: var(--ds-weight-bold); }
+.pl-card__body { margin: 0; transition: opacity var(--pl-dur-slow) var(--pl-ease-out), transform var(--pl-dur-slow) var(--pl-ease-out); }
+.pl-card__sources { display: flex; flex-wrap: wrap; gap: var(--ds-space-100); }
+.pl-card--lighting { animation: pl-rise var(--pl-dur-slow) var(--pl-ease-out); }
+@keyframes pl-rise { from { transform: translateY(4px); opacity: 0.6; } to { transform: none; opacity: 1; } }
+
+/* ---------- List row: one ticket or one note ---------- */
+.pl-list { list-style: none; margin: 0; padding: 0; border: 1px solid var(--ds-border); border-radius: var(--ds-radius-200); overflow: hidden; }
+.pl-row { display: grid; grid-template-columns: auto auto 1fr auto auto; align-items: center; gap: var(--ds-space-150); min-height: var(--pl-row-height); padding: var(--ds-space-050) var(--ds-space-150); border-top: 1px solid var(--ds-border); background: var(--ds-surface); }
+.pl-row:first-child { border-top: 0; }
+.pl-row:hover { background: var(--pl-unlit); }
+.pl-row__summary { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pl-row a { color: inherit; text-decoration: none; }
+.pl-row a:focus-visible { outline: 2px solid var(--ds-focus); outline-offset: 2px; border-radius: var(--ds-radius-100); }
+.pl-list--stagger .pl-row { animation: pl-rise var(--pl-dur-base) var(--pl-ease-out) both; }
+.pl-list--stagger .pl-row:nth-child(2) { animation-delay: var(--pl-stagger); }
+.pl-list--stagger .pl-row:nth-child(3) { animation-delay: calc(var(--pl-stagger) * 2); }
+.pl-list--stagger .pl-row:nth-child(4) { animation-delay: calc(var(--pl-stagger) * 3); }
+.pl-list--stagger .pl-row:nth-child(n+5) { animation-delay: calc(var(--pl-stagger) * 4); }
+
+/* ---------- Empty state: an unlit porch ---------- */
+.pl-empty { display: grid; justify-items: center; text-align: center; gap: var(--ds-space-150); padding: var(--ds-space-400) var(--ds-space-300) var(--ds-space-600); background: var(--ds-surface); border: 1px solid var(--ds-border); border-radius: var(--ds-radius-300); color: var(--ds-text-subtle); }
+.pl-empty__art { width: 288px; height: 180px; color: var(--ds-text-subtlest); margin-bottom: var(--ds-space-100); }
+.pl-empty__title { margin: 0; font-size: var(--ds-font-size-title); line-height: var(--ds-line-title); font-weight: var(--ds-weight-bold); color: var(--ds-text); }
+.pl-empty p { margin: 0; max-width: 44ch; }
+
+/* ---------- Section message: errors and info ---------- */
+.pl-message { display: flex; gap: var(--ds-space-150); align-items: start; padding: var(--ds-space-150) var(--ds-space-200); border-radius: var(--ds-radius-100); }
+.pl-message--error { background: var(--ds-danger-bg); color: var(--ds-danger-text); }
+.pl-message--info { background: var(--ds-status-neutral-bg); color: var(--ds-text-subtle); }
+.pl-message p { margin: 0; }
+.pl-message strong { color: inherit; }
+
+/* ---------- Toast ---------- */
+.pl-toast { display: inline-flex; gap: var(--ds-space-150); align-items: center; padding: var(--ds-space-150) var(--ds-space-200); border-radius: var(--ds-radius-200); background: var(--ds-surface-overlay); box-shadow: var(--ds-shadow-overlay), 0 0 0 1px var(--pl-glow-halo); animation: pl-rise var(--pl-dur-base) var(--pl-ease-out); }
+.pl-toast__lamp { width: 8px; height: 8px; border-radius: var(--ds-radius-round); background: var(--pl-glow); box-shadow: 0 0 8px var(--pl-glow); }
+
+/* ---------- Skeleton loading ---------- */
+.pl-skeleton { display: block; height: 12px; border-radius: var(--ds-radius-100); background: var(--pl-unlit); animation: pl-pulse 1200ms var(--pl-ease-out) infinite alternate; }
+@keyframes pl-pulse { from { opacity: 0.5; } to { opacity: 1; } }
+
+/* ---------- Illumination: warm up, then rest ----------
+   Add .pl-warming to a lit thing at the moment it is captured. The glow warms from dark to amber,
+   breathes gently three times, then rests. Its source chips light one by one after it.
+   Only opacity and transform animate. */
+.pl-warming .pl-card__glow { animation:
+  pl-warm var(--pl-dur-warm) var(--pl-ease-warm) both,
+  pl-breathe var(--pl-breathe-dur) ease-in-out var(--pl-dur-warm) var(--pl-breathe-count) alternate; }
+@keyframes pl-warm { from { opacity: 0; transform: scale(0.985); } to { opacity: 1; transform: none; } }
+@keyframes pl-breathe { from { opacity: 1; } to { opacity: 0.7; } }
+
+.pl-chip { position: relative; isolation: isolate; }
+.pl-chip::after { content: ""; position: absolute; inset: -1px; border-radius: inherit; pointer-events: none; opacity: 0; box-shadow: 0 0 0 1px var(--pl-glow-halo), 0 0 10px var(--pl-glow-halo); }
+.pl-warming .pl-chip::after { animation: pl-chip-light 1400ms var(--pl-ease-warm) both; }
+.pl-warming .pl-chip:nth-child(1)::after { animation-delay: var(--pl-dur-warm); }
+.pl-warming .pl-chip:nth-child(2)::after { animation-delay: calc(var(--pl-dur-warm) + var(--pl-chip-stagger)); }
+.pl-warming .pl-chip:nth-child(3)::after { animation-delay: calc(var(--pl-dur-warm) + var(--pl-chip-stagger) * 2); }
+.pl-warming .pl-chip:nth-child(n+4)::after { animation-delay: calc(var(--pl-dur-warm) + var(--pl-chip-stagger) * 3); }
+@keyframes pl-chip-light { 0% { opacity: 0; } 30% { opacity: 1; } 100% { opacity: 0; } }
+
+/* Icons: line art, 1.5px stroke. A part marked style="fill: var(--pl-icon-lit, none)" glows when lit. */
+.pl-glyph { width: 24px; height: 24px; color: var(--ds-text-subtle); flex: none; }
+.pl-glyph--sm { width: var(--pl-icon-size); height: var(--pl-icon-size); }
+.pl-glyph--lit { color: var(--ds-text); --pl-icon-lit: var(--pl-glow); filter: drop-shadow(0 0 4px var(--pl-glow-halo)); }
+.pl-btn .pl-glyph--lit { color: inherit; }   /* inside a button, the lantern frame takes the button's text colour */
+
+/* Illustrations: line art in currentColor; lit parts use var(--pl-glow). */
+.pl-illo { display: block; width: 100%; height: auto; color: var(--ds-text-subtlest); }
+
+/* ---------- Side panel: details over the 3D street ----------
+   Slides in from the right when a house is chosen. Glass over the scene, readable at AA. */
+.pl-panel { position: fixed; top: var(--ds-space-200); right: var(--ds-space-200); bottom: var(--ds-space-200); width: min(var(--pl-panel-width), calc(100% - var(--ds-space-400)));
+  background: var(--pl-scrim); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--ds-border); border-radius: var(--ds-radius-300); box-shadow: var(--ds-shadow-overlay);
+  display: grid; grid-template-rows: auto 1fr auto; overflow: hidden;
+  opacity: 0; transform: translateX(24px); pointer-events: none;
+  transition: opacity var(--pl-dur-slow) var(--pl-ease-out), transform var(--pl-dur-slow) var(--pl-ease-out); }
+.pl-panel.is-open { opacity: 1; transform: none; pointer-events: auto; }
+.pl-panel__head { padding: var(--ds-space-200) var(--ds-space-200) var(--ds-space-150); display: grid; gap: var(--ds-space-150); border-bottom: 1px solid var(--ds-border); }
+.pl-panel__who { display: flex; gap: var(--ds-space-150); align-items: center; }
+.pl-panel__name { margin: 0; font-size: var(--ds-font-size-heading); line-height: var(--ds-line-heading); font-weight: var(--ds-weight-bold); color: var(--ds-text-strong); }
+.pl-panel__body { overflow-y: auto; padding: var(--ds-space-200); display: grid; gap: var(--ds-space-150); align-content: start; }
+.pl-panel__foot { padding: var(--ds-space-150) var(--ds-space-200); border-top: 1px solid var(--ds-border); display: flex; justify-content: space-between; align-items: center; gap: var(--ds-space-100); }
+.pl-avatar--lg { width: var(--pl-avatar-size-lg); height: var(--pl-avatar-size-lg); font-size: var(--ds-font-size-body); }
+
+/* Window meter: one small window per work area, lit or dark. */
+.pl-meter { display: flex; gap: var(--ds-space-050); align-items: center; }
+.pl-meter__win { width: 12px; height: 14px; border-radius: 2px; border: 1px solid var(--ds-border-bold); background: var(--pl-unlit); }
+.pl-meter__win--lit { border-color: var(--pl-glow-halo); background: var(--pl-glow); box-shadow: 0 0 6px var(--pl-glow-halo); }
+
+/* Name tag floating over a house in the 3D street. Positioned by the scene each frame. */
+.pl-tag { position: fixed; left: 0; top: 0; transform: translate(-50%, -100%); pointer-events: none; white-space: nowrap;
+  display: inline-flex; gap: var(--ds-space-100); align-items: center; padding: var(--ds-space-050) var(--ds-space-100);
+  border-radius: var(--ds-radius-round); background: var(--pl-scrim); border: 1px solid var(--ds-border);
+  font-size: var(--ds-font-size-small); line-height: var(--ds-line-small); color: var(--ds-text);
+  transition: opacity var(--pl-dur-base) var(--pl-ease-out); }
+.pl-tag strong { color: var(--ds-text-strong); font-weight: var(--ds-weight-bold); }
+.pl-tag.is-active { border-color: var(--pl-glow-halo); box-shadow: 0 0 12px var(--pl-glow-halo); }
+.pl-tag.is-hidden { opacity: 0; }
+
+/* Presence: the porch light. ON = away or leaving (their knowledge waits for you). OFF = here, just ask. */
+.pl-presence { display: inline-flex; gap: var(--ds-space-050); align-items: center; font-size: var(--ds-font-size-small); line-height: var(--ds-line-small); color: var(--ds-text-subtlest); }
+.pl-presence__lamp { width: 8px; height: 8px; border-radius: var(--ds-radius-round); border: 1px solid var(--ds-border-bold); background: transparent; flex: none; }
+.pl-presence--away { color: var(--pl-accent); }
+.pl-presence--away .pl-presence__lamp { border-color: var(--pl-glow-halo); background: var(--pl-glow); box-shadow: 0 0 8px var(--pl-glow); }
+.pl-tag { flex-direction: column; align-items: flex-start; gap: var(--ds-space-025); border-radius: var(--ds-radius-200); padding: var(--ds-space-050) var(--ds-space-150); }
+.pl-tag__row { display: inline-flex; gap: var(--ds-space-100); align-items: center; }
+.pl-tag--away { border-color: var(--pl-glow-halo); }
+
+/* Keyboard hint */
+.pl-kbd { font: var(--ds-weight-medium) 11px/16px var(--ds-font-code); color: var(--ds-text-subtle); border: 1px solid var(--ds-border-bold); border-bottom-width: 2px; border-radius: var(--ds-radius-100); padding: 0 var(--ds-space-050); }
+
+/* ---------- Floors ---------- */
+/* Reduced motion is the default when the system asks for it. A viewer can choose full motion on the page,
+   which sets data-motion="full" on <html>; that choice is theirs, never the page's default. */
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion="full"]) *,
+  :root:not([data-motion="full"]) *::before,
+  :root:not([data-motion="full"]) *::after { animation: none !important; transition: none !important; }
+}
+.pl-motion { position: fixed; top: var(--ds-space-200); left: 50%; transform: translateX(-50%); }

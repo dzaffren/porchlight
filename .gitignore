@@ -1,0 +1,18 @@
+# zuko board copies
+docs/specs/.pages/
+
+# Dependencies and build output
+node_modules/
+dist/
+coverage/
+
+# Secrets and local settings: never commit these (public repo)
+.env*
+porchlight/e2e/.auth/
+
+# Playwright output
+porchlight/test-results/
+porchlight/playwright-report/
+
+# Windows crash dumps from Git Bash
+*.stackdump

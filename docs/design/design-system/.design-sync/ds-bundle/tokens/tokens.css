@@ -1,0 +1,125 @@
+/* Porchlight design tokens. DARK ONLY (D8): a porch light only means something at night.
+   Base values follow Atlassian's dark design tokens (@atlaskit/tokens); at build the --ds-* values
+   are read from the real dark tokens. Inside a light-themed Jira, Porchlight is deliberately a
+   dark page: a window into the night.
+   Porchlight adds only the --pl-* layer: one accent (porch amber), its glow, motion and the 3D scene.
+   Trace for every token: docs/design/system-brief.md. Direction: D6 "Lit window". */
+
+:root {
+  /* Surfaces (Atlassian dark) */
+  --ds-surface: #1D2125;
+  --ds-surface-sunken: #161A1D;
+  --ds-surface-raised: #22272B;
+  --ds-surface-overlay: #282E33;
+
+  /* Text (Atlassian dark) */
+  --ds-text: #B6C2CF;
+  --ds-text-strong: #DEE4EA;
+  --ds-text-subtle: #9FADBC;
+  --ds-text-subtlest: #8C9BAB;
+  --ds-text-inverse: #1D2125;
+
+  /* Borders and focus */
+  --ds-border: rgba(166, 197, 226, 0.16);
+  --ds-border-bold: rgba(166, 197, 226, 0.4);
+  --ds-focus: #85B8FF;
+
+  /* Status: ONLY for real status (ticket status, errors). Never decoration. */
+  --ds-status-neutral-bg: rgba(166, 197, 226, 0.08);
+  --ds-status-neutral-text: #9FADBC;
+  --ds-status-progress-bg: #1C2B41;
+  --ds-status-progress-text: #85B8FF;
+  --ds-status-done-bg: #1C3329;
+  --ds-status-done-text: #7EE2B8;
+  --ds-status-blocked-bg: #42221F;
+  --ds-status-blocked-text: #FD9891;
+  --ds-danger-text: #FD9891;
+  --ds-danger-border: #F87168;
+  --ds-danger-bg: #42221F;
+
+  /* Elevation */
+  --ds-shadow-raised: 0 0 0 1px rgba(188, 214, 240, 0.04), 0 1px 1px rgba(3, 4, 4, 0.5);
+  --ds-shadow-overlay: 0 0 0 1px rgba(188, 214, 240, 0.08), 0 8px 24px rgba(3, 4, 4, 0.5);
+  --pl-scrim: rgba(10, 12, 14, 0.72);        /* behind glass panels over the 3D street */
+
+  /* Porchlight: the one accent. Amber = captured and sourced. */
+  --pl-accent: #F5B544;                       /* text and interactive, 8.9:1 on the surface */
+  --pl-accent-hover: #F8C870;
+  --pl-on-accent: #1D2125;
+  --pl-glow: #F5B544;                         /* decorative light, never text */
+  --pl-glow-hot: #FFD37A;                     /* the centre of a lit window */
+  --pl-glow-soft: rgba(245, 181, 68, 0.12);   /* lit window fill */
+  --pl-glow-halo: rgba(245, 181, 68, 0.3);    /* glow ring and halo */
+  --pl-unlit: rgba(166, 197, 226, 0.05);      /* a dark window: a gap */
+  --pl-icon-lit: none;                        /* icon glow part: none at rest, --pl-glow when lit */
+
+  /* Spacing: 8px grid */
+  --ds-space-025: 2px;
+  --ds-space-050: 4px;
+  --ds-space-100: 8px;
+  --ds-space-150: 12px;
+  --ds-space-200: 16px;
+  --ds-space-300: 24px;
+  --ds-space-400: 32px;
+  --ds-space-600: 48px;
+
+  /* Radius */
+  --ds-radius-100: 4px;
+  --ds-radius-200: 8px;
+  --ds-radius-300: 12px;
+  --ds-radius-round: 999px;
+
+  /* Type (Atlassian stacks; 14px body for medium density) */
+  --ds-font-body: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --ds-font-code: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  --ds-font-size-small: 12px;
+  --ds-line-small: 16px;
+  --ds-font-size-body: 14px;
+  --ds-line-body: 20px;
+  --ds-font-size-title: 16px;
+  --ds-line-title: 24px;
+  --ds-font-size-heading: 20px;
+  --ds-line-heading: 28px;
+  --ds-font-size-display: 24px;
+  --ds-line-display: 32px;
+  --ds-weight-regular: 400;
+  --ds-weight-medium: 500;
+  --ds-weight-bold: 600;
+
+  /* Sizes */
+  --pl-control-height: 32px;
+  --pl-input-height: 36px;
+  --pl-row-height: 36px;
+  --pl-avatar-size: 24px;
+  --pl-avatar-size-lg: 40px;
+  --pl-icon-size: 16px;
+  --pl-panel-width: 400px;
+
+  /* Motion: tier 1 everywhere, tier 2 for "lighting up", tier 3 camera */
+  --pl-dur-fast: 140ms;
+  --pl-dur-base: 200ms;
+  --pl-dur-slow: 320ms;
+  --pl-stagger: 40ms;
+  --pl-ease-out: cubic-bezier(0.2, 0, 0, 1);
+  --pl-dur-warm: 600ms;                       /* dark → amber */
+  --pl-breathe-dur: 1000ms;                   /* one gentle breath after lighting */
+  --pl-breathe-count: 3;                      /* then the glow rests: about 3 seconds in all */
+  --pl-chip-stagger: 120ms;                   /* light runs to each source, one by one */
+  --pl-ease-warm: cubic-bezier(0.3, 0, 0.2, 1);
+  --pl-dur-fly: 1300ms;                       /* camera flight to a house: 1300ms + 55ms per unit of distance, max 2600ms */
+
+  /* 3D street, read by the scene from CSS */
+  --pl-3d-sky-top: #0A0E13;
+  --pl-3d-sky: #18212A;
+  --pl-3d-ground: #19222A;
+  --pl-3d-road: #11161B;
+  --pl-3d-line: #3A434C;
+  --pl-3d-house: #46505B;
+  --pl-3d-trim: #5A6571;
+  --pl-3d-roof: #2A323A;
+  --pl-3d-tree: #1A2A23;
+  --pl-3d-window-dark: #0C1013;
+  --pl-3d-moon: #C9D4E0;
+
+  color-scheme: dark;
+}

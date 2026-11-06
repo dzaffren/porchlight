@@ -1,0 +1,628 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Porchlight Overview</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&display=swap">
+<style>
+/* Layout: one narrow reading column; each diagram is a numbered lesson card in build order. */
+:root {
+  --bg: #f5f7fb;
+  --surface: #ffffff;
+  --fg: #172033;
+  --muted: #5a6478;
+  --line: #dde3ee;
+  --accent: #0b5cd5;
+  --accent-soft: #e6effd;
+  --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1420; --surface: #171e2d; --fg: #e6ebf4; --muted: #9aa5b8;
+    --line: #2a3346; --accent: #6ea8ff; --accent-soft: #1c2a44; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1420; --surface: #171e2d; --fg: #e6ebf4; --muted: #9aa5b8;
+  --line: #2a3346; --accent: #6ea8ff; --accent-soft: #1c2a44; color-scheme: dark;
+}
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: var(--font-body); font-size: 16px; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 860px; margin: 0 auto; padding-block: 40px 64px; display: grid; gap: 28px; }
+header { display: grid; gap: 8px; }
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+h1 { font-family: var(--font-display); font-size: clamp(28px, 5vw, 40px); line-height: 1.15; margin: 0; text-wrap: balance; }
+header p { margin: 0; color: var(--muted); max-width: 62ch; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px 20px; font-family: var(--font-mono); font-size: 13px; color: var(--muted); }
+.meta b { color: var(--fg); font-weight: 500; }
+nav { display: flex; flex-wrap: wrap; gap: 8px; }
+nav a { font-size: 14px; color: var(--accent); text-decoration: none; background: var(--accent-soft); padding: 4px 10px; border-radius: 6px; }
+nav a:hover, nav a:focus-visible { text-decoration: underline; outline: none; }
+section { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 22px; display: grid; gap: 12px; min-width: 0; }
+.num { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+h2 { font-family: var(--font-display); font-size: 22px; line-height: 1.25; margin: 0; text-wrap: balance; }
+section p { margin: 0; max-width: 65ch; }
+.analogy { border-left: 3px solid var(--accent); padding-left: 12px; color: var(--muted); }
+.diagram { overflow-x: auto; background: var(--bg); border-radius: 8px; padding: 12px; }
+pre.mermaid { margin: 0; background: transparent; text-align: center; }
+code { font-family: var(--font-mono); font-size: .9em; background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; }
+ul { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+footer { color: var(--muted); font-size: 13px; }
+
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { text-align: left; padding: 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Codegeist 2026 · project overview</div>
+    <h1>Porchlight</h1>
+    <p>Leave the light on for the next person. A Forge app that keeps what each person on a project team is working on, and why, so leave, handovers and "why was this built?" stop costing days.</p>
+    <div class="meta">
+      <span>Deadline <b>Dec 23, 2026 · 4:00am GMT+8</b></span>
+      <span>Category <b>Software Teams</b></span>
+      <span>Judging <b>5 criteria × 20%</b></span>
+    </div>
+    <nav aria-label="Sections">
+      <a href="#recap">Recap + next steps</a>
+      <a href="#rules">What the rules ask us to ship</a>
+      <a href="#forge">How a Forge app works</a>
+      <a href="#space">Account → Developer Space → apps</a>
+      <a href="#flow">What happens when the panel loads</a>
+      <a href="#manifest">How manifest.yml links to the file</a>
+      <a href="#loop">The edit → see loop</a>
+      <a href="#uikit">UI Kit vs Custom UI, and how we di</a>
+      <a href="#tools">Atlassian's tools, one map</a>
+      <a href="#evidence">Handover pain: your numbers vs pub</a>
+      <a href="#ai-era">AI coding makes the handover probl</a>
+      <a href="#handover-slices">Knowledge handover: the slice map</a>
+      <a href="#skeleton-p1">Porchlight skeleton: scope and acc</a>
+      <a href="#ds-brief">Design system brief</a>
+      <a href="#porch">Porch light rules</a>
+      <a href="#pass-it-on">Pass it on</a>
+      <a href="#skeleton-p2">Skeleton: page</a>
+      <a href="#skeleton-p3">Skeleton: build plan</a>
+    </nav>
+  </header>
+
+  <section id="recap">
+    <div class="num">01 · Where we are</div>
+    <h2>Recap and next steps</h2>
+    <div class="diagram"><pre class="mermaid">
+flowchart LR
+  SH["/shape knowledge-handover<br/>DONE · Shaped"] --> P1["/spec skeleton · pause 1<br/>DONE · approved"]
+  P1 --> DS["/design-system<br/>DONE · approved"]
+  DS --> P2["/spec skeleton · pause 2<br/>DONE"]
+  P2 --> P3["/spec skeleton · pause 3<br/>DONE · Refined"]
+  P3 --> B["/build skeleton<br/>NEXT"]
+    </pre></div>
+    <p>The idea is shaped, the skeleton's scope is approved, and the design system is approved: dark only, the "Lit window" style, a 3D street of windows, and the porch light as presence. See the <a href="design/design-system/">design system</a> and the <a href="design/design-system/street/index.html">street</a>.</p>
+    <table>
+      <thead><tr><th>Decided</th><th>Answer</th></tr></thead>
+      <tbody>
+        <tr><td>Idea</td><td>Knowledge handover for project teams: leave → resign → breaks later</td></tr>
+        <tr><td>Name</td><td>Porchlight, "leave the light on for the next person"</td></tr>
+        <tr><td>Category</td><td>Software Teams (D1)</td></tr>
+        <tr><td>UI</td><td>Custom UI with React + Vite (D2)</td></tr>
+        <tr><td>Context sources</td><td>Jira, Confluence, Bitbucket + a Rovo interview; no Teams/SharePoint pull (D3)</td></tr>
+        <tr><td>Where in Jira</td><td>A global page (D4)</td></tr>
+        <tr><td>Outside calls</td><td>None, keeps "Runs on Atlassian" (D5)</td></tr>
+        <tr><td>Stack</td><td>Forge SQL · Node 24 plain JS · Vitest · Playwright on the real site · GitHub Actions with auto-deploy to development · npm · public repo</td></tr>
+        <tr><td>Look</td><td>Atlassian base + porch amber (brief) · "Lit window" (D6) · dark only (D8)</td></tr>
+        <tr><td>Signature</td><td>3D street of windows: house = teammate, window = area of work, lit = captured, dark = gap (D7)</td></tr>
+        <tr><td>Porch light</td><td>On = away or leaving; off = here, just ask (D9). Rules drafted for slice porch-status.</td></tr>
+        <tr><td>House height</td><td>Grows with every area a person owns, no cap: 20 areas = 10 storeys (D10)</td></tr>
+        <tr><td>Handover</td><td>Done when every window is lit AND passed on. Leaver proposes, receiver accepts, team lead approves; unowned areas stay marked on the house (D11). New slice pass-it-on.</td></tr>
+      </tbody>
+    </table>
+    <p><b>Ideas considered and dropped:</b> zuko-for-everyone project brain (second product), ticket readiness gate, sprint risk radar, truth keeper, self-closing JSM loop (common in the agentic era), Specialized Industries audit angle (not industry-specific), free-form project map (became "the wow visual" question for catch-up-view).</p>
+    <p><b>Next steps:</b></p>
+    <ol>
+      <li>Optional: push the design system to Claude Design with <code>/design-sync</code> (before Dec 14, 2026, when standalone Claude Design closes).</li>
+      <li>Resume <code>/spec continue skeleton</code> at pause 2 (the Porchlight page), then pause 3 (technical plan).</li>
+      <li><code>/build skeleton</code>: git repo, <code>forge create</code>, Custom UI, Forge SQL, CI, tests.</li>
+    </ol>
+    <p><b>Files:</b> <code>OVERVIEW.md</code> · <code>DECISIONS.md</code> · <code>docs/specs/knowledge-handover/shape.md</code> · <code>docs/specs/skeleton.md</code></p>
+  </section>
+
+  <section id="rules">
+    <div class="num">02 · Hackathon</div>
+    <h2>What the rules ask us to ship</h2>
+    <p>Code is only one fifth of the score. The video, the design and the idea count just as much.</p>
+    <div class="diagram"><pre class="mermaid">
+flowchart LR
+  A[Idea] --> B[Forge app]
+  B --> C[Jira / Confluence / JSM / Bitbucket]
+  B -.bonus $1,500.-> D[Rovo agent / MCP / Teamwork Graph / Marketplace]
+  B --> E[Install link for judges]
+  B --> F[YouTube video under 5 min]
+  E --> G[Submit on Devpost by Dec 23, 4am GMT+8]
+  F --> G
+    </pre></div>
+    <div class="diagram"><pre class="mermaid">
+pie showData title Judging weights
+  "Tech implementation" : 20
+  "Design" : 20
+  "Potential impact" : 20
+  "Innovation" : 20
+  "Presentation (video)" : 20
+    </pre></div>
+  </section>
+  <section id="forge">
+    <div class="num">03 · Forge basics</div>
+    <h2>How a Forge app works</h2>
+    <p class="analogy">Forge is a stall in Atlassian's mall. You bring the goods (code). Atlassian runs the building (servers, security) and gives you a spot inside Jira or Confluence.</p>
+    <div class="diagram"><pre class="mermaid">
+flowchart LR
+  subgraph You["Your laptop"]
+    M["manifest.yml<br/>what + where"]
+    C["src/ code<br/>functions + UI"]
+    CLI[forge CLI]
+  end
+  subgraph Atlassian["Atlassian cloud (Forge)"]
+    R["Your functions<br/>(serverless)"]
+    S[Forge storage]
+  end
+  subgraph Site["Your Jira / Confluence site"]
+    UI["Your app's panel"]
+  end
+  M --> CLI
+  C --> CLI
+  CLI -- forge deploy --> R
+  CLI -- forge install --> Site
+  UI <--> R
+  R <--> S
+  R <-- product APIs --> Site
+    </pre></div>
+    <ul>
+      <li><code>forge deploy</code> uploads your code to Atlassian's cloud.</li>
+      <li><code>forge install</code> adds the app to a site.</li>
+      <li><code>forge tunnel</code> runs the backend on your laptop while testing.</li>
+      <li><code>forge logs</code> shows <code>console.log</code> output from the cloud.</li>
+    </ul>
+  </section>
+  <section id="space">
+    <div class="num">04 · Forge basics</div>
+    <h2>Account → Developer Space → apps</h2>
+    <p>A Developer Space is a folder on Atlassian's side that holds your apps. You made one the first time you ran <code>forge create</code>.</p>
+    <div class="diagram"><pre class="mermaid">
+flowchart LR
+  A[Your Atlassian account] --> B[Developer Space]
+  B --> C[hello-forge]
+  B --> D[Codegeist app, later]
+  A --> E["Dev site<br/>yoursite.atlassian.net"]
+  C -. installed on .-> E
+    </pre></div>
+  </section>
+  <section id="flow">
+    <div class="num">05 · Forge basics</div>
+    <h2>What happens when the panel loads</h2>
+    <p class="analogy">Restaurant: the frontend is the waiter at your table (browser). The resolver is the kitchen (cloud). <code>invoke</code> is the order slip.</p>
+    <div class="diagram"><pre class="mermaid">
+sequenceDiagram
+  participant U as You open a Jira issue
+  participant F as Frontend (browser)<br/>src/frontend/index.jsx
+  participant B as Forge bridge
+  participant R as Resolver (cloud)<br/>src/resolvers/index.js
+  U->>F: Jira shows the panel
+  F->>F: render "Hello world!" + "Loading..."
+  F->>B: invoke('getText', {...})
+  B->>R: run function 'getText'
+  R-->>B: return 'Hello, world!'
+  B-->>F: data arrives
+  F->>F: replace "Loading..." with the result
+    </pre></div>
+  </section>
+  <section id="manifest">
+    <div class="num">06 · Forge basics</div>
+    <h2>How manifest.yml links to the files</h2>
+    <p>Everything connects by <b>keys</b>. If something doesn't show up, check for a mismatched key first.</p>
+    <div class="diagram"><pre class="mermaid">
+flowchart LR
+  P["jira:issuePanel<br/>key: hello-forge-hello-world-issue-panel"]
+  P -- "resource: main" --> RES["resources → key: main"]
+  RES -- path --> FE["src/frontend/index.jsx"]
+  P -- "resolver.function: resolver" --> FN["function → key: resolver"]
+  FN -- "handler: index.handler" --> IDX["src/index.js<br/>export handler"]
+  IDX -- re-exports --> RV["src/resolvers/index.js<br/>define('getText')"]
+  FE -. "invoke('getText')" .-> RV
+    </pre></div>
+  </section>
+  <section id="loop">
+    <div class="num">07 · Forge basics</div>
+    <h2>The edit → see loop</h2>
+    <p>Code changes only need <code>deploy</code>. Run <code>install --upgrade</code> only when the manifest's permissions (scopes) change.</p>
+    <div class="diagram"><pre class="mermaid">
+flowchart LR
+  E[Edit code] --> D[forge deploy]
+  D --> R[Refresh the Jira issue]
+  R --> L["forge logs<br/>see console.log output"]
+  L --> E
+  D -. "manifest scopes changed?" .-> U[forge install --upgrade]
+  U --> R
+    </pre></div>
+    <p>Where the issue key lives in the request the resolver receives:</p>
+    <div class="diagram"><pre class="mermaid">
+flowchart LR
+  req --> payload["payload<br/>what the frontend sent"]
+  req --> context["context<br/>added by Forge"]
+  context --> ext[extension]
+  context --> acc["accountId, siteUrl"]
+  ext --> issue["issue<br/>key: KAN-1, id: 10000"]
+  ext --> project[project]
+    </pre></div>
+  </section>
+  <section id="uikit">
+    <div class="num">08 · Forge basics</div>
+    <h2>UI Kit vs Custom UI, and how we differ from last year's winner</h2>
+    <p class="analogy">UI Kit is LEGO from Atlassian's box: you can only use their bricks (Button, Box, Lozenge, DynamicTable…), but everything looks native to Jira and snaps together fast. Custom UI is a blank canvas: you bring your own HTML, CSS and JavaScript, so you can draw anything, but you build and style it all yourself.</p>
+    <div class="diagram"><pre class="mermaid">
+flowchart LR
+  subgraph K["UI Kit (what hello-forge uses)"]
+    K1["Your code: &lt;Box&gt;, &lt;Button&gt;, &lt;Lozenge&gt;<br/>from @forge/react"] --> K2["Jira draws them<br/>with its own design system"]
+  end
+  subgraph C["Custom UI"]
+    C1["Your code: any HTML / CSS / JS<br/>SVG, canvas, 3D, D3, React Flow"] --> C2["Jira shows your page<br/>inside a sandboxed frame (iframe)"]
+  end
+    </pre></div>
+    <div class="diagram" style="background:transparent;padding:0">
+      <table style="width:100%;border-collapse:collapse;font-size:14px">
+        <thead><tr style="text-align:left;border-bottom:1px solid var(--line)"><th style="padding:6px"></th><th style="padding:6px">UI Kit</th><th style="padding:6px">Custom UI</th></tr></thead>
+        <tbody>
+          <tr style="border-bottom:1px solid var(--line)"><td style="padding:6px"><b>Can draw</b></td><td style="padding:6px">Boxes, rows, tables, charts, labels</td><td style="padding:6px">Anything: maps, graphs, 3D</td></tr>
+          <tr style="border-bottom:1px solid var(--line)"><td style="padding:6px"><b>Looks like Jira</b></td><td style="padding:6px">Automatically</td><td style="padding:6px">Only if we style it to</td></tr>
+          <tr style="border-bottom:1px solid var(--line)"><td style="padding:6px"><b>Effort</b></td><td style="padding:6px">Low</td><td style="padding:6px">Higher (we own all the front-end)</td></tr>
+          <tr><td style="padding:6px"><b>Our rules (AGENTS.md)</b></td><td style="padding:6px">Allowed</td><td style="padding:6px">Not allowed unless you change the rule</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 style="font-size:18px">Graph Goose (2025 winner) vs our map</h2>
+    <div class="diagram"><pre class="mermaid">
+flowchart LR
+  subgraph GG["Graph Goose"]
+    G1["3D model of a machine / car"] --> G2["Click a part → the Jira tasks touching it"]
+    G3["Answers: WHERE in the physical thing<br/>does this work land?"]
+  end
+  subgraph US["Our map"]
+    U1["Map of the product: user journeys → stories"] --> U2["Each point: Why · Build · Test · Decided"]
+    U3["Answers: do we UNDERSTAND what we're building,<br/>and where are the holes?"]
+  end
+    </pre></div>
+    <ul>
+      <li><b>What they map:</b> Graph Goose maps tasks onto a physical object. We map the team's understanding of the product.</li>
+      <li><b>What you learn from it:</b> theirs shows location. Ours shows completeness: which points are clear enough to build, test and defend, and which aren't.</li>
+      <li><b>What we copy from them:</b> a striking visual, plus a new Forge feature (they used the Forge Object Store preview and Rovo-made JQL filters).</li>
+    </ul>
+  </section>
+  <section id="tools">
+    <div class="num">09 · Atlassian</div>
+    <h2>Atlassian's tools, one map</h2>
+    <p class="analogy">Think of a hospital. Jira is the ward's task board. Confluence is the library of procedures. JSM is the front desk where patients ask for help. Bitbucket is the pharmacy where the actual medicine (code) is made. Compass is the directory of departments and who runs them. Teamwork Graph is the patient record that links all of them. Rovo is the assistant who can read that record and answer questions.</p>
+    <div class="diagram"><pre class="mermaid">
+flowchart TB
+  subgraph AI["AI layer"]
+    RV["Rovo<br/>search, chat, agents"]
+  end
+  subgraph Apps["Apps people use every day"]
+    J["Jira<br/>track work as tickets"]
+    C["Confluence<br/>pages and docs"]
+    S["JSM<br/>help desk + customer portal"]
+    B["Bitbucket<br/>Git code + pull requests"]
+    CP["Compass<br/>catalogue of services + owners"]
+  end
+  TG[("Teamwork Graph<br/>links people, tickets, pages, code,<br/>plus outside tools like Slack, GitHub")]
+  J --- TG
+  C --- TG
+  S --- TG
+  B --- TG
+  CP --- TG
+  TG --> RV
+  RV --> Apps
+    </pre></div>
+    <p>What each one is, and whether it counts for Codegeist:</p>
+    <div class="diagram" style="background:transparent;padding:0">
+      <table style="width:100%;border-collapse:collapse;font-size:14px">
+        <thead><tr style="text-align:left;border-bottom:1px solid var(--line)"><th style="padding:6px">Tool</th><th style="padding:6px">What it is</th><th style="padding:6px">Who uses it</th><th style="padding:6px">Codegeist</th></tr></thead>
+        <tbody>
+          <tr style="border-bottom:1px solid var(--line)"><td style="padding:6px"><b>Jira</b></td><td style="padding:6px">Tickets, boards, sprints. You know this one.</td><td style="padding:6px">Dev teams, also HR, finance, legal</td><td style="padding:6px">Yes</td></tr>
+          <tr style="border-bottom:1px solid var(--line)"><td style="padding:6px"><b>Confluence</b></td><td style="padding:6px">A shared wiki. Pages live in spaces. Meeting notes, specs, policies, runbooks.</td><td style="padding:6px">Almost every team</td><td style="padding:6px">Yes</td></tr>
+          <tr style="border-bottom:1px solid var(--line)"><td style="padding:6px"><b>JSM</b> (Jira Service Management)</td><td style="padding:6px">A help desk built on Jira. Customers or staff raise requests in a portal. Agents work queues against deadlines (SLAs).</td><td style="padding:6px">IT support, HR, facilities</td><td style="padding:6px">Yes</td></tr>
+          <tr style="border-bottom:1px solid var(--line)"><td style="padding:6px"><b>Bitbucket</b></td><td style="padding:6px">Git hosting, like GitHub. Repos, pull requests, CI pipelines.</td><td style="padding:6px">Developers</td><td style="padding:6px">Yes</td></tr>
+          <tr style="border-bottom:1px solid var(--line)"><td style="padding:6px"><b>Compass</b></td><td style="padding:6px">A list of every service a company runs, who owns it, and a health score for each.</td><td style="padding:6px">Platform / SRE teams</td><td style="padding:6px">Forge supports it; not named in the rules</td></tr>
+          <tr style="border-bottom:1px solid var(--line)"><td style="padding:6px"><b>Rovo</b></td><td style="padding:6px">Atlassian's AI. Forge apps can add an agent (a chat helper with a job) and actions (things it can do).</td><td style="padding:6px">Everyone</td><td style="padding:6px">Yes + $1,500 bonus</td></tr>
+          <tr style="border-bottom:1px solid var(--line)"><td style="padding:6px"><b>Teamwork Graph</b></td><td style="padding:6px">The data map that links everything above, plus outside tools. This is the year's theme: <b>context</b>.</td><td style="padding:6px">Apps and Rovo read it</td><td style="padding:6px">Yes + $1,500 bonus</td></tr>
+          <tr><td style="padding:6px"><b>Loom, Trello</b></td><td style="padding:6px">Video messages; simple card boards.</td><td style="padding:6px">Everyone</td><td style="padding:6px">Not Forge targets</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+  <section id="evidence">
+    <div class="num">10 · Evidence</div>
+    <h2>Handover pain: your numbers vs published research</h2>
+    <p>Your team's numbers are <b>lower</b> than the surveys. That's good for the pitch: a conservative claim is easier to believe.</p>
+    <div class="diagram"><pre class="mermaid">
+flowchart LR
+  L["Leave<br/>once a month, ≥ half a day<br/>+ messaging people on leave"] --- L2["Panopto 2018: 5.3 h/week waiting for info<br/>or recreating it · Stack Overflow 2024: 61% of devs<br/>spend 30+ min/day searching; 53% say waiting<br/>on answers disrupts their flow"]
+  R["Resign / move<br/>2–3 a year, ≥ 1 week<br/>receiver still not confident"] --- R2["Panopto 2018: 42% of know-how is unique<br/>to one person · Robillard: after a departure, people<br/>rely on docs or recreate lost knowledge"]
+  B["Breaks later<br/>mid-year + year-end<br/>hunt tickets + chats for reasons"] --- B2["Rigby et al., ICSE 2016 (Chrome, Avaya):<br/>leavers take the knowledge of their decisions;<br/>picking the right successor works only 34–48% of the time"]
+  A["All of it"] --- A2["Atlassian State of Teams 2025 (12,000 workers):<br/>~25% of time spent searching for answers ·<br/>2.4 billion hours a year in the Fortune 500"]
+    </pre></div>
+    <h2 style="font-size:18px">Evidence, ranked by how solid it is</h2>
+    <div class="diagram" style="background:transparent;padding:0">
+      <table style="width:100%;border-collapse:collapse;font-size:14px">
+        <thead><tr style="text-align:left;border-bottom:1px solid var(--line)"><th style="padding:6px">Tier</th><th style="padding:6px">Finding</th><th style="padding:6px">Backs which pain</th></tr></thead>
+        <tbody>
+          <tr style="border-bottom:1px solid var(--line)"><td style="padding:6px"><b>Peer-reviewed</b></td><td style="padding:6px">Avelino et al., ICPC 2016: <b>65%</b> of 133 popular GitHub systems have a truck factor of 2 or less (2 people leaving would stall the project).</td><td style="padding:6px">Resign / move</td></tr>
+          <tr style="border-bottom:1px solid var(--line)"><td style="padding:6px"><b>Peer-reviewed</b></td><td style="padding:6px">Rigby et al., ICSE 2016 (Chrome, Avaya): leavers take the knowledge of their decisions; the right successor for abandoned files is found only <b>34–48%</b> of the time.</td><td style="padding:6px">Resign / breaks later</td></tr>
+          <tr style="border-bottom:1px solid var(--line)"><td style="padding:6px"><b>Peer-reviewed</b></td><td style="padding:6px">Mark, Gonzalez &amp; Harris, CHI 2005: interrupted work is resumed after <b>~25 minutes</b> on average, with about two other tasks in between.</td><td style="padding:6px">Leave (messaging people)</td></tr>
+          <tr style="border-bottom:1px solid var(--line)"><td style="padding:6px"><b>Peer-reviewed</b></td><td style="padding:6px">Interview study on team architecture decisions (arXiv 1707.00107): poor documentation causes missing rationale; revisiting it is a real problem, <b>especially when people change roles</b>. Tang et al., JSS 2006 (81 architects): practitioners value rationale but face barriers to recording it.</td><td style="padding:6px">Breaks later</td></tr>
+          <tr style="border-bottom:1px solid var(--line)"><td style="padding:6px"><b>Peer-reviewed</b></td><td style="padding:6px">Ju et al., ICSE 2021 (32 devs moving teams + 15 managers): onboarding is about learning <b>and confidence building</b>, not just tasks.</td><td style="padding:6px">Receiver not confident</td></tr>
+          <tr style="border-bottom:1px solid var(--line)"><td style="padding:6px"><b>Large survey, official</b></td><td style="padding:6px">Atlassian State of Teams 2025 (12,000 workers, 200 execs): <b>25%</b> of time spent searching for answers; <b>56%</b> say the only way to get info is to ask someone or book a meeting.</td><td style="padding:6px">All three; the 56% is exactly "message the person on leave"</td></tr>
+          <tr style="border-bottom:1px solid var(--line)"><td style="padding:6px"><b>Large survey</b></td><td style="padding:6px">Stack Overflow 2024: <b>61%</b> of devs spend 30+ min/day searching; <b>53%</b> say waiting on answers disrupts their flow.</td><td style="padding:6px">Leave</td></tr>
+          <tr style="border-bottom:1px solid var(--line)"><td style="padding:6px"><b>Vendor survey</b></td><td style="padding:6px">Panopto/YouGov 2018 (1,001 US workers): <b>42%</b> of know-how is unique to one person; 5.3 h/week lost waiting or recreating it.</td><td style="padding:6px">Resign / move</td></tr>
+          <tr><td style="padding:6px"><b>Don't use</b></td><td style="padding:6px">McKinsey "1.8 hours a day searching": widely quoted, but the claim can't be found in the original report. Vendor "offboarding takes 15–20 hours": no source.</td><td style="padding:6px">—</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <ul>
+      <li><b>Pitch line:</b> Atlassian's own research says 56% of people can only get information by asking someone. When that someone is on leave or has left, the work stops.</li>
+      <li><b>Still missing:</b> a solid study on how long a handover takes. Present "a week" as <i>our team's</i> number.</li>
+    </ul>
+  </section>
+  <section id="ai-era">
+    <div class="num">11 · Evidence</div>
+    <h2>AI coding makes the handover problem worse</h2>
+    <p>Code gets written faster, but understood less. The "why" used to live in one person's head. With AI, it often lives in a chat session that is closed and gone. The person leaving may not fully know the code either.</p>
+    <div class="diagram"><pre class="mermaid">
+flowchart LR
+  A["Before AI<br/>dev writes code<br/>why = in their head"] --> B["Dev leaves<br/>why is lost unless handed over"]
+  C["With AI<br/>agent writes code<br/>why = in a closed chat"] --> D["Dev leaves<br/>why was never in anyone's head"]
+  D --> E["Next person asks 'why?'<br/>nobody can answer"]
+    </pre></div>
+    <div class="diagram" style="background:transparent;padding:0">
+      <table style="width:100%;border-collapse:collapse;font-size:14px">
+        <thead><tr style="text-align:left;border-bottom:1px solid var(--line)"><th style="padding:6px">Source (year, size)</th><th style="padding:6px">Finding</th><th style="padding:6px">What it means for us</th></tr></thead>
+        <tbody>
+          <tr style="border-bottom:1px solid var(--line)"><td style="padding:6px"><b>Atlassian State of DevEx 2025</b> (3,500 devs + managers)</td><td style="padding:6px"><b>Finding information is now the #1 developer friction</b>, ahead of technical debt. 50% lose 10+ h/week to inefficiencies. AI saves ~10 h/week, and about the same is lost to friction.</td><td style="padding:6px">The judges' own research names our problem as #1.</td></tr>
+          <tr style="border-bottom:1px solid var(--line)"><td style="padding:6px"><b>Anthropic RCT, Jan 2026</b> (52 devs)</td><td style="padding:6px">Devs using AI scored significantly lower on understanding the code they had just written. Those who used AI to build understanding did better.</td><td style="padding:6px">The author may not understand their own code, so a handover from memory fails.</td></tr>
+          <tr style="border-bottom:1px solid var(--line)"><td style="padding:6px"><b>METR RCT, Jul 2025</b> (16 experienced devs, 246 tasks)</td><td style="padding:6px">With AI, tasks took <b>19% longer</b>, yet devs believed they were ~20% faster.</td><td style="padding:6px">Teams feel productive while understanding silently drops.</td></tr>
+          <tr style="border-bottom:1px solid var(--line)"><td style="padding:6px"><b>GitClear 2025</b> (211M changed lines, 2020–24)</td><td style="padding:6px">Refactored ("moved") code fell from 24.8% to 9.5% of changes; copy-paste rose from 8.4% to 12.3%.</td><td style="padding:6px">More code, less tidy structure: harder for the next person to follow.</td></tr>
+          <tr style="border-bottom:1px solid var(--line)"><td style="padding:6px"><b>Stack Overflow 2025</b> (49,000+ devs)</td><td style="padding:6px">46% distrust AI accuracy; 66% struggle with "almost right" AI answers; 87% worry about the accuracy of AI agents' information.</td><td style="padding:6px">A handover must show <b>sources and evidence</b>, not just an AI summary.</td></tr>
+          <tr><td style="padding:6px"><b>DORA 2025</b> (~5,000 professionals)</td><td style="padding:6px">90% use AI. AI is an <b>amplifier</b>: it magnifies good and bad team habits alike.</td><td style="padding:6px">Teams that don't capture context will lose it faster.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <ul>
+      <li><b>Pitch line:</b> "AI writes the code in minutes. Then the why disappears with the chat window."</li>
+      <li><b>Design rule it gives us:</b> every answer the app gives must link to its source (ticket, PR, page, interview). Developers don't trust bare AI summaries.</li>
+      <li><b>Caveats:</b> the 17% figure for the Anthropic study comes from press coverage, not the paper; METR is a small sample; GitClear sells code analytics.</li>
+    </ul>
+  </section>
+  <section id="handover-slices">
+    <div class="num">12 · Shape: knowledge handover</div>
+    <h2>Knowledge handover: the slice map</h2>
+    <p><b>Problem.</b> On a project team (POs, devs, testers), what each person is working on, and why, lives in their head and is scattered across Jira tickets, chats and documents. So every absence costs time: covering someone on leave takes half a day of catching up plus messages to them on holiday, a resignation takes a week of handover that still leaves the receiver unsure, and when something breaks months later the team hunts for reasons that left with the person. AI coding makes this worse: code gets written faster, but the reasoning stays in chat sessions nobody keeps.</p>
+    <h2 style="font-size:18px">Today</h2>
+    <div class="diagram"><pre class="mermaid">
+flowchart LR
+  P((Person A)) -->|works in| J["Jira tickets"]
+  P -->|decides in| T["Teams / email / meetings"]
+  P -->|codes with| AI["AI chat sessions<br/>(closed, gone)"]
+  P -->|knows| H["Their head"]
+  B((Teammate B)) -. "A on leave: half a day catching up<br/>+ messages A on holiday" .-> P
+  R((Receiver C)) -. "A resigns: 1 week handover<br/>still unsure" .-> P
+  L((Anyone, months later)) -. "breaks at year-end:<br/>hunts tickets + chats for why" .-> J
+  L -.-> T
+    </pre></div>
+    <h2 style="font-size:18px">Slices</h2>
+    <div class="diagram"><pre class="mermaid">
+flowchart LR
+  S0["0 · Skeleton<br/>new Forge app, one page,<br/>deployed + installed"]
+  S1["1 · Catch-up view<br/>pick a teammate → their open work,<br/>latest changes, blockers, next steps<br/>(every line links to its ticket)"]
+  S2["2 · Ask the trail<br/>Rovo agent: 'catch me up on A'<br/>answers with sources"]
+  S3["3 · Handover interview<br/>app finds gaps only A can fill;<br/>agent interviews A; standard<br/>handover pack written to Confluence"]
+  S4["4 · Why, later<br/>from any ticket: 'why is it like this?'<br/>answered from trail + interviews,<br/>after A has left"]
+  S5["5 · Code trail<br/>Bitbucket commits + PRs<br/>join the trail"]
+  S6["6 · Capture AI reasoning<br/>Forge MCP server: Claude Code<br/>writes its 'why' to the ticket<br/>as it works"]
+  S0 --> S1 --> S2 --> S4
+  S2 --> S3 --> S4
+  S1 --> S5
+  S4 --> S6
+  M1(["Video moment 1: leave"]) -.- S1
+  M2(["Video moment 2: resign"]) -.- S3
+  M3(["Video moment 3: breaks later"]) -.- S4
+    </pre></div>
+    <ul>
+      <li><b>Slices 1–4</b> cover all three video moments. That's the minimum winning submission.</li>
+      <li><b>Slice 5</b> adds "what actually changed" in code.</li>
+      <li><b>Slice 6</b> attacks the AI-era sentence of the problem directly, and earns the MCP bonus.</li>
+      <li><b>Design rule from the evidence:</b> every answer links to its source.</li>
+    </ul>
+  </section>
+  <section id="skeleton-p1">
+    <div class="num">13 · Spec: skeleton</div>
+    <h2>Porchlight skeleton: scope and acceptance</h2>
+    <p class="analogy">The skeleton is the plumbing test before the house: water goes in one tap, comes out the other, and the meter reads it. It barely does anything on purpose. It proves the pipes (page → function → database → deploy → CI → test) all connect.</p>
+    <div class="diagram"><pre class="mermaid">
+flowchart LR
+  A[Team member] -- "Apps → Porchlight" --> B[Porchlight page]
+  B -- "types note, clicks Save" --> C{"1–2,000 characters?"}
+  C -- no --> E["Error shown,<br/>text kept"]
+  C -- yes --> D[(notes table)]
+  D -- "saved note" --> F["List of notes,<br/>newest first"]
+  G[Another team member] -- "opens Porchlight later" --> F
+    </pre></div>
+    <p>A team member opens Porchlight from Jira's Apps menu and types a note. A note of 1–2,000 characters is saved and listed newest first, and anyone who opens the page later sees it. Any other note shows an error and keeps the text.</p>
+
+    <h2 style="font-size:18px">Stack (the record for the whole project)</h2>
+    <div class="diagram"><pre class="mermaid">
+flowchart LR
+  subgraph Laptop["Your laptop"]
+    R["React + Vite<br/>static/porchlight-ui"] -- "npm run build" --> BLD["build/ folder"]
+    FN["src/ resolvers<br/>plain JS, Node 24"]
+  end
+  subgraph GH["GitHub"]
+    CI["Actions: lint + Vitest on push<br/>forge deploy on merge to main"]
+  end
+  subgraph Forge["Atlassian Forge (development)"]
+    P["Porchlight global page<br/>(Custom UI frame)"] -- "invoke('saveNote')" --> RS[resolver]
+    RS --> SQL[(Forge SQL: notes)]
+  end
+  E2E["Playwright: logs in to dev site,<br/>walks the real page"]
+  Laptop -- "git push" --> CI
+  CI -- "forge deploy -e development" --> Forge
+  E2E --> P
+    </pre></div>
+
+    <h2 style="font-size:18px">Acceptance scenarios</h2>
+    <ol>
+      <li><b>Save a note and a teammate sees it.</b> Aisha saves "Payments retry 3 times because the bank API times out under load." It appears at the top with her name and today's date; Daniel sees it later.</li>
+      <li><b>First visit is empty.</b> "No notes yet. Leave the first one for the next person."</li>
+      <li><b>Empty note is not saved.</b> "Write something first."</li>
+      <li><b>Too long is not saved.</b> "Notes can be up to 2,000 characters. This one is 2,001." Text stays.</li>
+      <li><b>Save fails.</b> "Couldn't save your note. Try again." Text stays; no duplicate after a retry.</li>
+    </ol>
+    <p><b>Slice test:</b> passes all four: every layer (page, function, table, deploy, CI); one e2e walks it; worth shipping as proven rails; 5 scenarios, 2 areas.</p>
+  </section>
+
+  <section id="ds-brief">
+    <div class="num">14 · Design system</div>
+    <h2>Design system brief (pause A)</h2>
+    <p class="analogy">A porch light means "someone left this on for you". In Porchlight, amber light means the same: this knowledge was captured and has a source. A window that isn't lit yet is a gap, not an alarm.</p>
+    <div class="diagram"><pre class="mermaid">
+flowchart LR
+  F["Foundation: Atlassian tokens<br/>neutrals, type, spacing, light/dark"] --> N["Looks native in Jira"]
+  W["'warm' + the name"] --> A["ONE accent: porch amber<br/>light #A1520A (5.6:1) · dark #F5B544 (8.9:1)"]
+  A --> M1["Amber = captured + sourced"]
+  G["'never gloomy / surveillance'"] --> M2["Gap = unlit (dim neutral), never red"]
+  P["'precise' + Stripe"] --> M3["Every claim has a source chip<br/>ticket key · PR · page · interview"]
+  L["Linear restraint + 'never loud'"] --> M4["One accent only; status colours only for real status"]
+  T["'alive' + tier 3 ceiling"] --> M5["Tier 1 everywhere · tier 2 'lighting up' ·<br/>ONE three.js signature, budgeted in its slice"]
+    </pre></div>
+    <table>
+      <thead><tr><th>Answer</th><th>Becomes</th></tr></thead>
+      <tbody>
+        <tr><td>Feel: warm, precise, alive</td><td>Amber light · source chips and tabular dates · motion that makes knowledge feel present</td></tr>
+        <tr><td>Never: surveillance, cold, cluttered, corporate, robotic, loud, gloomy, chaotic, generic</td><td>No minute-by-minute activity feed · gaps are unlit, not red · one accent · no generated-UI tells</td></tr>
+        <tr><td>Linear</td><td>14px body, 8px grid, 36px rows, colour only when it means something</td></tr>
+        <tr><td>Stripe Docs</td><td>Summary first, evidence one click away</td></tr>
+        <tr><td>Things 3</td><td>Cards breathe (16–24px padding); warm tint only on the signature area</td></tr>
+        <tr><td>three.js</td><td>One signature piece only, with its size and frame-rate budget in its slice spec</td></tr>
+        <tr><td>Floors</td><td>WCAG AA in light and dark · reduced motion: no movement, glow becomes a static fill · desktop browsers</td></tr>
+      </tbody>
+    </table>
+    <p>Full brief: <code>docs/design/system-brief.md</code>.</p>
+  </section>
+
+  <section id="porch">
+    <div class="num">15 · Design system</div>
+    <h2>The porch light: who is away (draft for slice porch-status)</h2>
+    <p class="analogy">A real porch light is left on for someone who isn't home yet. In Porchlight it is left on for the people who aren't here: their lit windows are what they left for you. If someone's porch is dark, they're here, so just ask them.</p>
+    <div class="diagram"><pre class="mermaid">
+stateDiagram-v2
+  [*] --> Here
+  Here --> Away: person sets "away until date"
+  Away --> Here: day after the date, automatically
+  Here --> Leaving: person sets "leaving on date", or a handover starts
+  Leaving --> Left: after the date, or Jira says the account is deactivated
+  Here --> Left: Jira says the account is deactivated
+    </pre></div>
+    <table>
+      <thead><tr><th>Status</th><th>Porch</th><th>Set by</th><th>Ends</th></tr></thead>
+      <tbody>
+        <tr><td>Here</td><td>Off</td><td>Default</td><td>—</td></tr>
+        <tr><td>Away until a date</td><td>On</td><td>The person (lead too? O17)</td><td>Automatically after the date</td></tr>
+        <tr><td>Leaving on a date</td><td>On</td><td>The person, or a started handover</td><td>Becomes Left</td></tr>
+        <tr><td>Left</td><td>On, stays on</td><td>Jira: account deactivated</td><td>Never; their knowledge stays</td></tr>
+      </tbody>
+    </table>
+    <p><b>Never:</b> guessing presence from activity ("quiet for 5 days"). That watches people. <b>Open:</b> may a lead set it (O17) · can we read deactivated accounts (O18) · does Atlassian expose out-of-office (O19) · a resignation may be confidential before it's announced (O20).</p>
+  </section>
+
+  <section id="pass-it-on">
+    <div class="num">16 · Shape</div>
+    <h2>Pass it on: a handover passes every window to the team</h2>
+    <p class="analogy">Moving house: packing every box (capturing) isn't enough. Each box needs someone at the other end who agreed to take it, and the team lead checks nobody gets buried.</p>
+    <div class="diagram"><pre class="mermaid">
+stateDiagram-v2
+  [*] --> Gap: area exists, not captured
+  Gap --> Captured: interview answer saved
+  Captured --> Proposed: leaver proposes a receiver
+  Proposed --> Accepted: receiver accepts
+  Proposed --> Captured: receiver declines
+  Accepted --> PassedOn: team lead approves, light moves houses
+  Captured --> Unowned: leaving date passes
+  Gap --> Unowned: leaving date passes
+    </pre></div>
+    <p>A leaver's house shows a countdown and two meters, for example "14 of 20 captured · 9 of 20 passed on · 28 days left". Receiving an area adds a window to the receiver's house. Open: who is the team lead (O21) · what if the lead is the leaver or away (O22) · framing a 10-storey house (O23) · does a passed-on area keep its history (O24).</p>
+  </section>
+
+  <section id="skeleton-p2">
+    <div class="num">17 · Spec: skeleton</div>
+    <h2>Skeleton pause 2: the Porchlight note page</h2>
+    <p>One screen, one column. <a href="design/skeleton/preview.html">Open the preview</a>; the bar at the top switches between states.</p>
+    <div class="diagram"><pre class="mermaid">
+flowchart LR
+  L["Loading"] --> E["First visit: empty porch"]
+  L --> N["Notes: lit cards, newest first"]
+  E -- "type + Save" --> S["Saving"]
+  N -- "type + Save" --> S
+  S -- ok --> W["New note warms up + toast"]
+  S -- fails --> F["Error above Save, text kept"]
+  F -- "Save again" --> S
+  N -- "empty or over 2,000" --> V["Field error, text kept"]
+    </pre></div>
+  </section>
+
+  <section id="skeleton-p3">
+    <div class="num">18 · Spec: skeleton</div>
+    <h2>Skeleton pause 3: how it's built (Refined)</h2>
+    <p class="analogy">Think of a small restaurant. The page is the waiter, the two resolver functions are the kitchen, the notes table is the pantry, and the hourly trigger is the cleaner who makes sure the pantry shelf exists before the first delivery.</p>
+    <div class="diagram"><pre class="mermaid">
+flowchart TB
+  subgraph Browser["Jira page, sandboxed frame (Custom UI)"]
+    UI["porchlight-ui: React + Vite"]
+    DS["docs/design/design-system"]
+    DS -. "imported at build" .-> UI
+  end
+  subgraph Forge["Forge (Atlassian cloud)"]
+    R["resolvers: listNotes, saveNote"]
+    M["migrate: CREATE TABLE IF NOT EXISTS"]
+    T["hourly trigger"]
+    SQL[("Forge SQL: notes")]
+  end
+  J["Jira user API (as the viewer)"]
+  UI -- "invoke" --> R
+  R --> SQL
+  T --> M --> SQL
+  R -- "first call" --> M
+  UI -- "author names" --> J
+    </pre></div>
+    <ul>
+      <li><b>Safe retries:</b> each save carries a client key, so a retried save never makes a second note (D13).</li>
+      <li><b>Names:</b> looked up from Jira when listing, so they never go stale (D12).</li>
+      <li><b>Security:</b> the author always comes from Forge, typed text is validated twice, stored as data and shown as text; no inline styles (D15).</li>
+      <li><b>Chunks:</b> A app and data · B page and design-system class rewrite · C e2e and CI.</li>
+      <li><b>Riskiest choice:</b> running the table migration from the first resolver call (O7, accepted: the first deploy proves it).</li>
+    </ul>
+  </section>
+
+  <footer>Local page: run <code>python -m http.server 3000 -d docs</code> in <code>Codegeist/</code>, then open http://localhost:3000/overview.html. Updated at every zuko stage.</footer>
+</div>
+<script type="module">
+  // Render every <pre class="mermaid"> block. Mermaid loads from jsDelivr, pinned to one version.
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs";
+  const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  mermaid.initialize({ startOnLoad: true, theme: dark ? "dark" : "default", securityLevel: "strict" });
+</script>
+</body>
+</html>
