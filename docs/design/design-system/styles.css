@@ -228,4 +228,8 @@ body {
   :root:not([data-motion="full"]) *::before,
   :root:not([data-motion="full"]) *::after { animation: none !important; transition: none !important; }
 }
+/* A viewer who chooses reduced motion on the page gets it, whatever the system says. */
+:root[data-motion="reduced"] *,
+:root[data-motion="reduced"] *::before,
+:root[data-motion="reduced"] *::after { animation: none !important; transition: none !important; }
 .pl-motion { position: fixed; top: var(--ds-space-200); left: 50%; transform: translateX(-50%); }
