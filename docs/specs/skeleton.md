@@ -1,6 +1,6 @@
 # Skeleton
 
-**Version:** v1 · **Status:** Refined · **Type:** Skeleton · **Project type:** Web UI
+**Version:** v1 · **Status:** Built · **Type:** Skeleton · **Project type:** Web UI
 
 **Shape doc:** docs/specs/knowledge-handover/shape.md
 **Depends on:** None
@@ -226,7 +226,7 @@ There is no Porchlight code yet. Paths are under `Codegeist/porchlight/` unless 
 | `static/porchlight-ui/` | Vite + React app: `NotesPage`, `Composer`, `NoteList`, `EmptyPorch`, `Toast`; imports `docs/design/design-system/styles.css` and the icon sprite through a Vite alias | All scenarios; pause 2 design |
 | `test/unit/*.test.js` | Vitest: validate, saveNote (once per key, author from context), listNotes order | Scenarios 1, 3, 4, 5 |
 | `static/porchlight-ui/src/*.test.jsx` | Vitest + Testing Library: empty state, field errors, failed save keeps text | Scenarios 2–5 |
-| `e2e/skeleton.spec.js`, `e2e/login.js` | Playwright: one-time login saves a session; the test walks the real page | E2E |
+| `e2e/skeleton.spec.js`, `e2e/login.mjs` | Playwright: one-time login saves a session (O14); the test walks the real page | E2E |
 | `Codegeist/.github/workflows/ci.yml` | On push: install, lint, `forge lint`, Vitest. On `main`: `forge deploy -e development --non-interactive` with `FORGE_EMAIL` and `FORGE_API_TOKEN` | O5 |
 | `Codegeist/OVERVIEW.md` | Fill the Run it table with the real commands | Onboarding |
 
@@ -246,7 +246,7 @@ erDiagram
 ```
 
 **Migration:** expand only. `v001_create_notes` creates the table with `CREATE TABLE IF NOT EXISTS`. Nothing to backfill or switch; this is the first table.
-**Reverse:** `DROP TABLE IF EXISTS notes`, kept as `v001_down` in `src/db/migrate.js` and run only by hand on the development environment. A unit test checks the down statement exists and names the same table.
+**Reverse:** `rollbackV001()` in `src/db/migrate.js`: `DROP TABLE IF EXISTS notes`, then delete the `v001_create_notes` row from `__migrations` so the next run recreates the table. Run only by hand on the development environment. Unit tests run it forward, backward and forward again on Forge's own runner (O11).
 
 ### Earn-it
 
@@ -322,6 +322,11 @@ Recorded as D12, D13, D14, D15.
 | O8 | Custom UI blocks inline `style` attributes; the design system's sprite and porch scene use them. Add the `unsafe-inline` styles permission, or rewrite them to classes? | question | spec p3 | user | Resolved | Rewrite every inline style in the sprite and porch scene into design-system classes; the app keeps Forge's strict policy. Chunk B. D15. 2026-11-02 |
 | O9 | The e2e test uses one account, so "Daniel sees it" is proven by a reload as Aisha, not by a second login | flag | spec p3 | user | Accepted risk | One account keeps the e2e simple; a unit test proves the list never filters by author; a manual check with a second account before the demo. 2026-11-02 |
 | O10 | Adding the `read:jira-user` scope means `forge install --upgrade` on the dev site after the first deploy | flag | spec p3 | user | Resolved | Part of /build: deploy, then `install --non-interactive --upgrade`; the user approves the new permission in Jira. 2026-11-02 |
+| O11 | The plan's reverse step was only `DROP TABLE IF EXISTS notes`. Forge's runner would then still list v001 as done, and never recreate the table. | flag | build | user | Decided alone | Chose: `rollbackV001()` drops the table and deletes the v001 row from `__migrations`; tested forward, backward, forward on Forge's runner over the fake database. The real reverse has not been run on the dev site. Other: drop the table only. Undo: remove the DELETE line in `rollbackV001` in `src/db/migrate.js`. 2026-11-07 |
+| O12 | A saveNote call could reuse another person's client key and get their note back. | flag | build | user | Decided alone | Chose: the read-back matches on client key AND author; a key that belongs to someone else's note makes the save fail. Other: return whichever note owns the key. Undo: drop `AND author_account_id = ?` from the SELECT in `insertNoteOnce` (`src/db/notes.js`). 2026-11-07 |
+| O13 | The plan said every SQL value is bound with `?`. On Forge SQL, `LIMIT ?` fails with "ERROR 1210: Incorrect arguments to LIMIT", because bound values arrive as text. | flag | build | user | Decided alone | Chose: write `LIMIT 100` into the statement from the fixed constant `LIST_LIMIT`; typed text is still always bound. The fake database now refuses `LIMIT ?`. Other: none that works on Forge SQL. Undo: not needed. 2026-11-07 |
+| O14 | The plan said Playwright saves a login from a browser it launches (O3). Atlassian sends a Google-linked account to Google, and Google refuses sign-in in a Playwright-launched browser. | flag | build | user | Decided alone | Chose: `e2e/login.mjs` starts Chrome as a normal program with its own profile in the git-ignored `e2e/.auth/`, the user signs in by hand, and Playwright attaches and saves Atlassian cookies only. Other: a separate test account with a password. Undo: revert 03caa30 and 6e04f2a's login change, and create a password-only test user. 2026-11-07 |
+| O15 | No scenario covers the list failing to load, or a name lookup failing. | flag | build | user | Decided alone | Chose: the list shows "Couldn't load notes. Reload the page to try again."; a card whose author name cannot be found shows "A teammate". Other: a blank list. Undo: remove the `error` branch in `NotesPage.jsx` and the fallback in `NoteList.jsx`. 2026-11-07 |
 
 _Never delete this section or its rows. See references/ledger.md._
 
