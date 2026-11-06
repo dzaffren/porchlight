@@ -100,6 +100,40 @@ describe('NotesPage', () => {
     expect(within(card).getByRole('heading').textContent).toBe('A teammate');
   });
 
+  it('keeps the load error after a save, instead of showing one note as the whole list', async () => {
+    const user = userEvent.setup();
+    api.fetchNotes.mockRejectedValue(new Error('connection refused'));
+    api.saveNote.mockImplementation(async () => ({ ok: true, note: note('9', AISHA, 'hello', new Date().toISOString()) }));
+    render(<NotesPage />);
+    await screen.findByRole('alert');
+
+    await user.type(screen.getByLabelText('Note for the next person'), 'hello');
+    await user.click(screen.getByRole('button', { name: /save note/i }));
+
+    expect(await screen.findByText("Note saved. The light's on.")).toBeTruthy();
+    expect(screen.getByRole('alert').textContent).toContain("Couldn't load notes.");
+    expect(screen.queryByText(/newest first/)).toBeNull();
+  });
+
+  it('keeps a note saved while the first load is still running', async () => {
+    const user = userEvent.setup();
+    let finishLoad;
+    api.fetchNotes.mockReturnValue(new Promise((resolve) => { finishLoad = resolve; }));
+    api.saveNote.mockImplementation(async () => ({ ok: true, note: note('9', AISHA, 'hello', new Date().toISOString()) }));
+    render(<NotesPage />);
+
+    await user.type(screen.getByLabelText('Note for the next person'), 'hello');
+    await user.click(screen.getByRole('button', { name: /save note/i }));
+    await screen.findByText("Note saved. The light's on.");
+    // The list was read before the insert, so it does not contain the new note.
+    finishLoad([note('1', PRIYA, 'Refunds over 30 days need finance sign-off.', '2026-10-21T01:05:00.000Z')]);
+
+    await screen.findByText('Refunds over 30 days need finance sign-off.');
+    const cards = screen.getAllByRole('article');
+    expect(cards).toHaveLength(2);
+    expect(within(cards[0]).getByText('hello')).toBeTruthy();
+  });
+
   it('says so when the notes cannot be loaded', async () => {
     api.fetchNotes.mockRejectedValue(new Error('connection refused'));
     render(<NotesPage />);

@@ -47,8 +47,13 @@ export default function NotesPage() {
       }
       if (cancelled) return;
 
-      setNames(known);
-      setNotes(loaded);
+      setNames((previous) => ({ ...previous, ...known }));
+      // Keep any note saved while this load was running: the list may have been read
+      // before that insert. Saved notes are the newest, so they stay on top.
+      setNotes((previous) => {
+        const loadedIds = new Set(loaded.map((n) => n.id));
+        return [...previous.filter((n) => !loadedIds.has(n.id)), ...loaded];
+      });
       setStatus('ready');
     }
 
@@ -64,9 +69,10 @@ export default function NotesPage() {
     const result = await api.saveNote({ body, clientKey });
     if (result?.ok) {
       // Drop any copy of the same note first, so a retried save never lists it twice.
+      // The status is left as it is: after a failed load, one saved note is not the
+      // whole list, so the "Couldn't load notes" message stays.
       setNotes((previous) => [result.note, ...previous.filter((n) => n.id !== result.note.id)]);
       setFreshId(result.note.id);
-      setStatus('ready');
       setToast({ id: result.note.id, text: "Note saved. The light's on." });
     }
     return result;
