@@ -144,9 +144,38 @@ describe('TeamPage', () => {
     await waitFor(() => expect(within(results).queryByRole('button', { name: 'Add Aisha Rahman to the team' })).toBeNull());
   });
 
+  it('keeps a removed person off the list when an earlier reload answers late', async () => {
+    const user = userEvent.setup();
+    api.fetchTeam
+      .mockResolvedValueOnce([DANIEL_ROW, RAVI_ROW])             // first load
+      .mockResolvedValueOnce([DANIEL_ROW, RAVI_ROW, AISHA_ROW])  // the add's reload, read before the remove
+      .mockResolvedValue([DANIEL_ROW, AISHA_ROW]);               // after Ravi is taken off
+    api.addTeammate.mockResolvedValue({ ok: true, member: AISHA_ROW });
+    api.removeTeammate.mockResolvedValue({ ok: true });
+    render(<TeamPage />);
+    await screen.findByRole('button', { name: 'Catch up on Ravi Kumar' });
+
+    // The add's reload gets its team, then waits on Jira for the names.
+    let answerNames;
+    api.fetchDisplayNames.mockImplementationOnce(() => new Promise((resolve) => { answerNames = resolve; }));
+    await user.type(screen.getByLabelText('Add a teammate'), 'Aisha');
+    await user.click(await screen.findByRole('button', { name: 'Add Aisha Rahman to the team' }));
+    await waitFor(() => expect(answerNames).toBeTypeOf('function'));
+
+    // Daniel takes Ravi off while that reload is still waiting.
+    await user.click(screen.getByRole('button', { name: 'Take Ravi Kumar off the team' }));
+    await screen.findByText('Ravi Kumar is off the team. Their Jira tickets are unchanged.');
+
+    // The late answer arrives. It was read before the remove, so it must not bring Ravi back.
+    answerNames(NAMES);
+    await screen.findByRole('button', { name: 'Catch up on Aisha Rahman' });
+    expect(screen.queryByRole('button', { name: 'Catch up on Ravi Kumar' })).toBeNull();
+  });
+
   it('takes Ravi off the team with a toast that Jira is unchanged (scenario 2)', async () => {
     const user = userEvent.setup();
-    api.fetchTeam.mockResolvedValue([DANIEL_ROW, AISHA_ROW, RAVI_ROW]);
+    // The database forgets Ravi once he is taken off, so the page's reload agrees.
+    api.fetchTeam.mockResolvedValueOnce([DANIEL_ROW, AISHA_ROW, RAVI_ROW]).mockResolvedValue([DANIEL_ROW, AISHA_ROW]);
     api.removeTeammate.mockResolvedValue({ ok: true });
     render(<TeamPage />);
     await screen.findByRole('button', { name: 'Catch up on Ravi Kumar' });
@@ -161,7 +190,7 @@ describe('TeamPage', () => {
 
   it('marks the open person and closes their catch-up when they are taken off', async () => {
     const user = userEvent.setup();
-    api.fetchTeam.mockResolvedValue([DANIEL_ROW, RAVI_ROW]);
+    api.fetchTeam.mockResolvedValueOnce([DANIEL_ROW, RAVI_ROW]).mockResolvedValue([DANIEL_ROW]);
     api.removeTeammate.mockResolvedValue({ ok: true });
     render(<TeamPage />);
 

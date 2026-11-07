@@ -2,9 +2,10 @@
 //
 //   load:   listTeam → names of members and of who added them (one Jira request) → list
 //   add:    AddTeammate → addTeammate → reload the list → toast
-//   remove: Remove → removeTeammate → row gone (and the catch-up closes if it was theirs) → toast
+//   remove: Remove → removeTeammate → row gone (and the catch-up closes if it was theirs) → toast → reload
+//   reloads: only the newest read of the team may change the list
 //   pick:   a row → CatchUp reads their work from Jira, as the viewer
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as api from './api.js';
 import AddTeammate from './AddTeammate.jsx';
 import CatchUp from './CatchUp.jsx';
@@ -43,12 +44,23 @@ export default function TeamPage() {
     setStatus('ready');
   }, []);
 
+  // Every read of the team takes a ticket number. Only the newest read may change the
+  // list: an older read (for example an add's reload that started before a remove)
+  // would otherwise put a removed person back when its answer arrives late.
+  const newestRead = useRef(0);
+  const reloadTeam = useCallback(async () => {
+    const ticket = ++newestRead.current;
+    const team = await readTeam();
+    if (ticket === newestRead.current) showTeam(team);
+  }, [showTeam]);
+
   useEffect(() => {
     // Ignore an answer that arrives after the page has gone away.
     let cancelled = false;
+    const ticket = ++newestRead.current;
     readTeam().then(
-      (team) => { if (!cancelled) showTeam(team); },
-      () => { if (!cancelled) setStatus('error'); },
+      (team) => { if (!cancelled && ticket === newestRead.current) showTeam(team); },
+      () => { if (!cancelled && ticket === newestRead.current) setStatus('error'); },
     );
     return () => {
       cancelled = true;
@@ -69,7 +81,7 @@ export default function TeamPage() {
       // Reload rather than guess: someone else may have added people too, and the
       // reload brings who added each one.
       try {
-        showTeam(await readTeam());
+        await reloadTeam();
       } catch {
         // The add worked; the list catches up on the next page load.
       }
@@ -93,6 +105,10 @@ export default function TeamPage() {
     // If their catch-up was open, the pane goes back to "Pick a teammate".
     setSelectedId((current) => (current === member.accountId ? null : current));
     say(`${name} is off the team. Their Jira tickets are unchanged.`);
+    // Read the team again, so this becomes the newest read and any older one is ignored.
+    reloadTeam().catch(() => {
+      // The row is already gone; the list catches up on the next page load.
+    });
   }
 
   const selected = members.find((m) => m.accountId === selectedId) ?? null;
