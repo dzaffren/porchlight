@@ -11,3 +11,4 @@ Learned while building the skeleton slice, 2026-11-06 to 2026-11-07.
 - **A deploy that adds a scope prints "Run forge install --upgrade".** A first install grants the scopes directly.
 - **Forge's own packages carry audited advisories.** `@forge/sql` and `@forge/bridge` pull an old `glob` (through `@forge/manifest`), and `@forge/bridge` pulls `prosemirror-view` 1.41.5. npm's suggested fix is a breaking downgrade. Use `overrides` in `package.json` instead, and confirm with `npm audit` and a deploy.
 - **Give CI secrets to one step, not the job.** Installs, install scripts and builds then never run beside the token. Pin the Forge CLI as a dev dependency and call it with `npx forge`.
+- **`forge lint` needs a Forge login.** It reads only local files, but stops with "Not logged in" without credentials. In CI, give the lint step the token too.

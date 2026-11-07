@@ -46,7 +46,12 @@ jobs:
         run: npm run build:ui
 
       # The Forge CLI is a pinned dev dependency (package-lock.json), so npx runs that exact version.
+      # forge lint refuses to run without a Forge login, so this step gets the token too.
+      # Install and build ran in earlier steps, so their install scripts never see it.
       - name: Check the manifest
+        env:
+          FORGE_EMAIL: ${{ secrets.FORGE_EMAIL }}
+          FORGE_API_TOKEN: ${{ secrets.FORGE_API_TOKEN }}
         run: |
           npx forge settings set usage-analytics false
           npx forge lint
