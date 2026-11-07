@@ -7,7 +7,8 @@
 //   - client_key is unique, so a second insert with the same key changes nothing,
 //   - the list comes back newest first, with a limit,
 //   - team_members.account_id is unique, so INSERT IGNORE with the same person changes nothing,
-//   - the team list comes back oldest first, with a limit.
+//   - the team list comes back oldest first, with a limit,
+//   - porch_statuses.account_id is the primary key, so a second save for a person replaces the first.
 // Any statement it does not recognise throws, so a typo in a query fails a test loudly.
 //
 // The real MigrationRunner from @forge/sql runs on top of this fake, so the tests also
@@ -21,6 +22,7 @@ export const fake = {
   tables: new Set(),
   notes: [],
   team: [],
+  porch: [],
   migrations: [],
   nextId: 1,
   // Every statement sent, with its parameters, so a test can check how SQL was built.
@@ -34,6 +36,7 @@ export const fake = {
     this.tables = new Set();
     this.notes = [];
     this.team = [];
+    this.porch = [];
     this.migrations = [];
     this.nextId = 1;
     this.statements = [];
@@ -188,6 +191,20 @@ async function run(query, params = []) {
       .slice(0, limit)
       .map(withoutId);
     return { rows };
+  }
+
+  // --- the porch_statuses table (spec porch-status) ---
+  if (q.startsWith('CREATE TABLE IF NOT EXISTS porch_statuses')) {
+    if (!q.includes('account_id VARCHAR(128) PRIMARY KEY')) {
+      throw new Error('fake-forge-sql: the porch_statuses table must have account_id as its primary key');
+    }
+    fake.tables.add('porch_statuses');
+    return { rows: { affectedRows: 0 } };
+  }
+  if (q.startsWith('DROP TABLE IF EXISTS porch_statuses')) {
+    fake.tables.delete('porch_statuses');
+    fake.porch = [];
+    return { rows: { affectedRows: 0 } };
   }
 
   throw new Error(`fake-forge-sql does not understand: ${q}`);
