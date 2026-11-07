@@ -43,6 +43,16 @@ body { background: var(--ds-surface-sunken); }
 .pick:focus-visible { outline: 2px solid var(--ds-focus); outline-offset: 2px; border-radius: var(--ds-radius-100); }
 .pick .pl-avatar { grid-row: span 2; }
 .pick strong, .pick .pl-meta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* The name, then the porch light on its own line under it (docs/design/porch-status/preview.html). */
+.name-line { display: grid; gap: var(--ds-space-025); justify-items: start; min-width: 0; }
+
+/* ---------- Your porch light: a card above the team list (decision D25) ---------- */
+.column { display: grid; gap: var(--ds-space-200); align-content: start; }
+.mine { background: var(--ds-surface); border: 1px solid var(--ds-border); border-radius: var(--ds-radius-300); padding: var(--ds-space-200); display: grid; gap: var(--ds-space-150); }
+.mine-now { display: flex; justify-content: space-between; align-items: center; gap: var(--ds-space-100); }
+.mine-form { display: grid; gap: var(--ds-space-150); }
+.mine-fields { display: grid; grid-template-columns: 1fr 1fr; gap: var(--ds-space-100); }
+.mine-actions { display: flex; gap: var(--ds-space-100); justify-content: flex-end; }
 .pl-row .pl-key { min-width: 7ch; }
 .result-row { grid-template-columns: auto 1fr auto; }
 

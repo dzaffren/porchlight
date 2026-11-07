@@ -80,6 +80,23 @@ describe('CatchUp', () => {
     expect(api.searchOpenWork).not.toHaveBeenCalled();
   });
 
+  it("shows the person's porch light under their name, with no control (porch-status scenario 1)", () => {
+    api.searchOpenWork.mockReturnValue(new Promise(() => {}));
+    render(<CatchUp person={{ ...aisha, status: { kind: 'away', untilDate: '2026-11-20' } }} />);
+
+    const lamp = screen.getByText('Away until 20 Nov');
+    expect(lamp.className).toBe('pl-presence pl-presence--away');
+    expect(lamp.closest('.person-text').querySelector('h2').textContent).toBe('Aisha Rahman');
+    expect(screen.queryByRole('button')).toBeNull();
+  });
+
+  it('shows no porch light line for a person who is here', () => {
+    api.searchOpenWork.mockReturnValue(new Promise(() => {}));
+    const { container } = render(<CatchUp person={{ ...aisha, status: { kind: 'here' } }} />);
+
+    expect(container.querySelector('.pl-presence')).toBeNull();
+  });
+
   it('shows skeleton rows in the four sections while Jira answers', () => {
     api.searchOpenWork.mockReturnValue(new Promise(() => {}));
     render(<CatchUp person={aisha} />);

@@ -14,6 +14,7 @@ import * as api from './api.js';
 import { toBlockers, toChanges, toNextSteps, toOpenWork } from './catchup.js';
 import { formatDay, formatDue, formatFullDate, initials } from './format.js';
 import { Glyph } from './Glyph.jsx';
+import Presence from './Presence.jsx';
 
 const SECTION_TITLES = ['Open work', 'Latest changes', 'Blockers', 'Next steps'];
 
@@ -194,13 +195,17 @@ function PickSomeone({ titleId }) {
   );
 }
 
-/** The picked person: avatar, name, and where the facts come from. */
-function PersonHeader({ name, titleId }) {
+/**
+ * The picked person: avatar, name, their porch light, and where the facts come from.
+ * The porch light is read only here; only the person changes it, on their own card.
+ */
+function PersonHeader({ name, status, titleId }) {
   return (
     <div className="person">
       <span className="pl-avatar pl-avatar--lg" aria-hidden="true">{initials(name)}</span>
       <div className="person-text">
         <h2 id={titleId}>{name}</h2>
+        {status && <Presence status={status} />}
         <span className="pl-meta">From Jira, as you · {formatFullDate(new Date())} · Showing only tickets you can open.</span>
       </div>
     </div>
@@ -208,8 +213,9 @@ function PersonHeader({ name, titleId }) {
 }
 
 /**
- * @param {{ person: { accountId: string, name: string } | null }} props
+ * @param {{ person: { accountId: string, name: string, nameKnown?: boolean, status?: object } | null }} props
  *   TeamPage gives each person their own key, so this component starts fresh for each.
+ *   status: what their porch light shows right now, from effectiveStatus in @lib/porch.js.
  */
 export default function CatchUp({ person }) {
   const titleId = useId();
@@ -258,7 +264,7 @@ export default function CatchUp({ person }) {
   const whose = person.nameKnown === false ? "this teammate's" : `${person.name.split(' ')[0]}'s`;
   return (
     <section className="pane" aria-live="polite" aria-labelledby={titleId}>
-      <PersonHeader name={person.name} titleId={titleId} />
+      <PersonHeader name={person.name} status={person.status} titleId={titleId} />
       {state.status === 'loading' && <Loading />}
       {state.status === 'error' && (
         <div className="pl-message pl-message--error" role="alert">

@@ -25,18 +25,20 @@ export function statusText(status) {
  * @param {{
  *   status: { kind: 'here' } | { kind: 'left' } | { kind: 'away' | 'leaving', untilDate: string },
  *   showHere?: boolean,
+ *   id?: string,
  * }} props
  *   status: what effectiveStatus in @lib/porch.js worked out for this person, right now.
  *   showHere: say "Here, porch light off" instead of showing nothing. Only the viewer's
  *   own card does this; a team row with nothing to say stays quiet.
+ *   id: lets a button point at these words as its description (aria-describedby).
  */
-export default function Presence({ status, showHere = false }) {
+export default function Presence({ status, showHere = false, id }) {
   const on = status.kind !== 'here';
   if (!on && !showHere) {
     return null;
   }
   return (
-    <span className={on ? 'pl-presence pl-presence--away' : 'pl-presence'}>
+    <span className={on ? 'pl-presence pl-presence--away' : 'pl-presence'} id={id}>
       <span className="pl-presence__lamp" aria-hidden="true" />
       {on ? statusText(status) : 'Here, porch light off'}
     </span>
