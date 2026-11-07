@@ -8,13 +8,14 @@ import '@ds/styles.css';
 import './app.css';
 
 import Sprite from './Sprite.jsx';
-import NotesPage from './NotesPage.jsx';
+import App from './App.jsx';
 import MotionSwitch from './MotionSwitch.jsx';
 
+// The icon sprite and the Motion switch stay on both screens; App picks Team or Notes.
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <Sprite />
-    <NotesPage />
+    <App />
     <MotionSwitch />
   </StrictMode>,
 );
