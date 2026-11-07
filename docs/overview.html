@@ -93,6 +93,8 @@ th, td { text-align: left; padding: 6px; border-bottom: 1px solid var(--line); v
       <a href="#catchup-p1">Catch-up view: scope</a>
       <a href="#catchup-p2">Catch-up view: screens</a>
       <a href="#catchup-p3">Catch-up view: build plan</a>
+      <a href="#porch-p1">Porch status: scope</a>
+      <a href="#porch-p3">Porch status: build plan</a>
     </nav>
   </header>
 
@@ -114,8 +116,13 @@ flowchart LR
   C3 --> C4["/build catch-up-view<br/>DONE · Built, live on dev"]
   C4 --> C5["/review catch-up-view<br/>DONE · 7 of 11 findings fixed"]
   C5 --> C6["/ship catch-up-view<br/>DONE · docs marked Shipped, PR next"]
-  C6 --> NX["/spec porch-status<br/>NEXT (or ask-the-trail)"]
+  C6 --> PS["/spec porch-status<br/>DONE · Refined"]
+  PS --> PB["/build porch-status<br/>DONE · Built, live on dev"]
+  PB --> PR["/review porch-status<br/>DONE · 3 of 13 findings survived, 3 fixed"]
+  PR --> SH2["/ship porch-status<br/>DONE · docs marked Shipped, PR next"]
+  C6 -.-> O1["spike O1: Rovo agent<br/>no Rovo on dzaffren; demo site provisioning"]
     </pre></div>
+    <p>Porch-status is built and live on development (3.4.0): each person sets their own porch light (Away until or Leaving on a date) on the Team page, and everyone sees it on the rows and the catch-up. Reviewed: 13 raw findings, 3 survived and are fixed (the server no longer trusts the page's time zone, lamps redraw each minute, focus returns to Change). 127 server and 163 page unit tests pass, and all three real-site Playwright tests pass on 3.4.0. Docs marked Shipped on the branch; the PR and merge come next.</p>
     <p>The skeleton is built and live on dzaffren.atlassian.net (development): 58 unit tests (31 server, 27 page) and the real-site Playwright test pass. The idea is shaped and the design system is approved: dark only, the "Lit window" style, a 3D street of windows, and the porch light as presence. See the <a href="design/design-system/">design system</a> and the <a href="design/design-system/street/index.html">street</a>.</p>
     <table>
       <thead><tr><th>Decided</th><th>Answer</th></tr></thead>
@@ -740,6 +747,59 @@ sequenceDiagram
         <tr><td>Riskiest choice</td><td>Blockers and next steps come only from the 100 most recently updated open tickets</td></tr>
       </tbody>
     </table>
+  </section>
+
+  <section id="porch-p1">
+    <div class="num">22 · Spec: porch-status</div>
+    <h2>Porch status: scope and acceptance</h2>
+    <p class="analogy">A real porch light tells the street one thing: nobody is home right now, but they left the light on for you. Here it tells a teammate whether to read someone's catch-up, or just ask them.</p>
+    <div class="diagram"><pre class="mermaid">
+stateDiagram-v2
+    [*] --> Here
+    Here --> Away: person sets away until a date
+    Away --> Here: end of that date, their time zone, or they set Here
+    Here --> Leaving: person sets leaving on a date
+    Leaving --> Here: they set Here before the date
+    Leaving --> Left: end of the leaving date
+    Here --> Left: Jira says active false
+    Away --> Left: Jira says active false
+    Leaving --> Left: Jira says active false
+    </pre></div>
+    <ol>
+      <li><b>Away.</b> Aisha sets "Away until 20 Nov". Everyone sees her porch light on; only she can change it.</li>
+      <li><b>Away ends.</b> 21 Nov 00:00 in her time zone it turns off, or earlier if she sets Here.</li>
+      <li><b>Leaving becomes Left.</b> Ravi sets "Leaving on 31 Jan 2027" after the warning "Everyone on the team will see this." From 1 Feb he shows Left, for good.</li>
+      <li><b>Deactivated is Left.</b> Jira says Mei Ling's account is inactive: Left. If Jira leaves her out, she keeps her last status, never a wrong Left.</li>
+      <li><b>Bad dates.</b> "Pick today or a later date." · "Pick a date within a year."</li>
+    </ol>
+    <p><b>Research:</b> Jira has no out-of-office field (O7), so automatic Away became its own slice, 1c away-from-calendar, through Teamwork Graph. Deactivation is readable as <code>active</code> on the bulk user lookup, unproven for a deactivated account (O3, accepted with a safe rule).</p>
+  </section>
+
+  <section id="porch-p3">
+    <div class="num">23 · Spec: porch-status</div>
+    <h2>Porch status: how it's built (Refined)</h2>
+    <p class="analogy">Like a hotel's "do not disturb" card with a check-out date written on it: the hotel stores only the card and the date. Whether you are still "away" is worked out by looking at today's date in your own time zone, not by a night porter flipping cards at midnight.</p>
+    <div class="diagram"><pre class="mermaid">
+flowchart TB
+  subgraph Browser["Jira page (Custom UI)"]
+    TP["TeamPage: MyPorchLight, TeamList, CatchUp"]
+    LIB["src/lib/porch.js: todayIn, checkStatusDate, effectiveStatus"]
+    TP --> LIB
+  end
+  subgraph Forge["Forge"]
+    RP["porch resolvers: listStatuses, setMyStatus"]
+    SQL[("porch_statuses")]
+  end
+  J["Jira user/bulk: name, active, timeZone"]
+  TP -- "invoke" --> RP --> SQL
+  TP -- "requestJira" --> J
+    </pre></div>
+    <ul>
+      <li><b>Stored:</b> one row per person, kind and date. Here is no row. Left and "Away ended" are worked out when read (D26).</li>
+      <li><b>Time zone and active:</b> from Jira's bulk user lookup each time, never stored (D27). Hidden zone: the viewer's own (O10).</li>
+      <li><b>Security:</b> you can only write your own row; no typed text.</li>
+      <li><b>Riskiest choice:</b> computing Left on the page from <code>active: false</code>, which is unproven for a really deactivated account (O3).</li>
+    </ul>
   </section>
 
   <footer>Local page: run <code>python -m http.server 3000 -d docs</code> in <code>Codegeist/</code>, then open http://localhost:3000/overview.html. Updated at every zuko stage.</footer>

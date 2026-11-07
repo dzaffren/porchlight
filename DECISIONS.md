@@ -163,3 +163,38 @@ Why: the /poc proved that `search/jql` with `expand: "changelog"` and the `comme
 Rejected: one changelog and one comment request per ticket (up to 40 requests per catch-up for the same data).
 Source: docs/specs/catch-up-view.md
 Status: active
+
+## D24 · 2026-11-07 · Only the person sets their porch light, and setting Leaving announces it
+
+Why: a porch light is the person's own signal (D9), and the brief says Porchlight must never feel like surveillance; a resignation may be confidential, so the person picks the moment by choosing when to set Leaving, and the form warns that everyone will see it.
+Rejected: anyone on the team sets anyone's status (open to misuse), a Jira admin can set it (a second path and a permission check), a hidden Leaving with a separate announce date (a hidden state that can leak), Leaving seen only by a team lead (needs a lead concept that pass-it-on owns).
+Source: docs/specs/porch-status.md
+Status: active
+
+## D25 · 2026-11-07 · Your porch light is a card at the top of the Team column
+
+Why: the person sets their own status (D24), so the control belongs beside the team list where they look for others; a card opens its form in place without moving the page, and the same lamp then shows on their row and catch-up.
+Rejected: a compact control in the page header (its open form pushed the title down, and the off state was too small to read).
+Source: docs/specs/porch-status.md
+Status: active
+
+## D26 · 2026-11-07 · Store only the chosen status; work out Here and Left when it is read
+
+Why: Away must end at the end of a date in each person's own time zone, and Left must follow a passed leaving date or a deactivated account; working this out at read time from the stored choice, Jira's time zone and Jira's active flag needs no job running at every midnight in every zone, and can never be stale.
+Rejected: a scheduled trigger that rewrites rows when dates pass (one run per time zone, and a missed run leaves a wrong lamp), storing Left as a row (a deactivation would still need a check at read time).
+Source: docs/specs/porch-status.md
+Status: active
+
+## D27 · 2026-11-07 · Each person's time zone comes from Jira each time, never stored
+
+Why: Jira's bulk user lookup already returns `timeZone` and `active` with the names the Team page asks for (checked 2026-11-07), so the status rules get them for free, and a person who moves country is right at once.
+Rejected: storing the time zone with the status (stale after a move, and copies personal data Jira owns, against D12's reasoning), the site's time zone (O4 chose the person's own day).
+Source: docs/specs/porch-status.md
+Status: active
+
+## D28 · 2026-11-08 · The server checks porch light dates against the whole planet, never a time zone from the page
+
+Why: the resolver cannot ask Jira for a person's time zone (D21), and a zone sent by the page let a changed request undo a Left for up to about a day (review finding F1); judging "past" in UTC-12 and "within a year" and "Left" in UTC+14 refuses no real choice and cannot be stretched.
+Rejected: storing each person's time zone with the status (against D27, and stale after a move), trusting the zone the page sends (anyone can undo Left).
+Source: docs/specs/porch-status.md
+Status: active

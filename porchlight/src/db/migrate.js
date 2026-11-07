@@ -13,6 +13,7 @@ import { sql, migrationRunner } from '@forge/sql';
 
 const V001_NAME = 'v001_create_notes';
 const V002_NAME = 'v002_create_team_members';
+const V003_NAME = 'v003_create_porch_statuses';
 
 // Forward: create the notes table.
 // - client_key is unique. The page sends a random key with each save, so a retried
@@ -51,9 +52,28 @@ export const V002_UP = `
 // Backward: remove the team list. The notes table is not touched. See rollbackV002 below.
 export const V002_DOWN = 'DROP TABLE IF EXISTS team_members';
 
+// Forward: create the porch light table (spec porch-status, decision D26).
+// - At most one row per person: account_id is the primary key. Here is no row at all.
+// - Only what the person chose is stored: kind ("away" or "leaving") and the date they picked,
+//   in their own day. Left and Here-after-Away are worked out when the status is read.
+// - account_id comes from Forge's context, never from the page.
+// - set_at is set by the database, in UTC, like notes.created_at.
+export const V003_UP = `
+  CREATE TABLE IF NOT EXISTS porch_statuses (
+    account_id VARCHAR(128) PRIMARY KEY,
+    kind VARCHAR(16) NOT NULL,
+    until_date DATE NOT NULL,
+    set_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )
+`;
+
+// Backward: remove the porch light table. Notes and the team list are not touched.
+// See rollbackV003 below.
+export const V003_DOWN = 'DROP TABLE IF EXISTS porch_statuses';
+
 // Register the migrations with Forge's runner, in the order they must run.
 // enqueue() only adds them to a list; nothing touches the database until run() is called.
-migrationRunner.enqueue(V001_NAME, V001_UP).enqueue(V002_NAME, V002_UP);
+migrationRunner.enqueue(V001_NAME, V001_UP).enqueue(V002_NAME, V002_UP).enqueue(V003_NAME, V003_UP);
 
 /**
  * Run every migration that has not run yet on this installation.
@@ -124,5 +144,19 @@ export async function rollbackV001() {
 export async function rollbackV002() {
   await sql.executeDDL(V002_DOWN);
   await sql.prepare('DELETE FROM __migrations WHERE name = ?').bindParams(V002_NAME).execute();
+  migrationRun = null;
+}
+
+/**
+ * Reverse v003: drop the porch_statuses table and remove its record from __migrations,
+ * so that running the migrations again recreates the table. Notes and the team list stay
+ * as they are.
+ *
+ * Like rollbackV002, it runs only by hand, on the development environment.
+ * It turns everyone's porch light off.
+ */
+export async function rollbackV003() {
+  await sql.executeDDL(V003_DOWN);
+  await sql.prepare('DELETE FROM __migrations WHERE name = ?').bindParams(V003_NAME).execute();
   migrationRun = null;
 }

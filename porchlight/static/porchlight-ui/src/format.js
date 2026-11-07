@@ -45,15 +45,20 @@ export const parseJiraTime = (value) => Date.parse(value.replace(/([+-]\d\d)(\d\
 export const formatDay = (value) => dayFormat.format(new Date(parseJiraTime(value)));
 
 /**
- * A ticket's due date: "Due 20 Dec", or "No due date".
- * Jira sends a due date as a plain calendar day ("2026-12-20"), with no time zone, so it
- * is read as that day in the viewer's zone. new Date("2026-12-20") would read it as
+ * A plain calendar day ("2026-12-20", no time zone) as "20 Dec", on that same day.
+ * It is read as that day in the viewer's zone. new Date("2026-12-20") would read it as
  * midnight UTC, which is 19 Dec for anyone west of London.
+ * Used for due dates and for porch light dates ("Away until 20 Nov").
  */
+export function formatCalendarDay(isoDay) {
+  const [year, month, day] = isoDay.split('-').map(Number);
+  return dayFormat.format(new Date(year, month - 1, day));
+}
+
+/** A ticket's due date: "Due 20 Dec", or "No due date". Jira sends it as a calendar day. */
 export function formatDue(due) {
   if (!due) return 'No due date';
-  const [year, month, day] = due.split('-').map(Number);
-  return `Due ${dayFormat.format(new Date(year, month - 1, day))}`;
+  return `Due ${formatCalendarDay(due)}`;
 }
 
 /** Today in the catch-up's header: "10 Nov 2026". */

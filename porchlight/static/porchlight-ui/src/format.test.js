@@ -1,6 +1,6 @@
 // Tests for the dates the catch-up shows: "6 Nov", "Due 20 Dec", "No due date".
 import { describe, it, expect } from 'vitest';
-import { formatDay, formatDue, formatFullDate, parseJiraTime } from './format.js';
+import { formatCalendarDay, formatDay, formatDue, formatFullDate, parseJiraTime } from './format.js';
 
 describe('parseJiraTime', () => {
   it("reads Jira's offset without a colon", () => {
@@ -13,6 +13,13 @@ describe('formatDay', () => {
   it('shows a Jira time as day and short month', () => {
     // Midday UTC, so it is 6 November in every time zone the tests run in.
     expect(formatDay('2026-11-06T12:00:00.000+0000')).toBe('6 Nov');
+  });
+});
+
+describe('formatCalendarDay', () => {
+  it('shows a calendar day as day and short month, on that same day', () => {
+    expect(formatCalendarDay('2026-11-20')).toBe('20 Nov');
+    expect(formatCalendarDay('2027-01-31')).toBe('31 Jan');
   });
 });
 

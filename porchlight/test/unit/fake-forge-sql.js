@@ -7,7 +7,8 @@
 //   - client_key is unique, so a second insert with the same key changes nothing,
 //   - the list comes back newest first, with a limit,
 //   - team_members.account_id is unique, so INSERT IGNORE with the same person changes nothing,
-//   - the team list comes back oldest first, with a limit.
+//   - the team list comes back oldest first, with a limit,
+//   - porch_statuses.account_id is the primary key, so a second save for a person replaces the first.
 // Any statement it does not recognise throws, so a typo in a query fails a test loudly.
 //
 // The real MigrationRunner from @forge/sql runs on top of this fake, so the tests also
@@ -21,12 +22,16 @@ export const fake = {
   tables: new Set(),
   notes: [],
   team: [],
+  porch: [],
   migrations: [],
   nextId: 1,
   // Every statement sent, with its parameters, so a test can check how SQL was built.
   statements: [],
   // Set to an Error to make the next statements fail, as if the database were down.
   failWith: null,
+  // Forge SQL may return a DATE column as text ("2026-11-20") or as a JavaScript Date.
+  // false returns text; a test sets true to get Date objects instead.
+  datesAsObjects: false,
   // A fixed clock, so created_at values are predictable. Tests move it forward.
   now: new Date('2026-11-06T09:00:00Z'),
 
@@ -34,10 +39,12 @@ export const fake = {
     this.tables = new Set();
     this.notes = [];
     this.team = [];
+    this.porch = [];
     this.migrations = [];
     this.nextId = 1;
     this.statements = [];
     this.failWith = null;
+    this.datesAsObjects = false;
     this.now = new Date('2026-11-06T09:00:00Z');
   },
 
@@ -59,6 +66,13 @@ function requireTable(name) {
 
 /** A team row as the SELECTs return it: the three asked-for columns, without the id. */
 const withoutId = ({ id, ...rest }) => ({ ...rest }); // eslint-disable-line no-unused-vars
+
+/** A porch_statuses row as the SELECTs return it, with until_date as text or as a Date. */
+const porchRow = ({ account_id, kind, until_date }) => ({
+  account_id,
+  kind,
+  until_date: fake.datesAsObjects ? new Date(`${until_date}T00:00:00Z`) : until_date,
+});
 
 /** Run one statement against the in-memory state. */
 async function run(query, params = []) {
@@ -187,6 +201,58 @@ async function run(query, params = []) {
       .sort((a, b) => (a.added_at === b.added_at ? a.id - b.id : a.added_at < b.added_at ? -1 : 1))
       .slice(0, limit)
       .map(withoutId);
+    return { rows };
+  }
+
+  // --- the porch_statuses table (spec porch-status) ---
+  if (q.startsWith('CREATE TABLE IF NOT EXISTS porch_statuses')) {
+    if (!q.includes('account_id VARCHAR(128) PRIMARY KEY')) {
+      throw new Error('fake-forge-sql: the porch_statuses table must have account_id as its primary key');
+    }
+    fake.tables.add('porch_statuses');
+    return { rows: { affectedRows: 0 } };
+  }
+  if (q.startsWith('DROP TABLE IF EXISTS porch_statuses')) {
+    fake.tables.delete('porch_statuses');
+    fake.porch = [];
+    return { rows: { affectedRows: 0 } };
+  }
+  if (
+    q.startsWith(
+      'INSERT INTO porch_statuses (account_id, kind, until_date) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE ' +
+        'kind = VALUES(kind), until_date = VALUES(until_date), set_at = CURRENT_TIMESTAMP',
+    )
+  ) {
+    requireTable('porch_statuses');
+    const [accountId, kind, untilDate] = params;
+    // The primary key on account_id: a second save for the same person replaces the row.
+    // MySQL counts an insert as 1 affected row and an update as 2.
+    const existing = fake.porch.find((p) => p.account_id === accountId);
+    if (existing) {
+      Object.assign(existing, { kind, until_date: untilDate, set_at: toDatetime(fake.now) });
+      return { rows: { affectedRows: 2 } };
+    }
+    fake.porch.push({ account_id: accountId, kind, until_date: untilDate, set_at: toDatetime(fake.now) });
+    return { rows: { affectedRows: 1 } };
+  }
+  if (q.startsWith('DELETE FROM porch_statuses WHERE account_id = ?')) {
+    requireTable('porch_statuses');
+    const before = fake.porch.length;
+    fake.porch = fake.porch.filter((p) => p.account_id !== params[0]);
+    return { rows: { affectedRows: before - fake.porch.length } };
+  }
+  if (q.startsWith('SELECT account_id, kind, until_date FROM porch_statuses WHERE account_id = ?')) {
+    requireTable('porch_statuses');
+    return { rows: fake.porch.filter((p) => p.account_id === params[0]).map(porchRow) };
+  }
+  const porchListQuery = q.match(/^SELECT account_id, kind, until_date FROM porch_statuses ORDER BY account_id ASC LIMIT (\d+)$/);
+  if (porchListQuery) {
+    requireTable('porch_statuses');
+    const limit = Number(porchListQuery[1]);
+    const rows = [...fake.porch]
+      .sort((a, b) => (a.account_id < b.account_id ? -1 : 1))
+      .slice(0, limit)
+      .map(porchRow);
     return { rows };
   }
 

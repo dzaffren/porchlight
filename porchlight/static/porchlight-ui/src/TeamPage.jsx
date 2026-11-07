@@ -1,14 +1,23 @@
-// The Team page: the team list on the left, the picked teammate's catch-up on the right.
+// The Team page: your porch light and the team list on the left, the picked teammate's
+// catch-up on the right.
 //
-//   load:   listTeam → names of members and of who added them (one Jira request) → list
+//   load:   listTeam + listStatuses → people (one Jira request: names, active, time zone) → list
 //   add:    AddTeammate → addTeammate → reload the list → toast
 //   remove: Remove → removeTeammate → row gone (and the catch-up closes if it was theirs) → toast → reload
 //   reloads: only the newest read of the team may change the list
 //   pick:   a row → CatchUp reads their work from Jira, as the viewer
+//   porch:  MyPorchLight → setMyStatus → the lamp changes at once → toast → reload
+//
+// What each lamp shows is worked out on every render by effectiveStatus in @lib/porch.js,
+// from the stored choice, the person's Jira time zone and Jira's `active` flag (D26).
+// A one-minute clock redraws the page, so lamps stay right on a page left open.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { effectiveStatus, isKnownTimeZone } from '@lib/porch.js';
 import * as api from './api.js';
 import AddTeammate from './AddTeammate.jsx';
 import CatchUp from './CatchUp.jsx';
+import MyPorchLight from './MyPorchLight.jsx';
+import { statusText } from './Presence.jsx';
 import TeamList from './TeamList.jsx';
 import Toast from './Toast.jsx';
 import { Glyph } from './Glyph.jsx';
@@ -16,32 +25,67 @@ import { Glyph } from './Glyph.jsx';
 const unique = (values) => [...new Set(values)];
 
 /**
- * The team and every name it shows. Names are looked up each time, never stored
- * (decision D12). A failed name lookup never hides the team: rows say "A teammate".
+ * The team, everyone's stored porch light, and what Jira says about each person. Jira's
+ * part is looked up each time, never stored (decisions D12 and D27).
+ *
+ * A failed Jira lookup never hides the team: rows say "A teammate" and keep their stored
+ * porch light. A failed porch light read does fail the whole read, because showing
+ * everyone as Here would tell a teammate to message someone who is away.
  */
 async function readTeam() {
-  const members = await api.fetchTeam();
+  const [members, statuses] = await Promise.all([api.fetchTeam(), api.fetchStatuses()]);
   const accountIds = unique(members.flatMap((m) => [m.accountId, m.addedByAccountId]));
-  let names = {};
+  let people = {};
   try {
-    names = await api.fetchDisplayNames(accountIds);
+    people = await api.fetchPeople(accountIds);
   } catch {
     // Names are a nicety; see nameOf below.
   }
-  return { members, names };
+  return { members, people, statuses: Object.fromEntries(statuses.map((row) => [row.accountId, row])) };
 }
+
+/** The browser's own time zone, for when Jira does not give the viewer's. */
+const browserTimeZone = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+// How often the page looks at the clock again. A lamp changes when a date ends in someone's
+// own time zone, which can be any minute of the viewer's day, so a page left open must work
+// every lamp out again on its own (review finding F10). Once a minute is plenty for a lamp,
+// and redrawing a team of 5 to 50 rows costs nothing.
+const CLOCK_TICK_MS = 60_000;
 
 export default function TeamPage() {
   const [status, setStatus] = useState('loading'); // 'loading' | 'ready' | 'error'
   const [members, setMembers] = useState([]);
-  const [names, setNames] = useState({}); // accountId → display name
+  const [people, setPeople] = useState({}); // accountId → { displayName, active, timeZone }
+  const [statuses, setStatuses] = useState({}); // accountId → stored porch light; Here has none
+  const [me, setMe] = useState(null); // the viewer: { accountId, displayName, timeZone }
   const [selectedId, setSelectedId] = useState(null);
   const [toast, setToast] = useState(null);
+  // "Now", for every lamp on the page. Updating it each minute redraws the page, so an Away
+  // that ends turns off, and a Leaving that ends turns into Left, with nobody clicking.
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), CLOCK_TICK_MS);
+    return () => clearInterval(timer);
+  }, []);
 
   const showTeam = useCallback((team) => {
     setMembers(team.members);
-    setNames((previous) => ({ ...previous, ...team.names }));
+    // Keep what Jira said before about anyone it leaves out this time.
+    setPeople((previous) => ({ ...previous, ...team.people }));
+    setStatuses(team.statuses);
     setStatus('ready');
+  }, []);
+
+  // Who the viewer is, once: their own porch light card needs their account and time zone.
+  // Without it there is no card, and the team list still works.
+  useEffect(() => {
+    let cancelled = false;
+    api.fetchMyself().then((viewer) => { if (!cancelled) setMe(viewer); }, () => {});
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Every read of the team takes a ticket number. Only the newest read may change the
@@ -67,7 +111,18 @@ export default function TeamPage() {
     };
   }, [showTeam]);
 
-  const nameOf = useCallback((accountId) => names[accountId] ?? 'A teammate', [names]);
+  const nameOf = useCallback((accountId) => people[accountId]?.displayName ?? 'A teammate', [people]);
+
+  // The viewer's own zone decides "today" in the form, and stands in for anyone whose
+  // zone Jira hides (open item O10).
+  const viewerTimeZone = isKnownTimeZone(me?.timeZone) ? me.timeZone : browserTimeZone();
+
+  // What one person's porch light shows right now. A person missing from Jira's answer
+  // has no entry in `people`, so effectiveStatus keeps their stored status (risk O3).
+  const statusOf = useCallback(
+    (accountId) => effectiveStatus(statuses[accountId], people[accountId], now, viewerTimeZone),
+    [statuses, people, now, viewerTimeZone],
+  );
   const memberIds = useMemo(() => new Set(members.map((m) => m.accountId)), [members]);
   const say = (text) => setToast({ id: crypto.randomUUID(), text });
   // One function for the page's whole life, so a re-render never restarts the toast's timer.
@@ -111,6 +166,37 @@ export default function TeamPage() {
     });
   }
 
+  // Called by MyPorchLight with { kind, untilDate }. Returns the resolver's
+  // answer so the form can show a date error; a thrown error passes straight through.
+  async function handleSaveStatus(choice) {
+    const result = await api.setMyStatus(choice);
+    if (!result?.ok) return result;
+
+    // The lamp changes at once on the card, the row and the catch-up (motion tier 1).
+    // Here has no stored row, so choosing it removes the viewer's row.
+    setStatuses((previous) => {
+      const next = { ...previous };
+      if (choice.kind === 'here') delete next[me.accountId];
+      else next[me.accountId] = { accountId: me.accountId, kind: choice.kind, untilDate: choice.untilDate };
+      return next;
+    });
+    say(choice.kind === 'here' ? 'Your porch light is off.' : `Your porch light is on: ${statusText(choice)}.`);
+    // Read again, so this becomes the newest read and teammates' changes show too.
+    reloadTeam().catch(() => {
+      // The lamp is already right; the list catches up on the next page load.
+    });
+    return result;
+  }
+
+  // The viewer's own porch light. When they are not on the team list, Jira's bulk answer
+  // has no entry for them, so their time zone comes from /myself.
+  const myStatus = me && effectiveStatus(
+    statuses[me.accountId],
+    people[me.accountId] ?? { timeZone: me.timeZone },
+    now,
+    viewerTimeZone,
+  );
+
   const selected = members.find((m) => m.accountId === selectedId) ?? null;
   const count = members.length;
   return (
@@ -124,31 +210,39 @@ export default function TeamPage() {
         </header>
 
         <div className="split">
-          <section className="team" aria-labelledby="team-title">
-            <div className="sec-head">
-              <h2 id="team-title">Team</h2>
-              {status === 'ready' && count > 0 && (
-                <span className="pl-meta">{count} {count === 1 ? 'person' : 'people'}</span>
-              )}
-            </div>
-            <AddTeammate memberIds={memberIds} onAdd={handleAdd} />
-            {status === 'loading' && <span className="pl-meta" role="status">Loading the team…</span>}
-            {status === 'error' && (
-              <div className="pl-message pl-message--error" role="alert">
-                <Glyph name="gap" />
-                <p><strong>Couldn&apos;t load the team.</strong> Reload the page to try again.</p>
+          <div className="column">
+            {/* Your porch light sits above the team list (decision D25). It waits for the
+                stored statuses, so it never shows "Here" for someone who is away. */}
+            {status === 'ready' && myStatus && (
+              <MyPorchLight status={myStatus} timeZone={viewerTimeZone} onSave={handleSaveStatus} />
+            )}
+            <section className="team" aria-labelledby="team-title">
+              <div className="sec-head">
+                <h2 id="team-title">Team</h2>
+                {status === 'ready' && count > 0 && (
+                  <span className="pl-meta">{count} {count === 1 ? 'person' : 'people'}</span>
+                )}
               </div>
-            )}
-            {status === 'ready' && (
-              <TeamList
-                members={members}
-                nameOf={nameOf}
-                selectedId={selectedId}
-                onPick={(member) => setSelectedId(member.accountId)}
-                onRemove={handleRemove}
-              />
-            )}
-          </section>
+              <AddTeammate memberIds={memberIds} onAdd={handleAdd} />
+              {status === 'loading' && <span className="pl-meta" role="status">Loading the team…</span>}
+              {status === 'error' && (
+                <div className="pl-message pl-message--error" role="alert">
+                  <Glyph name="gap" />
+                  <p><strong>Couldn&apos;t load the team.</strong> Reload the page to try again.</p>
+                </div>
+              )}
+              {status === 'ready' && (
+                <TeamList
+                  members={members}
+                  nameOf={nameOf}
+                  statusOf={statusOf}
+                  selectedId={selectedId}
+                  onPick={(member) => setSelectedId(member.accountId)}
+                  onRemove={handleRemove}
+                />
+              )}
+            </section>
+          </div>
 
           {/* A new key per person gives each catch-up fresh state, so one person's
               tickets never show under another person's name. */}
@@ -157,7 +251,8 @@ export default function TeamPage() {
             person={selected && {
               accountId: selected.accountId,
               name: nameOf(selected.accountId),
-              nameKnown: selected.accountId in names, // false → the row says "A teammate"
+              nameKnown: selected.accountId in people, // false → the row says "A teammate"
+              status: statusOf(selected.accountId),
             }}
           />
         </div>

@@ -4,8 +4,12 @@
 // catch-up is open gets .pl-row.is-selected and aria-current, so the list shows where
 // you are (decision D19).
 //
+// Under each name, on its own line, is the person's porch light (docs/specs/porch-status.md).
+// It is read only: nobody gets a control for another person's lamp (decision D24).
+//
 // Security: names come from Jira. They are React text children, so they show as text.
 import { formatDay, initials } from './format.js';
+import Presence from './Presence.jsx';
 
 /** First visit: a house at night with its porch light on, waiting. */
 function EmptyTeam() {
@@ -24,12 +28,14 @@ function EmptyTeam() {
  * @param {{
  *   members: Array<{ accountId: string, addedByAccountId: string, addedAt: string }>,
  *   nameOf: (accountId: string) => string,
+ *   statusOf: (accountId: string) => { kind: string, untilDate?: string },
  *   selectedId: string | null,
  *   onPick: (member) => void,
  *   onRemove: (member) => void,
  * }} props
+ *   statusOf: what the person's porch light shows right now, from effectiveStatus.
  */
-export default function TeamList({ members, nameOf, selectedId, onPick, onRemove }) {
+export default function TeamList({ members, nameOf, statusOf, selectedId, onPick, onRemove }) {
   if (members.length === 0) {
     return <EmptyTeam />;
   }
@@ -38,15 +44,28 @@ export default function TeamList({ members, nameOf, selectedId, onPick, onRemove
       {members.map((member) => {
         const name = nameOf(member.accountId);
         const selected = member.accountId === selectedId;
+        const status = statusOf(member.accountId);
+        // The button's name stays "Catch up on Aisha Rahman". A lamp that is on is linked
+        // as its description, so a screen reader also says "Away until 20 Nov".
+        const statusId = `status-${member.accountId}`;
         return (
           <li
             key={member.accountId}
             className={selected ? 'pl-row team-row is-selected' : 'pl-row team-row'}
             aria-current={selected ? 'true' : undefined}
           >
-            <button className="pick" type="button" aria-label={`Catch up on ${name}`} onClick={() => onPick(member)}>
+            <button
+              className="pick"
+              type="button"
+              aria-label={`Catch up on ${name}`}
+              aria-describedby={status.kind === 'here' ? undefined : statusId}
+              onClick={() => onPick(member)}
+            >
               <span className="pl-avatar" aria-hidden="true">{initials(name)}</span>
-              <strong>{name}</strong>
+              <span className="name-line">
+                <strong>{name}</strong>
+                <Presence status={status} id={statusId} />
+              </span>
               <span className="pl-meta">Added by {nameOf(member.addedByAccountId)} · {formatDay(member.addedAt)}</span>
             </button>
             <button
