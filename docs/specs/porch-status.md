@@ -336,21 +336,7 @@ Pause 1: recorded as D24 on 2026-11-07.
 
 Pause 2: recorded as D25 on 2026-11-07.
 
-Drafted at pause 3. `/build` appends them to `DECISIONS.md`.
-
-### D26 · 2026-11-07 · Store only the chosen status; work out Here and Left when it is read
-
-Why: Away must end at the end of a date in each person's own time zone, and Left must follow a passed leaving date or a deactivated account; working this out at read time from the stored choice, Jira's time zone and Jira's active flag needs no job running at every midnight in every zone, and can never be stale.
-Rejected: a scheduled trigger that rewrites rows when dates pass (one run per time zone, and a missed run leaves a wrong lamp), storing Left as a row (a deactivation would still need a check at read time).
-Source: docs/specs/porch-status.md
-Status: active
-
-### D27 · 2026-11-07 · Each person's time zone comes from Jira each time, never stored
-
-Why: Jira's bulk user lookup already returns `timeZone` and `active` with the names the Team page asks for (checked 2026-11-07), so the status rules get them for free, and a person who moves country is right at once.
-Rejected: storing the time zone with the status (stale after a move, and copies personal data Jira owns, against D12's reasoning), the site's time zone (O4 chose the person's own day).
-Source: docs/specs/porch-status.md
-Status: active
+Pause 3: recorded as D26 and D27 on 2026-11-07.
 
 ## Glossary
 
