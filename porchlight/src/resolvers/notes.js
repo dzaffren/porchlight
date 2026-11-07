@@ -13,22 +13,11 @@
 import { validateNoteBody } from '../lib/validate.js';
 import { ensureMigrated } from '../db/migrate.js';
 import { insertNoteOnce, listNewestNotes } from '../db/notes.js';
+import { signedInAccountId } from './context.js';
 
 // The page makes client keys with crypto.randomUUID(), which looks like
 // "6f1c2a4e-1b7d-4c3e-9a51-2f8e0d4b7c11". Anything else is refused.
 const CLIENT_KEY_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-/**
- * Read the signed-in user's account ID from Forge's context.
- * The author always comes from here, never from the payload, so nobody can save as someone else.
- */
-function signedInAccountId(req) {
-  const accountId = req.context?.accountId;
-  if (!accountId) {
-    throw new Error('Porchlight needs a signed-in Atlassian account.');
-  }
-  return accountId;
-}
 
 /**
  * Save one note.

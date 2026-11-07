@@ -4,26 +4,10 @@
 // bindParams(). The database treats those values as plain data, so text a person typed
 // (even text that looks like SQL) can never change what the query does.
 import { sql } from '@forge/sql';
+import { toIsoUtc } from './datetime.js';
 
 // The list shows at most this many notes. Pagination is a later slice.
 export const LIST_LIMIT = 100;
-
-/**
- * Turn the DATETIME the database returns into an ISO 8601 string in UTC,
- * like "2026-11-06T09:00:00.000Z", which the page can format for the reader.
- * The column is stored in UTC, so a value without a time zone is read as UTC.
- *
- * @param {string|Date} value
- * @returns {string}
- */
-function toIsoUtc(value) {
-  if (value instanceof Date) {
-    return value.toISOString();
-  }
-  const text = String(value);
-  const hasZone = /(Z|[+-]\d\d:?\d\d)$/.test(text);
-  return new Date(hasZone ? text : `${text.replace(' ', 'T')}Z`).toISOString();
-}
 
 /**
  * Convert one database row into the shape the page uses.
