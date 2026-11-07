@@ -53,7 +53,7 @@ beforeEach(() => {
   vi.setSystemTime(new Date('2026-11-07T04:00:00.000Z'));
   api.fetchPeople.mockImplementation(async (ids) => peopleFor(ids));
   api.fetchStatuses.mockResolvedValue([]);
-  api.fetchMyself.mockResolvedValue({ accountId: DANIEL, displayName: 'Daniel Tan', timeZone: KL });
+  api.fetchMyself.mockResolvedValue({ accountId: DANIEL, displayName: 'Daniel Tan' });
   api.searchUsers.mockResolvedValue([
     { accountId: AISHA, displayName: 'Aisha Rahman' },
     { accountId: DANIEL, displayName: 'Daniel Tan' },
@@ -250,7 +250,7 @@ const leaving = (accountId, untilDate) => ({ accountId, kind: 'leaving', untilDa
 
 /** Open the page as this person. */
 function viewAs(accountId) {
-  api.fetchMyself.mockResolvedValue({ accountId, displayName: NAMES[accountId], timeZone: KL });
+  api.fetchMyself.mockResolvedValue({ accountId, displayName: NAMES[accountId] });
 }
 
 /** A team row, found by the person's name on its "Catch up on …" button. */
@@ -283,7 +283,7 @@ describe('TeamPage porch lights', () => {
 
     await setMyPorchLight(user, 'away', '2026-11-20');
 
-    expect(api.setMyStatus).toHaveBeenCalledWith({ kind: 'away', untilDate: '2026-11-20', timeZone: KL });
+    expect(api.setMyStatus).toHaveBeenCalledWith({ kind: 'away', untilDate: '2026-11-20' });
     expect(await screen.findByText('Your porch light is on: Away until 20 Nov.')).toBeTruthy();
     expect((await myCard()).querySelector('.pl-presence--away').textContent).toBe('Away until 20 Nov');
     const row = rowOf('Aisha Rahman');
@@ -339,7 +339,7 @@ describe('TeamPage porch lights', () => {
 
     await setMyPorchLight(user, 'here');
 
-    expect(api.setMyStatus).toHaveBeenCalledWith({ kind: 'here', untilDate: null, timeZone: KL });
+    expect(api.setMyStatus).toHaveBeenCalledWith({ kind: 'here', untilDate: null });
     expect(await screen.findByText('Your porch light is off.')).toBeTruthy();
     expect(within(await myCard()).getByText('Here, porch light off')).toBeTruthy();
     expect(rowOf('Aisha Rahman').querySelector('.pl-presence')).toBeNull();

@@ -84,7 +84,7 @@ function StatusForm({ status, timeZone, onSave, onClose }) {
 
     setSaving(true);
     try {
-      const result = await onSave({ kind: draft.kind, untilDate, timeZone });
+      const result = await onSave({ kind: draft.kind, untilDate });
       if (result?.ok) {
         onClose();
         return;
@@ -162,10 +162,10 @@ function StatusForm({ status, timeZone, onSave, onClose }) {
  * @param {{
  *   status: { kind: 'here' } | { kind: 'left' } | { kind: 'away' | 'leaving', untilDate: string },
  *   timeZone: string,
- *   onSave: (choice: { kind: string, untilDate: string | null, timeZone: string }) => Promise<{ ok: boolean, error?: string }>,
+ *   onSave: (choice: { kind: string, untilDate: string | null }) => Promise<{ ok: boolean, error?: string }>,
  * }} props
  *   status: the viewer's own porch light right now, from effectiveStatus.
- *   timeZone: the viewer's Jira time zone; dates are checked in it and it is sent on save.
+ *   timeZone: the viewer's Jira time zone; dates are checked in it before saving.
  *   onSave: resolves with the resolver's answer, or rejects when the save failed.
  */
 export default function MyPorchLight({ status, timeZone, onSave }) {

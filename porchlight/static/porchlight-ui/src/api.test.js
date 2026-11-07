@@ -143,13 +143,13 @@ describe('porch light resolvers', () => {
     await expect(fetchStatuses()).rejects.toThrow();
   });
 
-  it("setMyStatus sends the kind, date and time zone, and passes the resolver's answer back", async () => {
+  it("setMyStatus sends only the kind and the date (the server never trusts a time zone), and passes the resolver's answer back", async () => {
     invoke.mockResolvedValue({ ok: false, error: 'past' });
 
-    const answer = await setMyStatus({ kind: 'away', untilDate: '2026-11-02', timeZone: 'Asia/Kuala_Lumpur' });
+    const answer = await setMyStatus({ kind: 'away', untilDate: '2026-11-02' });
 
     expect(answer).toEqual({ ok: false, error: 'past' });
-    expect(invoke).toHaveBeenCalledWith('setMyStatus', { kind: 'away', untilDate: '2026-11-02', timeZone: 'Asia/Kuala_Lumpur' });
+    expect(invoke).toHaveBeenCalledWith('setMyStatus', { kind: 'away', untilDate: '2026-11-02' });
   });
 });
 

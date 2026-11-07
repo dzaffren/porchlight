@@ -151,7 +151,7 @@ export default function TeamPage() {
     });
   }
 
-  // Called by MyPorchLight with { kind, untilDate, timeZone }. Returns the resolver's
+  // Called by MyPorchLight with { kind, untilDate }. Returns the resolver's
   // answer so the form can show a date error; a thrown error passes straight through.
   async function handleSaveStatus(choice) {
     const result = await api.setMyStatus(choice);

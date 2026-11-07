@@ -168,7 +168,7 @@ Your own porch light is a card at the top of the Team column. Change opens a sma
 
 Porchlight stores only what a person chose: one row per person in a new `porch_statuses` table with a kind (away or leaving) and a date. Here is no row. Here-after-Away and Left are never stored; they are worked out each time the page reads a status, from the date, the person's Jira time zone and Jira's `active` flag (D26). The time zone and `active` come from the bulk user lookup the Team page already makes for names, so nothing personal that Jira owns is copied (D12, D27). One shared file, `src/lib/porch.js`, holds the date rules, so the page and the resolver use the same code, like `src/lib/validate.js` for notes.
 
-Relies on: D2, D9, D12, D14, D15, D16, D19, D21, D24, D25, and D26–D27 drafted below.
+Relies on: D2, D9, D12, D14, D15, D16, D19, D21, D24, D25, and D26–D27 drafted below, and D28 drafted at /review.
 
 ```mermaid
 flowchart TB
@@ -200,8 +200,8 @@ sequenceDiagram
     participant J as Jira (as the viewer)
     A->>TP: Away until 20 Nov, Save
     TP->>TP: checkStatusDate in her time zone, else field error
-    TP->>R: invoke setMyStatus with kind, date and her time zone
-    R->>R: accountId from context; same date check; refuse if already Left
+    TP->>R: invoke setMyStatus with kind and date (no time zone)
+    R->>R: accountId from context; date check from UTC-12 to UTC+14; refuse if already Left
     R->>DB: upsert her one row (or delete it for Here)
     R-->>TP: saved
     TP->>R: listStatuses
@@ -210,16 +210,16 @@ sequenceDiagram
     TP-->>A: lamp on her card, row and catch-up, toast
 ```
 
-On Save, the page and the resolver both check the date in Aisha's time zone, and the resolver writes only her own row. Every read then joins the stored choices with Jira's time zone and active flag to show the right lamp.
+On Save, the page checks the date in Aisha's time zone. The resolver checks it again against every time zone on Earth, and writes only her own row. Every read then joins the stored choices with Jira's time zone and active flag to show the right lamp.
 
 ```mermaid
 flowchart LR
-    P["Page payload<br/>kind, date, timeZone (untrusted)"] -- "allow-list, date format, Intl time zone check" --> R["setMyStatus"]
+    P["Page payload<br/>kind, date (untrusted)"] -- "allow-list, date format, range from UTC-12 to UTC+14" --> R["setMyStatus"]
     C["Forge context<br/>accountId (trusted)"] -- "whose row" --> R
     R -- "bound SQL" --> DB[("porch_statuses")]
 ```
 
-Nobody can write another person's row: the row key comes from Forge's context. The kind is an allow-list, the date a strict format, and the time zone must be one that `Intl` knows. No typed text is stored or shown.
+Nobody can write another person's row: the row key comes from Forge's context. The kind is an allow-list and the date a strict format. The resolver takes no time zone from the page (review finding F1). No typed text is stored or shown.
 
 ### Changes
 
@@ -230,7 +230,7 @@ Paths are under `Codegeist/porchlight/` unless they start at the repo root.
 | `src/lib/porch.js` (new) | `todayIn(timeZone, now)` gives a "YYYY-MM-DD" day with `Intl.DateTimeFormat`; `checkStatusDate(kind, date, today)` gives ok, "Pick today or a later date." or "Pick a date within a year."; `effectiveStatus(row, person, now)` gives here, away, leaving or left | Scenarios 1–5; shared like `src/lib/validate.js` |
 | `src/db/migrate.js:56` | Enqueue `v003_create_porch_statuses` after v002; `rollbackV003()` like `rollbackV002()` at line 124 | Scenarios 1–3 |
 | `src/db/porch.js` (new) | `listStatuses()` (`LIMIT 500` written in, as `notes.js` does), `upsertStatus(accountId, kind, date)` with `ON DUPLICATE KEY UPDATE`, `deleteStatus(accountId)`, `getStatus(accountId)` | Scenarios 1–3 |
-| `src/resolvers/porch.js` (new) | `listStatuses`; `setMyStatus` checks kind, date and time zone, refuses a change once the stored Leaving date has passed (error `left`), logs `porchlight.status.set kind=<kind> by=<id>`; reuses `signedInAccountId` (`src/resolvers/context.js`) and `ensureMigrated` | Scenarios 1, 2, 3, 5 |
+| `src/resolvers/porch.js` (new) | `listStatuses`; `setMyStatus` checks kind and date, with "past" in UTC-12 and "within a year" in UTC+14, refuses a change once the stored Leaving date has passed in UTC+14 (error `left`), logs `porchlight.status.set kind=<kind> by=<id>`; reuses `signedInAccountId` (`src/resolvers/context.js`) and `ensureMigrated` | Scenarios 1, 2, 3, 5 |
 | `src/resolvers/index.js:16` | Define the two resolvers | Wiring |
 | `static/porchlight-ui/src/api.js` | `fetchStatuses`, `setMyStatus` (invoke); `fetchPeople(ids)` returns name, active and time zone per person from the batched `user/bulk` (`fetchDisplayNames` keeps working for notes); `fetchMyself` also returns `timeZone` | Scenarios 1–4 |
 | `static/porchlight-ui/src/Presence.jsx` (new), `MyPorchLight.jsx` (new) | The lamp with its text; the "Your porch light" card and its form, from the preview | Scenarios 1, 2, 3, 5 |
@@ -267,7 +267,7 @@ One row per person at most. Here is no row. Time zones, names and `active` are n
 | `porch_statuses` table and two resolvers | Scenarios 1 and 3: a status persists and everyone sees it |
 | `src/lib/porch.js` shared by page and resolver | Scenarios 2, 3 and 5: the same date and time-zone rule on both sides |
 | Time zone and `active` from `user/bulk` | Scenarios 2, 3 and 4 (O4, O3); the request already exists for names |
-| The page sends its own time zone on save | Scenario 5: the resolver checks "today" in the person's day; it cannot call Jira itself (no `@forge/api`, D21) |
+| The resolver checks dates at the two edges of the calendar, UTC-12 and UTC+14 | Scenario 5 and review finding F1: it cannot ask Jira for the person's zone (no `@forge/api`, D21), and a zone from the page can be changed |
 
 No new npm package and no new scope: `read:jira-user` covers `user/bulk` and `myself`.
 
@@ -277,7 +277,7 @@ No new npm package and no new scope: `read:jira-user` covers `user/bulk` and `my
 | -------------------- | ----------------------------------------------------------------------------- |
 | **Load**             | One team of 5–50 people. One extra invoke per Team page load; the `user/bulk` call already happens |
 | **Breaks first**     | At 10×, nothing near a limit: `listStatuses` returns up to 500 rows, ten times the team list's 200 |
-| **Security surface** | Anyone who can open Porchlight reads all statuses (D24: setting it announces it) and writes only their own row, keyed by Forge's context. Kind is an allow-list, the date a strict "YYYY-MM-DD" in range, the time zone checked with `Intl`. No typed text. Stores an account ID, a kind, a date and when it was set |
+| **Security surface** | Anyone who can open Porchlight reads all statuses (D24: setting it announces it) and writes only their own row, keyed by Forge's context. Kind is an allow-list, the date a strict "YYYY-MM-DD" in range, no time zone taken from the page. No typed text. Stores an account ID, a kind, a date and when it was set |
 | **Proof it works**   | `forge logs -e development` shows `porchlight.status.set kind=away by=<id>`, and once `porchlight.migrate v003_create_porch_statuses=done` |
 | **Rollout**          | Development only, no users yet, so no flag. No scope change, so no install upgrade. Rollback: redeploy the previous commit; v003 only adds a table |
 
@@ -308,7 +308,7 @@ A owns `src/lib/porch.js`; B imports it through the `@lib` alias and never edits
 | Risk | Mitigation |
 | ---- | ---------- |
 | Jira hides another person's time zone (O10) | `effectiveStatus` falls back to the viewer's own time zone; a unit test covers it |
-| Forge's runtime lacks time-zone data for `Intl` (O11) | The resolver answers `bad_request` for a zone it cannot use; the first deploy and the e2e prove the real runtime |
+| Forge's runtime lacks time-zone data for `Intl` (O11) | The resolver uses only `Etc/GMT+12` and `Etc/GMT-14`; the first deploy and the e2e prove the real runtime |
 | `user/bulk` leaves a deactivated person out (O3) | Show Left only on `active: false`; a missing person keeps the last status |
 | A device clock is wrong, so the lamp turns off a day early or late | Display only; the resolver's date check uses the server clock |
 
@@ -332,7 +332,7 @@ A owns `src/lib/porch.js`; B imports it through the `@lib` alias and never edits
 | O14 | The spec does not say what the Team page shows when `listStatuses` fails. | flag | build | user | Decided alone | Chose: the whole team read fails with the existing "Couldn't load the team." and its Try again, because showing everyone as Here gives the wrong signal. Other: show the team with no lamps. Undo: catch `fetchStatuses` in `readTeam` (`TeamPage.jsx`) and use `[]`. 2026-11-07 |
 | O15 | The spec gives no text for a save that fails (network, `bad_request` or `left`). | flag | build | user | Decided alone | Chose: a new message under the form, "Couldn't save your porch light. Try again.", in the Composer pattern; added to Texts. `left` has no special path. Other: reload the page on `left`, so the card turns into Left. Undo: `handleSubmit` in `MyPorchLight.jsx` and `handleSaveStatus` in `TeamPage.jsx`. 2026-11-07 |
 | O16 | The spec does not say how the form opens, or what Save does with an empty date. | flag | build | user | Decided alone | Chose: for a person who is Here, the form opens on "Away until" with an empty date; otherwise on their current kind and date. Save with no date shows "Pick today or a later date." Other: default the date to today, or add a "Pick a date." text. Undo: `draftFrom` and `dateMessage` in `MyPorchLight.jsx`. 2026-11-07 |
-| O17 | `setMyStatus` decides "already Left" with the time zone that the page sends. A changed request with a zone further west can still change a Leaving status for a few hours after its date passes. | flag | build | user | Decided alone | Chose: accept it. The page cannot be stopped from sending a valid zone, and the resolver cannot ask Jira itself (no `@forge/api`, D21). The lamp everyone sees still uses Jira's zone. Other: look up the zone on the server, which means superseding D21. Undo: a later slice. For /review to judge. 2026-11-07 |
+| O17 | `setMyStatus` decides "already Left" with the time zone that the page sends. A changed request with a zone further west can still change a Leaving status for a few hours after its date passes. | flag | build | user | Resolved | Chose: accept it. The page cannot be stopped from sending a valid zone, and the resolver cannot ask Jira itself (no `@forge/api`, D21). The lamp everyone sees still uses Jira's zone. Other: look up the zone on the server, which means superseding D21. Undo: a later slice. For /review to judge. 2026-11-07. Reopened at /review 2026-11-08 as finding F1 (A06, low), which showed the window is up to about a day. The user chose option B: the resolver takes no time zone from the page; "past" is judged in UTC-12, "within a year" and "Left" in UTC+14. Consequence: on the leaving date, changes are refused from the moment the next day begins in UTC+14 (18:00 in Kuala Lumpur), a few hours before the lamp shows Left. D28 drafted. 2026-11-08 |
 
 _Never delete this section or its rows. See references/ledger.md._
 
@@ -343,6 +343,15 @@ Pause 1: recorded as D24 on 2026-11-07.
 Pause 2: recorded as D25 on 2026-11-07.
 
 Pause 3: recorded as D26 and D27 on 2026-11-07.
+
+Drafted at /review on 2026-11-08, approved by the user's choice of option B. `/ship` appends it to `DECISIONS.md`.
+
+### D28 · 2026-11-08 · The server checks porch light dates against the whole planet, never a time zone from the page
+
+Why: the resolver cannot ask Jira for a person's time zone (D21), and a zone sent by the page let a changed request undo a Left for up to about a day (review finding F1); judging "past" in UTC-12 and "within a year" and "Left" in UTC+14 refuses no real choice and cannot be stretched.
+Rejected: storing each person's time zone with the status (against D27, and stale after a move), trusting the zone the page sends (anyone can undo Left).
+Source: docs/specs/porch-status.md
+Status: active
 
 ## Glossary
 

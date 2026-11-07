@@ -75,12 +75,12 @@ describe('MyPorchLight', () => {
     expect(document.activeElement).toBe(status);
   });
 
-  it('saves Away until 20 Nov with the viewer\'s own time zone (scenario 1)', async () => {
+  it('saves Away until 20 Nov, checked in the viewer\'s own day (scenario 1)', async () => {
     const user = await openForm();
 
     await choose(user, 'away', '2026-11-20');
 
-    expect(onSave).toHaveBeenCalledWith({ kind: 'away', untilDate: '2026-11-20', timeZone: KL });
+    expect(onSave).toHaveBeenCalledWith({ kind: 'away', untilDate: '2026-11-20' });
     // The form closes once the save worked.
     expect(await screen.findByRole('button', { name: 'Change' })).toBeTruthy();
     expect(screen.queryByRole('combobox', { name: 'Status' })).toBeNull();
@@ -102,7 +102,7 @@ describe('MyPorchLight', () => {
     expect(screen.getByText('Your porch light is off: teammates just ask you.')).toBeTruthy();
     await user.click(screen.getByRole('button', { name: 'Save' }));
 
-    expect(onSave).toHaveBeenCalledWith({ kind: 'here', untilDate: null, timeZone: KL });
+    expect(onSave).toHaveBeenCalledWith({ kind: 'here', untilDate: null });
   });
 
   it('starts from the current choice when changing an Away date', async () => {

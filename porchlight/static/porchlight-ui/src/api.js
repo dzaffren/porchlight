@@ -142,13 +142,16 @@ export async function fetchStatuses() {
  * Set the viewer's own porch light. The resolver takes whose row it is from Forge's
  * context, never from the page, so nobody can set someone else's.
  *
- * @param {{ kind: 'here' | 'away' | 'leaving', untilDate: string | null, timeZone: string }} choice
- *   timeZone is the viewer's own, so the resolver checks "today" in their day.
+ * No time zone is sent: the resolver never trusts one from the page, so it checks dates
+ * against every time zone on Earth instead (review finding F1). The page's own check, in the
+ * viewer's own day, runs first and gives the person the words they see.
+ *
+ * @param {{ kind: 'here' | 'away' | 'leaving', untilDate: string | null }} choice
  * @returns {Promise<{ ok: true, status: unknown } | { ok: false, error: 'bad_request' | 'past' | 'too_far' | 'left' }>}
  *   Rejects when the call itself failed.
  */
-export function setMyStatus({ kind, untilDate, timeZone }) {
-  return invoke('setMyStatus', { kind, untilDate, timeZone });
+export function setMyStatus({ kind, untilDate }) {
+  return invoke('setMyStatus', { kind, untilDate });
 }
 
 // ---------------------------------------------------------------------------------
