@@ -318,7 +318,7 @@ A owns `src/lib/porch.js`; B imports it through the `@lib` alias and never edits
 
 - A06 Insecure Design · `porchlight/src/resolvers/porch.js:76` · take no time zone from the page, and check dates from UTC-12 to UTC+14 · `c43fe85`
 - correctness · `porchlight/static/porchlight-ui/src/TeamPage.jsx:108` · a one-minute clock redraws every lamp on an open page · `4020005`
-- correctness · `porchlight/static/porchlight-ui/src/MyPorchLight.jsx:191` · focus goes back to Change when the form closes · `026dbe8`
+- correctness · `porchlight/static/porchlight-ui/src/MyPorchLight.jsx:191` · focus goes back to Change when the form closes · `81b6738`
 
 ## Open items
 
