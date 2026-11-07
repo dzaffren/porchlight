@@ -1,6 +1,6 @@
 # Porch status
 
-**Version:** v1 · **Status:** Refined · **Type:** Feature · **Project type:** Web UI
+**Version:** v1 · **Status:** Built · **Type:** Feature · **Project type:** Web UI
 
 **Shape doc:** docs/specs/knowledge-handover/shape.md
 **Depends on:** catch-up-view
@@ -152,7 +152,7 @@ Your own porch light is a card at the top of the Team column. Change opens a sma
 | An account Jira deactivates shows as Left | Mei Ling left |
 | A date outside today to one year ahead | Past date; Over a year |
 
-**Texts:** "Away until 20 Nov", "Leaving on 31 Jan", "Left"; on your own card when off, "Here, porch light off". Form help: Away "Your porch light turns off by itself after this date.", Leaving "Everyone on the team will see this.", Here "Your porch light is off: teammates just ask you." Toasts: "Your porch light is on: Away until 20 Nov." and "Your porch light is off."
+**Texts:** "Away until 20 Nov", "Leaving on 31 Jan", "Left"; on your own card when off, "Here, porch light off". Form help: Away "Your porch light turns off by itself after this date.", Leaving "Everyone on the team will see this.", Here "Your porch light is off: teammates just ask you." Toasts: "Your porch light is on: Away until 20 Nov." and "Your porch light is off." A failed save: "Couldn't save your porch light. Try again."
 
 **Motion tier:** 1 (approved 2026-11-07). The lamp switches at once, with a toast. Tier 2 (the lamp warming up over 600ms) was tried in the preview and dropped: on an 8px lamp it could not be seen.
 
@@ -326,7 +326,13 @@ A owns `src/lib/porch.js`; B imports it through the `@lib` alias and never edits
 | O8 | Where does a person set their own porch light? | question | spec p2 | user | Resolved | A card at the top of the Team column, with a Change button that opens a small form in place. D25. 2026-11-07 |
 | O9 | Motion tier | question | spec p2 | user | Resolved | Tier 1: the lamp switches at once, with a toast. Tier 2's warm-up was shown and could not be seen on an 8px lamp. 2026-11-07 |
 | O10 | Pause 3 needs each person's time zone at read time. Does `/rest/api/3/user/bulk` return `timeZone` for other people, or can profile visibility hide it? | unproven | spec p3 | poc | Accepted risk | Checked 2026-11-07 for the viewer's own account: bulk returns `active: true` and `timeZone: Asia/Kuala_Lumpur`. Not checked for another person. When Jira hides it, `effectiveStatus` uses the viewer's own time zone; at worst the lamp changes a few hours early or late on the last day. Unit-tested. 2026-11-07 |
-| O11 | The resolver checks dates in the person's time zone with `Intl`. Does Forge's Node 24 runtime carry full time-zone data? | unproven | spec p3 | poc | Accepted risk | Official Node builds carry full time-zone data, and Forge runs Node 24. The e2e saves a status with the person's real zone after the first deploy; a failure shows as `bad_request` and is fixed before /review. 2026-11-07 |
+| O11 | The resolver checks dates in the person's time zone with `Intl`. Does Forge's Node 24 runtime carry full time-zone data? | unproven | spec p3 | poc | Resolved | Official Node builds carry full time-zone data, and Forge runs Node 24. The e2e saves a status with the person's real zone after the first deploy; a failure shows as `bad_request` and is fixed before /review. 2026-11-07 Proven 2026-11-07 at /build: deploy 3.3.0 to development, the e2e saved Away with Asia/Kuala_Lumpur, and `forge logs` showed `porchlight.status.set kind=away`. |
+| O12 | The plan did not name `porchlight/playwright.config.js`. With no `workers` value, Playwright ran spec files in parallel, and `catch-up.spec.js` removes and re-adds the same person whose row `porch-status.spec.js` checks. | flag | build | user | Decided alone | Chose: `workers: 1`, so the three e2e files run one after another (1.3 min in all). Other: keep parallel and give each spec its own teammate. Undo: `git revert eb1e134`. 2026-11-07 |
+| O13 | The preview shows "Here, porch light off" and "They're here: just ask them too." in the catch-up header for a person who is Here. The spec's Texts list neither for the header. | flag | build | user | Decided alone | Chose: the catch-up header shows nothing for Here, like the team rows. Other: copy the preview. Undo: pass `showHere` to `<Presence>` in `PersonHeader` (`CatchUp.jsx`) and add the meta text. 2026-11-07 |
+| O14 | The spec does not say what the Team page shows when `listStatuses` fails. | flag | build | user | Decided alone | Chose: the whole team read fails with the existing "Couldn't load the team." and its Try again, because showing everyone as Here gives the wrong signal. Other: show the team with no lamps. Undo: catch `fetchStatuses` in `readTeam` (`TeamPage.jsx`) and use `[]`. 2026-11-07 |
+| O15 | The spec gives no text for a save that fails (network, `bad_request` or `left`). | flag | build | user | Decided alone | Chose: a new message under the form, "Couldn't save your porch light. Try again.", in the Composer pattern; added to Texts. `left` has no special path. Other: reload the page on `left`, so the card turns into Left. Undo: `handleSubmit` in `MyPorchLight.jsx` and `handleSaveStatus` in `TeamPage.jsx`. 2026-11-07 |
+| O16 | The spec does not say how the form opens, or what Save does with an empty date. | flag | build | user | Decided alone | Chose: for a person who is Here, the form opens on "Away until" with an empty date; otherwise on their current kind and date. Save with no date shows "Pick today or a later date." Other: default the date to today, or add a "Pick a date." text. Undo: `draftFrom` and `dateMessage` in `MyPorchLight.jsx`. 2026-11-07 |
+| O17 | `setMyStatus` decides "already Left" with the time zone that the page sends. A changed request with a zone further west can still change a Leaving status for a few hours after its date passes. | flag | build | user | Decided alone | Chose: accept it. The page cannot be stopped from sending a valid zone, and the resolver cannot ask Jira itself (no `@forge/api`, D21). The lamp everyone sees still uses Jira's zone. Other: look up the zone on the server, which means superseding D21. Undo: a later slice. For /review to judge. 2026-11-07 |
 
 _Never delete this section or its rows. See references/ledger.md._
 
