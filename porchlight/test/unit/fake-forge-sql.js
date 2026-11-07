@@ -5,7 +5,9 @@
 // matters to us:
 //   - the notes table must exist before you insert into it,
 //   - client_key is unique, so a second insert with the same key changes nothing,
-//   - the list comes back newest first, with a limit.
+//   - the list comes back newest first, with a limit,
+//   - team_members.account_id is unique, so INSERT IGNORE with the same person changes nothing,
+//   - the team list comes back oldest first, with a limit.
 // Any statement it does not recognise throws, so a typo in a query fails a test loudly.
 //
 // The real MigrationRunner from @forge/sql runs on top of this fake, so the tests also
@@ -18,6 +20,7 @@ const oneLine = (query) => query.replace(/\s+/g, ' ').trim();
 export const fake = {
   tables: new Set(),
   notes: [],
+  team: [],
   migrations: [],
   nextId: 1,
   // Every statement sent, with its parameters, so a test can check how SQL was built.
@@ -30,6 +33,7 @@ export const fake = {
   reset() {
     this.tables = new Set();
     this.notes = [];
+    this.team = [];
     this.migrations = [];
     this.nextId = 1;
     this.statements = [];
@@ -128,6 +132,20 @@ async function run(query, params = []) {
       .slice(0, limit)
       .map(({ client_key, ...rest }) => ({ ...rest })); // eslint-disable-line no-unused-vars
     return { rows };
+  }
+
+  // --- the team_members table (spec catch-up-view) ---
+  if (q.startsWith('CREATE TABLE IF NOT EXISTS team_members')) {
+    if (!q.includes('UNIQUE KEY uq_team_account (account_id)')) {
+      throw new Error('fake-forge-sql: the team_members table must have a unique key on account_id');
+    }
+    fake.tables.add('team_members');
+    return { rows: { affectedRows: 0 } };
+  }
+  if (q.startsWith('DROP TABLE IF EXISTS team_members')) {
+    fake.tables.delete('team_members');
+    fake.team = [];
+    return { rows: { affectedRows: 0 } };
   }
 
   throw new Error(`fake-forge-sql does not understand: ${q}`);
