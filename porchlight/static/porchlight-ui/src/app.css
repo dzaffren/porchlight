@@ -52,7 +52,7 @@ body { background: var(--ds-surface-sunken); }
 .person h2 { font-size: var(--ds-font-size-heading); line-height: var(--ds-line-heading); }
 .person-text { display: grid; gap: var(--ds-space-025); }
 .empty-row { color: var(--ds-text-subtlest); grid-template-columns: 1fr; }
-.more { color: var(--pl-accent); }
+.more { color: var(--ds-text-subtle); text-decoration: underline; }
 .sk-row { grid-template-columns: auto 1fr; }
 .sk-key { width: 56px; }
 .pl-row .pl-chip { white-space: nowrap; }
