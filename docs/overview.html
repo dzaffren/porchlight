@@ -94,6 +94,7 @@ th, td { text-align: left; padding: 6px; border-bottom: 1px solid var(--line); v
       <a href="#catchup-p2">Catch-up view: screens</a>
       <a href="#catchup-p3">Catch-up view: build plan</a>
       <a href="#porch-p1">Porch status: scope</a>
+      <a href="#porch-p3">Porch status: build plan</a>
     </nav>
   </header>
 
@@ -115,8 +116,9 @@ flowchart LR
   C3 --> C4["/build catch-up-view<br/>DONE · Built, live on dev"]
   C4 --> C5["/review catch-up-view<br/>DONE · 7 of 11 findings fixed"]
   C5 --> C6["/ship catch-up-view<br/>DONE · docs marked Shipped, PR next"]
-  C6 --> P1["/spec porch-status · pause 1<br/>WAITING FOR YOUR OK"]
-  C6 -.-> O1["spike O1: Rovo agent<br/>RUNNING in background"]
+  C6 --> P1["/spec porch-status<br/>DONE · Refined"]
+  P1 --> PB["/build porch-status<br/>NEXT"]
+  C6 -.-> O1["spike O1: Rovo agent<br/>no Rovo on dzaffren; demo site provisioning"]
     </pre></div>
     <p>The skeleton is built and live on dzaffren.atlassian.net (development): 58 unit tests (31 server, 27 page) and the real-site Playwright test pass. The idea is shaped and the design system is approved: dark only, the "Lit window" style, a 3D street of windows, and the porch light as presence. See the <a href="design/design-system/">design system</a> and the <a href="design/design-system/street/index.html">street</a>.</p>
     <table>
@@ -768,6 +770,33 @@ stateDiagram-v2
       <li><b>Bad dates.</b> "Pick today or a later date." · "Pick a date within a year."</li>
     </ol>
     <p><b>Research:</b> Jira has no out-of-office field (O7), so automatic Away became its own slice, 1c away-from-calendar, through Teamwork Graph. Deactivation is readable as <code>active</code> on the bulk user lookup, unproven for a deactivated account (O3, accepted with a safe rule).</p>
+  </section>
+
+  <section id="porch-p3">
+    <div class="num">23 · Spec: porch-status</div>
+    <h2>Porch status: how it's built (Refined)</h2>
+    <p class="analogy">Like a hotel's "do not disturb" card with a check-out date written on it: the hotel stores only the card and the date. Whether you are still "away" is worked out by looking at today's date in your own time zone, not by a night porter flipping cards at midnight.</p>
+    <div class="diagram"><pre class="mermaid">
+flowchart TB
+  subgraph Browser["Jira page (Custom UI)"]
+    TP["TeamPage: MyPorchLight, TeamList, CatchUp"]
+    LIB["src/lib/porch.js: todayIn, checkStatusDate, effectiveStatus"]
+    TP --> LIB
+  end
+  subgraph Forge["Forge"]
+    RP["porch resolvers: listStatuses, setMyStatus"]
+    SQL[("porch_statuses")]
+  end
+  J["Jira user/bulk: name, active, timeZone"]
+  TP -- "invoke" --> RP --> SQL
+  TP -- "requestJira" --> J
+    </pre></div>
+    <ul>
+      <li><b>Stored:</b> one row per person, kind and date. Here is no row. Left and "Away ended" are worked out when read (D26).</li>
+      <li><b>Time zone and active:</b> from Jira's bulk user lookup each time, never stored (D27). Hidden zone: the viewer's own (O10).</li>
+      <li><b>Security:</b> you can only write your own row; no typed text.</li>
+      <li><b>Riskiest choice:</b> computing Left on the page from <code>active: false</code>, which is unproven for a really deactivated account (O3).</li>
+    </ul>
   </section>
 
   <footer>Local page: run <code>python -m http.server 3000 -d docs</code> in <code>Codegeist/</code>, then open http://localhost:3000/overview.html. Updated at every zuko stage.</footer>
