@@ -14,7 +14,7 @@ All commands run in `porchlight/`.
 | install | `npm install && npm install --prefix static/porchlight-ui` |
 | run     | `npm run build:ui && forge deploy --non-interactive -e development`, then open Apps → Porchlight in Jira on dzaffren.atlassian.net. Porchlight has two pages in Jira's sidebar: Team and Notes |
 | test    | `npm run test:all` (server and page unit tests) |
-| e2e     | `npm run e2e:login` once to save a login, then `npm run e2e` after each deploy. It runs both e2e tests: Notes, and Team with a catch-up |
+| e2e     | `npm run e2e:login` once to save a login, then `npm run e2e` after each deploy. It runs the three e2e tests: Notes, Team with a catch-up, and the porch light |
 | lint    | `npm run lint && forge lint` |
 | logs    | `forge logs -e development --since 15m` |
 
@@ -31,6 +31,7 @@ All commands run in `porchlight/`.
 | -------- | ------- | ------------ | ---- |
 | skeleton | Shipped | A Porchlight page in Jira where anyone saves a short note and sees every saved note, newest first. Deployed by CI and walked by one real e2e test. | `docs/overview.html` |
 | catch-up-view | Shipped | A shared team list and a catch-up panel: pick a teammate and see their open work, what they did in the last 14 days, what blocks them and what comes next, read from Jira as the viewer. | `docs/overview.html` |
+| porch-status | Built | Each person can turn on their own porch light: Away until a date, or Leaving on a date. Everyone sees it on the team list and in the catch-up, and it turns into Left after the leaving date or when Jira deactivates the account. | `docs/overview.html` |
 
 ## More
 
