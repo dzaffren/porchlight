@@ -8,7 +8,7 @@
 //
 // Checks happen here first, so the person gets an answer without waiting on the network.
 // The resolver checks again (src/resolvers/porch.js), because a browser can be tampered with.
-import { useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { MAX_DAYS_AHEAD, STATUS_DATE_MESSAGES, addDays, checkStatusDate, todayIn } from '@lib/porch.js';
 import Presence from './Presence.jsx';
 import { Glyph } from './Glyph.jsx';
@@ -174,6 +174,17 @@ export default function MyPorchLight({ status, timeZone, onSave }) {
   // Left is final, so a person who has left gets no control and no form.
   const canChange = status.kind !== 'left';
 
+  // When the form closes, the Cancel or Save button that had focus leaves the page, and the
+  // browser would drop focus to the top of the page. Give it back to Change instead, so a
+  // keyboard user keeps their place (review finding F5), the same way Composer does after a save.
+  // `wasEditing` makes sure this runs only after the form was open, never on the first render.
+  const changeRef = useRef(null);
+  const wasEditing = useRef(false);
+  useEffect(() => {
+    if (wasEditing.current && !editing) changeRef.current?.focus();
+    wasEditing.current = editing;
+  }, [editing]);
+
   return (
     <section className="mine" aria-labelledby={titleId}>
       <div className="sec-head">
@@ -182,7 +193,7 @@ export default function MyPorchLight({ status, timeZone, onSave }) {
       <div className="mine-now">
         <Presence status={status} showHere />
         {canChange && !editing && (
-          <button className="pl-btn pl-btn--secondary" type="button" aria-expanded="false" onClick={() => setEditing(true)}>
+          <button ref={changeRef} className="pl-btn pl-btn--secondary" type="button" aria-expanded="false" onClick={() => setEditing(true)}>
             Change
           </button>
         )}

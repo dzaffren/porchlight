@@ -193,6 +193,31 @@ describe('MyPorchLight', () => {
     expect(screen.getByRole('button', { name: 'Change' })).toBeTruthy();
   });
 
+  // The form's Cancel or Save button had focus, and it leaves the page as the form closes.
+  // Focus goes back to Change, so a keyboard user keeps their place (review finding F5).
+  it('gives focus back to Change when the form closes on Cancel', async () => {
+    const user = await openForm();
+
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Change' }));
+  });
+
+  it('gives focus back to Change when the form closes after a save', async () => {
+    const user = await openForm();
+
+    await choose(user, 'away', '2026-11-20');
+
+    const change = await screen.findByRole('button', { name: 'Change' });
+    expect(document.activeElement).toBe(change);
+  });
+
+  it('does not take focus on its own when the page first shows the card', () => {
+    render(<MyPorchLight status={HERE} timeZone={KL} onSave={onSave} />);
+
+    expect(document.activeElement).toBe(document.body);
+  });
+
   it('has no Change control once the viewer has Left (scenario 3)', () => {
     render(<MyPorchLight status={{ kind: 'left' }} timeZone={KL} onSave={onSave} />);
 
