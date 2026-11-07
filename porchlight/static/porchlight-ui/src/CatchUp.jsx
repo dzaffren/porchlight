@@ -44,8 +44,8 @@ async function loadCatchUp(accountId) {
   };
 }
 
-/** Rows rise in, 40ms apart, unless the viewer chose reduced motion (MotionSwitch). */
-const listClass = () => (document.documentElement.dataset.motion === 'reduced' ? 'pl-list' : 'pl-list pl-list--stagger');
+/** Rows rise in, 40ms apart. Reduced motion is handled by the design system's CSS. */
+const LIST_CLASS = 'pl-list pl-list--stagger';
 
 /**
  * A link to a page in Jira, such as "/browse/PAY-142". The page runs in a sandboxed
@@ -94,7 +94,7 @@ function Section({ title, count, emptyText, rows, footer = null }) {
         <h3 id={headingId}>{title}</h3>
         {rows.length > 0 && <span className="pl-meta">{count}</span>}
       </div>
-      <ul className={listClass()}>
+      <ul className={LIST_CLASS}>
         {rows.length > 0 ? rows : <li className="pl-row empty-row"><span>{emptyText}</span></li>}
         {footer}
       </ul>

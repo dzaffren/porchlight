@@ -214,16 +214,13 @@ describe('CatchUp', () => {
     expect(screen.queryByText('PAY-142')).toBeNull();
   });
 
-  it('lets rows rise in, unless the viewer chose reduced motion', async () => {
-    const { unmount } = render(<CatchUp person={aisha} />);
-    const open = await screen.findByRole('region', { name: 'Open work' });
-    expect(within(open).getByRole('list').className).toBe('pl-list pl-list--stagger');
-    unmount();
-
+  it('lets rows rise in; reduced motion is left to the design system', async () => {
+    // styles.css stops every animation under :root[data-motion="reduced"], so the list keeps
+    // its stagger class either way, and a later Motion switch takes effect at once.
     document.documentElement.dataset.motion = 'reduced';
     render(<CatchUp person={aisha} />);
-    const still = await screen.findByRole('region', { name: 'Open work' });
-    expect(within(still).getByRole('list').className).toBe('pl-list');
+    const open = await screen.findByRole('region', { name: 'Open work' });
+    expect(within(open).getByRole('list').className).toBe('pl-list pl-list--stagger');
   });
 
   it("says this teammate's work when their name could not be looked up", async () => {
