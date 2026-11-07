@@ -312,6 +312,14 @@ A owns `src/lib/porch.js`; B imports it through the `@lib` alias and never edits
 | `user/bulk` leaves a deactivated person out (O3) | Show Left only on `active: false`; a missing person keeps the last status |
 | A device clock is wrong, so the lamp turns off a day early or late | Display only; the resolver's date check uses the server clock |
 
+## Review
+
+2026-11-08 · 13 raw findings, 3 survived, 3 fixed.
+
+- A06 Insecure Design · `porchlight/src/resolvers/porch.js:76` · take no time zone from the page, and check dates from UTC-12 to UTC+14 · `c43fe85`
+- correctness · `porchlight/static/porchlight-ui/src/TeamPage.jsx:108` · a one-minute clock redraws every lamp on an open page · `4020005`
+- correctness · `porchlight/static/porchlight-ui/src/MyPorchLight.jsx:191` · focus goes back to Change when the form closes · `026dbe8`
+
 ## Open items
 
 | ID | What | Type | Raised at | Owner | Status | Answer |

@@ -12,3 +12,6 @@ Learned while building porch-status, 2026-11-07.
 - **Build the shared file before you split.** When two chunks import one module, build and commit it first, then start the chunks on top of it. Each chunk then codes against the real file, not a guess.
 - **Put the exact accessible names in both briefs.** The page chunk and the e2e chunk ran in parallel and matched on the first run, because both briefs named the region, buttons and labels word for word.
 - **Playwright runs spec files in parallel by default.** Specs that share one real site and one signed-in person need `workers: 1`.
+- **At most 20 subagents run at once.** A large review with three verifiers per finding goes past that. Start the rest as slots free up, with the same prompts.
+- **Do not edit code while verifiers read it.** A fix made mid-verification changes the lines a verifier is judging. Wait for every verdict, then fix.
+- **Tell each verifier the repo root.** Agents start in `hello-forge/`, and the hook blocks `git -C` and `cd`, so several verifiers could not run `git diff` and fell back to reading files.
