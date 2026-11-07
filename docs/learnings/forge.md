@@ -22,3 +22,6 @@ Learned while building the skeleton slice, 2026-11-06 to 2026-11-07.
 - **Forge SQL accepts `INSERT ... ON DUPLICATE KEY UPDATE col = VALUES(col)`.** MySQL 8 marks `VALUES()` as deprecated, but TiDB under Forge SQL runs it. Proven by the porch-status e2e, 2026-11-07.
 - **Forge's Node 24 runtime has full time-zone data.** `Intl.DateTimeFormat` with `timeZone: 'Asia/Kuala_Lumpur'` works in a resolver.
 - **Two resolver calls on a cold start can both run the migrations.** `forge logs` showed `v003...=done` twice after one deploy. `CREATE TABLE IF NOT EXISTS` keeps it harmless; a migration that is not safe to repeat would not be.
+- **A Rovo action runs as the person chatting.** `api.asUser().requestJira` in a `GET` action returned that person's account from `/rest/api/3/myself`, and the same ID is in `payload.context.accountId`. The context has `cloudId` but no site URL. Proven by /poc on the demo site, 2026-11-08.
+- **The agent's model writes an action's inputs in its own words.** "Run the spike" arrived as "The user wants to run the spike." Treat every input as untrusted text.
+- **Removing a scope is a major version too.** Deploy with `--approve MAJOR_VERSION_RULE`, then `forge install --upgrade` on each site that should drop the old version.
