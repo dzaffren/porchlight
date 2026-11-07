@@ -1,6 +1,6 @@
 # Codegeist 2026
 
-**Status:** Active · **Updated:** 2026-11-07 by /ship catch-up-view
+**Status:** Active · **Updated:** 2026-11-08 by /ship porch-status
 
 A Forge app for Jira that captures what each person on a project team is working on, and why, so leave, handovers and "why was this built?" stop costing days.
 Users: project teams of POs, devs and testers. Entry for Atlassian Codegeist 2026, Software Teams.
@@ -31,7 +31,7 @@ All commands run in `porchlight/`.
 | -------- | ------- | ------------ | ---- |
 | skeleton | Shipped | A Porchlight page in Jira where anyone saves a short note and sees every saved note, newest first. Deployed by CI and walked by one real e2e test. | `docs/overview.html` |
 | catch-up-view | Shipped | A shared team list and a catch-up panel: pick a teammate and see their open work, what they did in the last 14 days, what blocks them and what comes next, read from Jira as the viewer. | `docs/overview.html` |
-| porch-status | Built | Each person can turn on their own porch light: Away until a date, or Leaving on a date. Everyone sees it on the team list and in the catch-up, and it turns into Left after the leaving date or when Jira deactivates the account. | `docs/overview.html` |
+| porch-status | Shipped | Each person can turn on their own porch light: Away until a date, or Leaving on a date. Everyone sees it on the team list and in the catch-up, and it turns into Left after the leaving date or when Jira deactivates the account. | `docs/overview.html` |
 
 ## More
 

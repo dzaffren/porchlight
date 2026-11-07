@@ -1,6 +1,6 @@
 # Codegeist 2026 · architecture
 
-**Status:** Active · **Updated:** 2026-11-07 by /build porch-status
+**Status:** Active · **Updated:** 2026-11-08 by /ship porch-status
 
 ## Context
 

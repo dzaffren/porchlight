@@ -191,3 +191,10 @@ Why: Jira's bulk user lookup already returns `timeZone` and `active` with the na
 Rejected: storing the time zone with the status (stale after a move, and copies personal data Jira owns, against D12's reasoning), the site's time zone (O4 chose the person's own day).
 Source: docs/specs/porch-status.md
 Status: active
+
+## D28 · 2026-11-08 · The server checks porch light dates against the whole planet, never a time zone from the page
+
+Why: the resolver cannot ask Jira for a person's time zone (D21), and a zone sent by the page let a changed request undo a Left for up to about a day (review finding F1); judging "past" in UTC-12 and "within a year" and "Left" in UTC+14 refuses no real choice and cannot be stretched.
+Rejected: storing each person's time zone with the status (against D27, and stale after a move), trusting the zone the page sends (anyone can undo Left).
+Source: docs/specs/porch-status.md
+Status: active

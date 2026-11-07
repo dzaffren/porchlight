@@ -1,6 +1,6 @@
 # Porch status
 
-**Version:** v1 · **Status:** Built · **Type:** Feature · **Project type:** Web UI
+**Version:** v1 · **Status:** Shipped · **Type:** Feature · **Project type:** Web UI
 
 **Shape doc:** docs/specs/knowledge-handover/shape.md
 **Depends on:** catch-up-view
@@ -168,7 +168,7 @@ Your own porch light is a card at the top of the Team column. Change opens a sma
 
 Porchlight stores only what a person chose: one row per person in a new `porch_statuses` table with a kind (away or leaving) and a date. Here is no row. Here-after-Away and Left are never stored; they are worked out each time the page reads a status, from the date, the person's Jira time zone and Jira's `active` flag (D26). The time zone and `active` come from the bulk user lookup the Team page already makes for names, so nothing personal that Jira owns is copied (D12, D27). One shared file, `src/lib/porch.js`, holds the date rules, so the page and the resolver use the same code, like `src/lib/validate.js` for notes.
 
-Relies on: D2, D9, D12, D14, D15, D16, D19, D21, D24, D25, and D26–D27 drafted below, and D28 drafted at /review.
+Relies on: D2, D9, D12, D14, D15, D16, D19, D21, D24, D25, D26, D27 and D28.
 
 ```mermaid
 flowchart TB
@@ -352,14 +352,7 @@ Pause 2: recorded as D25 on 2026-11-07.
 
 Pause 3: recorded as D26 and D27 on 2026-11-07.
 
-Drafted at /review on 2026-11-08, approved by the user's choice of option B. `/ship` appends it to `DECISIONS.md`.
-
-### D28 · 2026-11-08 · The server checks porch light dates against the whole planet, never a time zone from the page
-
-Why: the resolver cannot ask Jira for a person's time zone (D21), and a zone sent by the page let a changed request undo a Left for up to about a day (review finding F1); judging "past" in UTC-12 and "within a year" and "Left" in UTC+14 refuses no real choice and cannot be stretched.
-Rejected: storing each person's time zone with the status (against D27, and stale after a move), trusting the zone the page sends (anyone can undo Left).
-Source: docs/specs/porch-status.md
-Status: active
+Review: recorded as D28 on 2026-11-08.
 
 ## Glossary
 

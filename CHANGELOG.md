@@ -13,3 +13,5 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Porchlight has two pages in Jira's sidebar: Team and Notes.
 - Keep one shared team list: add teammates from a Jira user search, take them off, and see who added each one.
 - Pick a teammate to see their open work, what they did in the last 14 days, what blocks them and their next steps, read from Jira as you, with every line opening its ticket.
+- Turn on your own porch light on the Team page: Away until a date, or Leaving on a date.
+- See each teammate's porch light on the team list and in their catch-up; it turns into Left after their leaving date or when Jira deactivates their account.
