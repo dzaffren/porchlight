@@ -1,5 +1,8 @@
-// Playwright settings for the one end-to-end test, which walks the real Porchlight
-// page inside Jira on the development site.
+// Playwright settings for the end-to-end tests, which walk the real Porchlight
+// pages inside Jira on the development site:
+//   e2e/skeleton.spec.js  — the Notes page (skeleton slice)
+//   e2e/catch-up.spec.js  — the Team page and a catch-up (catch-up-view slice)
+// e2e/helpers.js holds what both share; it is not a test.
 //
 // Run order:
 //   1. npm run e2e:login   (once, or when the saved login expires) — you log in by hand
