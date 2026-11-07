@@ -236,6 +236,10 @@ Paths are under `Codegeist/porchlight/` unless they start at the repo root.
 | `static/porchlight-ui/src/catchup.test.js`, `TeamPage.test.jsx`, `CatchUp.test.jsx` (new), `api.test.js` | Section rules, empty and error states, the JQL each call sends | Scenarios 1–5 |
 | `e2e/catch-up.spec.js` (new), `e2e/skeleton.spec.js:11` | New walk of the Team page; the notes test opens `…/notes` | E2E |
 | `Codegeist/docs/ARCHITECTURE.md`, `Codegeist/OVERVIEW.md` | New components, the team table, the second slice | Docs |
+| `src/db/datetime.js` (new), `src/db/notes.js`, `src/resolvers/notes.js` | Added at build: `toIsoUtc` moves out of `notes.js` so `team.js` shares it; `notes.js` imports it and `signedInAccountId` from `context.js`. No behaviour change | Reuse, scenarios 1, 2 |
+| `static/porchlight-ui/src/format.js`, `format.test.js`, `App.jsx`, `App.test.jsx` | Added at build: date helpers ("6 Nov", "Due 20 Dec") shared by the team list and the catch-up; `App.jsx` holds the route switch that `main.jsx` renders | Scenarios 1, 3; D20 |
+| `e2e/helpers.js` (new), `playwright.config.js` | Added at build: the page path, frame finder and policy-error check shared by both e2e tests; a comment names both tests | E2E |
+| `Codegeist/.gitignore` | Added at build: ignore `.claude/worktrees/`, the build agents' worktrees | Repo hygiene |
 
 Reusing: `signedInAccountId` (`src/resolvers/notes.js:25`), `ensureMigrated` (`src/db/migrate.js:72`), the fixed-LIMIT rule (`src/db/notes.js:80`), `fetchDisplayNames` (`static/porchlight-ui/src/api.js:48`), the fake database and its use of Forge's real `MigrationRunner`, `Glyph`, `Toast`, `MotionSwitch`, and the e2e frame finder (`e2e/skeleton.spec.js:19`).
 
