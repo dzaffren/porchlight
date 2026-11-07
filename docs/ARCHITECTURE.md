@@ -1,6 +1,6 @@
 # Codegeist 2026 · architecture
 
-**Status:** Active · **Updated:** 2026-11-07 by /build catch-up-view
+**Status:** Active · **Updated:** 2026-11-07 by /ship catch-up-view
 
 ## Context
 
