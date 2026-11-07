@@ -108,6 +108,39 @@ describe('setMyStatus (scenario 1: leave the porch light on while away)', () => 
   });
 });
 
+describe('setMyStatus (scenario 2: back early, the porch light goes off)', () => {
+  it('deletes Aisha\'s row when she sets Here on 18 Nov, so the list shows her as Here', async () => {
+    const { fake, setMyStatus, listStatuses } = await load();
+    await setMyStatus(request(AISHA, { kind: 'away', untilDate: '2026-11-20', timeZone: KUALA_LUMPUR }));
+    setNow('2026-11-18T02:00:00Z');
+
+    const saved = await setMyStatus(request(AISHA, { kind: 'here', timeZone: KUALA_LUMPUR }));
+
+    expect(saved).toEqual({ ok: true, status: { kind: 'here' } });
+    expect(fake.porch).toEqual([]);
+    expect(await listStatuses(request(DANIEL))).toEqual({ ok: true, statuses: [] });
+    expect(console.log).toHaveBeenCalledWith(`porchlight.status.set kind=here by=${AISHA}`);
+  });
+
+  it('ignores a date sent with Here, and answers ok when there was no row', async () => {
+    const { fake, setMyStatus } = await load();
+
+    const saved = await setMyStatus(request(AISHA, { kind: 'here', untilDate: '2026-11-20', timeZone: KUALA_LUMPUR }));
+
+    expect(saved).toEqual({ ok: true, status: { kind: 'here' } });
+    expect(fake.statements.map((s) => s.query)).toContain('DELETE FROM porch_statuses WHERE account_id = ?');
+  });
+
+  it('deletes only the signed-in person\'s row', async () => {
+    const { fake, setMyStatus } = await load();
+    await setMyStatus(request(AISHA, { kind: 'away', untilDate: '2026-11-20', timeZone: KUALA_LUMPUR }));
+
+    await setMyStatus(request(DANIEL, { accountId: AISHA, kind: 'here', timeZone: KUALA_LUMPUR }));
+
+    expect(fake.porch.map((row) => row.account_id)).toEqual([AISHA]);
+  });
+});
+
 describe('listStatuses', () => {
   it('returns an empty list on a fresh install', async () => {
     const { listStatuses } = await load();

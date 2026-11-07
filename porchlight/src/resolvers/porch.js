@@ -11,7 +11,7 @@
 //   - { ok: false, error } for an answer the page shows to the person.
 //   - A thrown error for anything else (database down, no signed-in user).
 import { ensureMigrated } from '../db/migrate.js';
-import { listStatuses as listStoredStatuses, upsertStatus } from '../db/porch.js';
+import { deleteStatus, listStatuses as listStoredStatuses, upsertStatus } from '../db/porch.js';
 import { signedInAccountId } from './context.js';
 
 /**
@@ -40,9 +40,19 @@ export async function setMyStatus(req) {
   const { kind, untilDate } = req.payload ?? {};
 
   await ensureMigrated();
-  await upsertStatus(accountId, kind, untilDate);
+
+  // Here is no row: deleting it turns the porch light off. Any date sent with Here is ignored.
+  // Away and Leaving replace whatever the person saved before.
+  let status;
+  if (kind === 'here') {
+    await deleteStatus(accountId);
+    status = { kind: 'here' };
+  } else {
+    await upsertStatus(accountId, kind, untilDate);
+    status = { kind, untilDate };
+  }
 
   // The proof line from the spec's non-functionals: `forge logs` shows one per save.
   console.log(`porchlight.status.set kind=${kind} by=${accountId}`);
-  return { ok: true, status: { kind, untilDate } };
+  return { ok: true, status };
 }

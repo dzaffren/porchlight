@@ -235,6 +235,12 @@ async function run(query, params = []) {
     fake.porch.push({ account_id: accountId, kind, until_date: untilDate, set_at: toDatetime(fake.now) });
     return { rows: { affectedRows: 1 } };
   }
+  if (q.startsWith('DELETE FROM porch_statuses WHERE account_id = ?')) {
+    requireTable('porch_statuses');
+    const before = fake.porch.length;
+    fake.porch = fake.porch.filter((p) => p.account_id !== params[0]);
+    return { rows: { affectedRows: before - fake.porch.length } };
+  }
   if (q.startsWith('SELECT account_id, kind, until_date FROM porch_statuses WHERE account_id = ?')) {
     requireTable('porch_statuses');
     return { rows: fake.porch.filter((p) => p.account_id === params[0]).map(porchRow) };
