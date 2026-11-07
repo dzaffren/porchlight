@@ -1,7 +1,7 @@
 // Tests for the catch-up pane: scenarios 3, 4 and 5 in docs/specs/catch-up-view.md.
 // ./api.js is replaced with test doubles; the real rules in catchup.js run on its answers.
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, cleanup, within } from '@testing-library/react';
+import { render, screen, cleanup, within, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 vi.mock('./api.js', () => ({
@@ -11,6 +11,7 @@ vi.mock('./api.js', () => ({
   searchRecentActivity: vi.fn(),
   openWorkJql: vi.fn(),
   openInJira: vi.fn(),
+  getSiteUrl: vi.fn(),
 }));
 
 import * as api from './api.js';
@@ -62,6 +63,7 @@ beforeEach(() => {
   api.findFlaggedFieldId.mockResolvedValue(FLAGGED);
   api.searchOpenWork.mockResolvedValue({ issues: AISHA_OPEN, isLast: true });
   api.searchRecentActivity.mockResolvedValue(AISHA_RECENT);
+  api.getSiteUrl.mockResolvedValue('https://handover-demo.atlassian.net');
   api.openWorkJql.mockImplementation((id) => `assignee = "${id}" AND statusCategory != Done ORDER BY updated DESC`);
 });
 afterEach(() => {
@@ -128,7 +130,9 @@ describe('CatchUp', () => {
     render(<CatchUp person={aisha} />);
 
     const key = within(await screen.findByRole('region', { name: 'Open work' })).getByRole('link', { name: 'PAY-142' });
-    expect(key.getAttribute('href')).toBe('/browse/PAY-142');
+    // The full address, so a middle-click or "Open link in new tab" lands on the ticket in Jira,
+    // not on the app frame's own host. A plain click still goes through Forge's router.
+    await waitFor(() => expect(key.getAttribute('href')).toBe('https://handover-demo.atlassian.net/browse/PAY-142'));
     await user.click(key);
     expect(api.openInJira).toHaveBeenCalledWith('/browse/PAY-142');
 

@@ -1,7 +1,7 @@
 // Everything the page asks of Forge and Jira goes through this file.
 // Keeping it in one place means the tests can swap it for test doubles, because
 // @forge/bridge only works inside Jira's frame, not in a test runner.
-import { invoke, requestJira, router } from '@forge/bridge';
+import { invoke, requestJira, router, view } from '@forge/bridge';
 
 /**
  * The newest notes from everyone, from the listNotes resolver.
@@ -244,6 +244,17 @@ export async function searchRecentActivity(accountId) {
     expand: 'changelog',
   });
   return Promise.all(page.issues.map(withNewestEntries));
+}
+
+/**
+ * The Jira site's address, such as "https://handover-demo.atlassian.net", from Forge's
+ * context. Links use it as their full href, so a middle-click or "Open link in new tab"
+ * goes to Jira, not to the app frame's own host.
+ * @returns {Promise<string>}
+ */
+export async function getSiteUrl() {
+  const context = await view.getContext();
+  return String(context.siteUrl ?? '').replace(/\/+$/, '');
 }
 
 /**

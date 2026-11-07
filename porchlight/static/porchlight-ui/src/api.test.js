@@ -2,9 +2,9 @@
 // so its invoke and requestJira are replaced with test doubles here.
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-vi.mock('@forge/bridge', () => ({ invoke: vi.fn(), requestJira: vi.fn(), router: { open: vi.fn() } }));
+vi.mock('@forge/bridge', () => ({ invoke: vi.fn(), requestJira: vi.fn(), router: { open: vi.fn() }, view: { getContext: vi.fn() } }));
 
-import { invoke, requestJira, router } from '@forge/bridge';
+import { view, invoke, requestJira, router } from '@forge/bridge';
 import {
   addTeammate,
   countOpenWork,
@@ -331,5 +331,14 @@ describe('openWorkJql and openInJira', () => {
     await openInJira('/browse/PAY-142');
 
     expect(router.open).toHaveBeenCalledWith('/browse/PAY-142');
+  });
+});
+
+describe('getSiteUrl', () => {
+  it("returns the Jira site's address from Forge's context, without a trailing slash", async () => {
+    const { getSiteUrl } = await import('./api.js');
+    view.getContext.mockResolvedValue({ siteUrl: 'https://handover-demo.atlassian.net/' });
+
+    expect(await getSiteUrl()).toBe('https://handover-demo.atlassian.net');
   });
 });

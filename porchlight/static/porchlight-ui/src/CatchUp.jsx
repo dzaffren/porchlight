@@ -9,7 +9,7 @@
 //
 // Security: summaries, comments and names are typed by people in Jira. They are React
 // text children, so they show as text (like textContent), never as HTML.
-import { useEffect, useId, useState } from 'react';
+import { createContext, useContext, useEffect, useId, useState } from 'react';
 import * as api from './api.js';
 import { toBlockers, toChanges, toNextSteps, toOpenWork } from './catchup.js';
 import { formatDay, formatDue, formatFullDate, initials } from './format.js';
@@ -53,14 +53,19 @@ const listClass = () => (document.documentElement.dataset.motion === 'reduced' ?
  * kept so the link still reads as a link, and shows where it goes.
  */
 function JiraLink({ path, className, title, children }) {
+  const siteUrl = useContext(SiteUrl);
   function handleClick(event) {
     event.preventDefault();
     api.openInJira(path);
   }
+  // The full address once Forge has told us the site; a middle-click then opens Jira.
   return (
-    <a className={className} href={path} title={title} onClick={handleClick}>{children}</a>
+    <a className={className} href={`${siteUrl}${path}`} title={title} onClick={handleClick}>{children}</a>
   );
 }
+
+/** The Jira site's address for every link in the pane; empty until Forge answers. */
+const SiteUrl = createContext('');
 
 /**
  * One ticket line: icon, key (opens the ticket), text, real Jira status, and an end
@@ -212,6 +217,16 @@ export default function CatchUp({ person }) {
   const [attempt, setAttempt] = useState(0); // goes up on each Try again, to load again
   const accountId = person?.accountId;
 
+  // The site's address, for full link hrefs. A failure keeps relative links, which a
+  // plain click still opens through Forge's router.
+  const [siteUrl, setSiteUrl] = useState('');
+  useEffect(() => {
+    if (!accountId) return undefined;
+    let cancelled = false;
+    api.getSiteUrl().then((url) => { if (!cancelled) setSiteUrl(url); }, () => {});
+    return () => { cancelled = true; };
+  }, [accountId]);
+
   useEffect(() => {
     if (!accountId) return undefined;
     // Ignore an answer for a person who is no longer picked, or for an older attempt.
@@ -252,7 +267,11 @@ export default function CatchUp({ person }) {
           <button className="pl-btn pl-btn--secondary" type="button" onClick={tryAgain}>Try again</button>
         </div>
       )}
-      {state.status === 'ready' && <Sections accountId={person.accountId} work={state.work} />}
+      {state.status === 'ready' && (
+        <SiteUrl.Provider value={siteUrl}>
+          <Sections accountId={person.accountId} work={state.work} />
+        </SiteUrl.Provider>
+      )}
     </section>
   );
 }

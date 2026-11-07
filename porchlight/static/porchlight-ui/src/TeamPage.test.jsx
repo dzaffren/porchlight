@@ -16,6 +16,7 @@ vi.mock('./api.js', () => ({
   searchRecentActivity: vi.fn(),
   openWorkJql: vi.fn(),
   openInJira: vi.fn(),
+  getSiteUrl: vi.fn(),
 }));
 
 import * as api from './api.js';
@@ -45,6 +46,7 @@ beforeEach(() => {
   api.findFlaggedFieldId.mockResolvedValue(null);
   api.searchOpenWork.mockResolvedValue({ issues: [], isLast: true });
   api.searchRecentActivity.mockResolvedValue([]);
+  api.getSiteUrl.mockResolvedValue('https://handover-demo.atlassian.net');
 });
 afterEach(cleanup);
 
