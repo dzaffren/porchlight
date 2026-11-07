@@ -1,0 +1,27 @@
+/* Page layout only. Every component and value comes from the Porchlight design system
+   (docs/design/design-system); this file only places them, as in docs/design/skeleton/preview.html. */
+
+body { background: var(--ds-surface-sunken); }
+
+.frame { max-width: 760px; margin: 0 auto; padding: var(--ds-space-400) var(--ds-space-200) var(--ds-space-600); display: grid; gap: var(--ds-space-300); }
+.title { display: flex; gap: var(--ds-space-150); align-items: center; }
+
+.composer { background: var(--ds-surface); border: 1px solid var(--ds-border); border-radius: var(--ds-radius-300); padding: var(--ds-space-200); display: grid; gap: var(--ds-space-150); }
+.composer__foot { display: flex; justify-content: space-between; align-items: center; gap: var(--ds-space-150); }
+
+.list { display: grid; gap: var(--ds-space-150); }
+.list__head { display: flex; justify-content: space-between; align-items: baseline; }
+.list__head h2 { margin: 0; font-size: var(--ds-font-size-title); line-height: var(--ds-line-title); color: var(--ds-text-strong); }
+
+.who { display: flex; gap: var(--ds-space-100); align-items: center; }
+.who__name { margin: 0; font-size: var(--ds-font-size-body); line-height: var(--ds-line-body); font-weight: var(--ds-weight-bold); color: var(--ds-text-strong); }
+.pl-card__body { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* Loading placeholders: line widths as classes, because inline styles are blocked (D15). */
+.line--30 { width: 30%; }
+.line--55 { width: 55%; }
+.line--70 { width: 70%; }
+.line--90 { width: 90%; }
+
+.toast-slot { position: fixed; left: 50%; bottom: var(--ds-space-300); transform: translateX(-50%); }
+.pl-motion { top: auto; bottom: var(--ds-space-200); left: auto; right: var(--ds-space-200); transform: none; }

@@ -1,0 +1,33 @@
+{
+  "name": "porchlight",
+  "version": "0.1.0",
+  "main": "index.js",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "lint": "eslint src test",
+    "test": "vitest run",
+    "test:ui": "npm --prefix static/porchlight-ui test",
+    "test:all": "npm test && npm run test:ui",
+    "build:ui": "npm --prefix static/porchlight-ui run build",
+    "test:watch": "vitest",
+    "e2e:login": "node e2e/login.mjs",
+    "e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@forge/cli": "15.0.0",
+    "@playwright/test": "1.65.0",
+    "eslint": "^8.56.0",
+    "vitest": "5.1.0"
+  },
+  "dependencies": {
+    "@forge/resolver": "2.0.2",
+    "@forge/sql": "4.0.9"
+  },
+  "description": "Porchlight: leave the light on for the next person. A Forge app for Jira.",
+  "overrides": {
+    "@forge/manifest": {
+      "glob": "14.0.4"
+    }
+  }
+}

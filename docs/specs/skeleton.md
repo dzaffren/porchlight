@@ -1,6 +1,6 @@
 # Skeleton
 
-**Version:** v1 · **Status:** Refined · **Type:** Skeleton · **Project type:** Web UI
+**Version:** v1 · **Status:** Shipped · **Type:** Skeleton · **Project type:** Web UI
 
 **Shape doc:** docs/specs/knowledge-handover/shape.md
 **Depends on:** None
@@ -170,7 +170,7 @@ flowchart TB
         SQL[("Forge SQL<br/>notes")]
     end
     J["Jira REST<br/>GET /rest/api/3/user/bulk"]
-    UI -- "invoke('saveNote', {body, clientKey})" --> R
+    UI -- "invoke('saveNote', body + clientKey)" --> R
     UI -- "invoke('listNotes')" --> R
     R -- "INSERT / SELECT" --> SQL
     T -- "run()" --> M -- "CREATE TABLE IF NOT EXISTS" --> SQL
@@ -188,11 +188,11 @@ sequenceDiagram
     participant DB as Forge SQL notes
     A->>UI: types note, clicks Save
     UI->>UI: trim, 1–2,000 chars, else field error
-    UI->>R: invoke saveNote {body, clientKey: uuid}
+    UI->>R: invoke saveNote with body and clientKey (a uuid)
     R->>R: accountId from context (never from the payload), validate again
     R->>DB: INSERT … ON DUPLICATE KEY (client_key) do nothing
     DB-->>R: row (new or already saved)
-    R-->>UI: {id, body, authorAccountId, createdAt}
+    R-->>UI: the note: id, body, authorAccountId, createdAt
     UI->>UI: note warms in at the top, toast
     Note over UI,R: On error: message above Save, text kept, same clientKey on retry
 ```
@@ -226,7 +226,7 @@ There is no Porchlight code yet. Paths are under `Codegeist/porchlight/` unless 
 | `static/porchlight-ui/` | Vite + React app: `NotesPage`, `Composer`, `NoteList`, `EmptyPorch`, `Toast`; imports `docs/design/design-system/styles.css` and the icon sprite through a Vite alias | All scenarios; pause 2 design |
 | `test/unit/*.test.js` | Vitest: validate, saveNote (once per key, author from context), listNotes order | Scenarios 1, 3, 4, 5 |
 | `static/porchlight-ui/src/*.test.jsx` | Vitest + Testing Library: empty state, field errors, failed save keeps text | Scenarios 2–5 |
-| `e2e/skeleton.spec.js`, `e2e/login.js` | Playwright: one-time login saves a session; the test walks the real page | E2E |
+| `e2e/skeleton.spec.js`, `e2e/login.mjs` | Playwright: one-time login saves a session (O14); the test walks the real page | E2E |
 | `Codegeist/.github/workflows/ci.yml` | On push: install, lint, `forge lint`, Vitest. On `main`: `forge deploy -e development --non-interactive` with `FORGE_EMAIL` and `FORGE_API_TOKEN` | O5 |
 | `Codegeist/OVERVIEW.md` | Fill the Run it table with the real commands | Onboarding |
 
@@ -246,7 +246,7 @@ erDiagram
 ```
 
 **Migration:** expand only. `v001_create_notes` creates the table with `CREATE TABLE IF NOT EXISTS`. Nothing to backfill or switch; this is the first table.
-**Reverse:** `DROP TABLE IF EXISTS notes`, kept as `v001_down` in `src/db/migrate.js` and run only by hand on the development environment. A unit test checks the down statement exists and names the same table.
+**Reverse:** `rollbackV001()` in `src/db/migrate.js`: `DROP TABLE IF EXISTS notes`, then delete the `v001_create_notes` row from `__migrations` so the next run recreates the table. Run only by hand on the development environment. Unit tests run it forward, backward and forward again on Forge's own runner (O11).
 
 ### Earn-it
 
@@ -281,7 +281,7 @@ erDiagram
 | Note over 2,000 characters is not saved | `test/unit/validate.test.js` (2,000 passes, 2,001 fails) + `Composer.test.jsx` (text kept) | `npm test` |
 | Save fails | `Composer.test.jsx` (invoke rejects → message, text kept) + `test/unit/notes.test.js` (same `clientKey` twice → one row) | `npm test` |
 
-**E2E:** `e2e/skeleton.spec.js` opens the dev site's Porchlight page with the saved session, saves a note with a unique timestamp, reloads, and finds it at the top of the list with the author's name. Run with `npx playwright test` after `forge deploy`. The harness does not exist yet; setting it up, including `e2e/login.js` that saves the session to `e2e/.auth/` (git-ignored), is part of this slice.
+**E2E:** `e2e/skeleton.spec.js` opens the dev site's Porchlight page with the saved session, saves a note with a unique timestamp, reloads, and finds it at the top of the list with the author's name. Run with `npx playwright test` after `forge deploy`. The harness does not exist yet; setting it up, including `e2e/login.mjs` that saves the session to `e2e/.auth/` (git-ignored), is part of this slice.
 
 ### Chunks
 
@@ -306,33 +306,21 @@ Chunk A runs `forge create` first and owns the manifest. B and C start once A ha
 
 ### Decisions to record
 
-## D12 · 2026-11-02 · Look up author names from Jira when listing notes
+Recorded as D12, D13, D14, D15.
 
-Why: a note must show "Aisha Rahman", and a name stored at save time goes stale when someone renames themselves or leaves.
-Rejected: storing the display name in the notes table at save time (stale names; stores more personal data than needed).
-Source: docs/specs/skeleton.md
-Status: active
+## Review
 
-## D13 · 2026-11-02 · A client key makes every save safe to retry
+2026-11-07 · 10 raw findings, 9 survived, 9 fixed.
 
-Why: scenario 5 needs a retried save to list the note once, even when the first request reached the database but the reply was lost.
-Rejected: only disabling the Save button while saving (does not cover a lost reply), checking for an identical body from the same author (blocks two genuinely identical notes).
-Source: docs/specs/skeleton.md
-Status: active
-
-## D15 · 2026-11-02 · Keep Forge's strict style policy; no inline styles anywhere
-
-Why: Custom UI blocks inline `style` attributes by default, and the design system's sprite and porch scene used them; moving them into classes keeps the app's security policy strict.
-Rejected: adding `permissions.content.styles: unsafe-inline` (loosens the policy for the whole app, and developers report it does not cover every case).
-Source: docs/specs/skeleton.md
-Status: active
-
-## D14 · 2026-11-02 · The page imports the design system from docs/design, never a copy
-
-Why: one design system per product; a copy inside the app would drift from the one the drift check and previews use.
-Rejected: copying tokens and styles into `static/porchlight-ui/` (two sources of truth), publishing the design system as an npm package (overkill for one app).
-Source: docs/specs/skeleton.md
-Status: active
+- A03 Software Supply Chain Failures · `porchlight/package-lock.json:214` · npm override lifts glob under @forge/manifest to 14.0.4 · `c2a8cfa`
+- A03 Software Supply Chain Failures · `.github/workflows/ci.yml:91` · Forge CLI pinned in the lockfile, token on the deploy step only · `ad663e2`
+- A03 Software Supply Chain Failures · `porchlight/static/porchlight-ui/package.json:13` · npm overrides lift prosemirror-view to 1.42.9 and glob to 14.0.4 · `9d1d8da`
+- A03 Software Supply Chain Failures · `porchlight/static/porchlight-ui/package.json:14` · install and page build run without the token · `ad663e2`
+- correctness · `porchlight/static/porchlight-ui/src/NoteList.jsx:49` · a card rests as soon as a newer note is saved · `d43f278`
+- correctness · `porchlight/static/porchlight-ui/src/NotesPage.jsx:67` · a save keeps the load error, and the load keeps notes saved during it · `e41c575`
+- correctness · `porchlight/static/porchlight-ui/src/MotionSwitch.jsx:25` · a rule for data-motion reduced outside the media query · `cc20b84`
+- coverage · `porchlight/static/porchlight-ui/src/api.js:48` · tests for the bulk user lookup and the other bridge calls · `1ae287e`
+- quality · `porchlight/playwright.config.js:18` · the comment names e2e/login.mjs · `f174b86`
 
 ## Open items
 
@@ -348,6 +336,14 @@ Status: active
 | O8 | Custom UI blocks inline `style` attributes; the design system's sprite and porch scene use them. Add the `unsafe-inline` styles permission, or rewrite them to classes? | question | spec p3 | user | Resolved | Rewrite every inline style in the sprite and porch scene into design-system classes; the app keeps Forge's strict policy. Chunk B. D15. 2026-11-02 |
 | O9 | The e2e test uses one account, so "Daniel sees it" is proven by a reload as Aisha, not by a second login | flag | spec p3 | user | Accepted risk | One account keeps the e2e simple; a unit test proves the list never filters by author; a manual check with a second account before the demo. 2026-11-02 |
 | O10 | Adding the `read:jira-user` scope means `forge install --upgrade` on the dev site after the first deploy | flag | spec p3 | user | Resolved | Part of /build: deploy, then `install --non-interactive --upgrade`; the user approves the new permission in Jira. 2026-11-02 |
+| O11 | The plan's reverse step was only `DROP TABLE IF EXISTS notes`. Forge's runner would then still list v001 as done, and never recreate the table. | flag | build | user | Decided alone | Chose: `rollbackV001()` drops the table and deletes the v001 row from `__migrations`; tested forward, backward, forward on Forge's runner over the fake database. The real reverse has not been run on the dev site. Other: drop the table only. Undo: remove the DELETE line in `rollbackV001` in `src/db/migrate.js`. 2026-11-07 |
+| O12 | A saveNote call could reuse another person's client key and get their note back. | flag | build | user | Decided alone | Chose: the read-back matches on client key AND author; a key that belongs to someone else's note makes the save fail. Other: return whichever note owns the key. Undo: drop `AND author_account_id = ?` from the SELECT in `insertNoteOnce` (`src/db/notes.js`). 2026-11-07 |
+| O13 | The plan said every SQL value is bound with `?`. On Forge SQL, `LIMIT ?` fails with "ERROR 1210: Incorrect arguments to LIMIT", because bound values arrive as text. | flag | build | user | Decided alone | Chose: write `LIMIT 100` into the statement from the fixed constant `LIST_LIMIT`; typed text is still always bound. The fake database now refuses `LIMIT ?`. Other: none that works on Forge SQL. Undo: not needed. 2026-11-07 |
+| O14 | The plan said Playwright saves a login from a browser it launches (O3). Atlassian sends a Google-linked account to Google, and Google refuses sign-in in a Playwright-launched browser. | flag | build | user | Decided alone | Chose: `e2e/login.mjs` starts Chrome as a normal program with its own profile in the git-ignored `e2e/.auth/`, the user signs in by hand, and Playwright attaches and saves Atlassian cookies only. Other: a separate test account with a password. Undo: revert 03caa30 and 6e04f2a's login change, and create a password-only test user. 2026-11-07 |
+| O15 | No scenario covers the list failing to load, or a name lookup failing. | flag | build | user | Decided alone | Chose: the list shows "Couldn't load notes. Reload the page to try again."; a card whose author name cannot be found shows "A teammate". Other: a blank list. Undo: remove the `error` branch in `NotesPage.jsx` and the fallback in `NoteList.jsx`. 2026-11-07 |
+| O16 | The review's touch-target check failed: buttons are 32px tall (`--pl-control-height`), under the 44 by 44 px floor. | flag | review | user | Decided alone | Chose: keep 32px. The brief's device floor is desktop, and Atlassian's own buttons are 32px. Other: raise `--pl-control-height` to 44px in `docs/design/design-system/tokens/tokens.css`. Undo: change that token and re-run the drift check. 2026-11-07 |
+| O17 | `@atlaskit/editor-prosemirror` pins prosemirror-view 1.41.5, which has a high XSS advisory. The page never loads that code. | flag | review | user | Decided alone | Chose: an npm override forces 1.42.9 in `static/porchlight-ui/package.json`. Other: leave the pin and accept the advisory, because nothing in dist uses it. Undo: remove the `prosemirror-view` override and re-lock. 2026-11-07 |
+| O18 | CI's `forge lint` step failed with "Not logged in": the review fix gave the Forge token to the deploy step only, and `forge lint` needs a login. | flag | ship | user | Decided alone | Chose: the manifest check step gets FORGE_EMAIL and FORGE_API_TOKEN too; install and build still run without them. Other: drop `forge lint` from CI and rely on the lint that `forge deploy` runs on main. Undo: remove the `env` block from the "Check the manifest" step in `.github/workflows/ci.yml`. 2026-11-07 |
 
 _Never delete this section or its rows. See references/ledger.md._
 

@@ -102,9 +102,12 @@ flowchart LR
   P1 --> DS["/design-system<br/>DONE · approved"]
   DS --> P2["/spec skeleton · pause 2<br/>DONE"]
   P2 --> P3["/spec skeleton · pause 3<br/>DONE · Refined"]
-  P3 --> B["/build skeleton<br/>NEXT"]
+  P3 --> B["/build skeleton<br/>DONE · Built"]
+  B --> R["/review skeleton<br/>DONE · 9 of 10 findings fixed"]
+  R --> S["/ship skeleton<br/>IN PROGRESS · docs marked Shipped, PR next"]
+  S --> N["/spec catch-up-view<br/>NEXT"]
     </pre></div>
-    <p>The idea is shaped, the skeleton's scope is approved, and the design system is approved: dark only, the "Lit window" style, a 3D street of windows, and the porch light as presence. See the <a href="design/design-system/">design system</a> and the <a href="design/design-system/street/index.html">street</a>.</p>
+    <p>The skeleton is built and live on dzaffren.atlassian.net (development): 58 unit tests (31 server, 27 page) and the real-site Playwright test pass. The idea is shaped and the design system is approved: dark only, the "Lit window" style, a 3D street of windows, and the porch light as presence. See the <a href="design/design-system/">design system</a> and the <a href="design/design-system/street/index.html">street</a>.</p>
     <table>
       <thead><tr><th>Decided</th><th>Answer</th></tr></thead>
       <tbody>
@@ -127,8 +130,8 @@ flowchart LR
     <p><b>Next steps:</b></p>
     <ol>
       <li>Optional: push the design system to Claude Design with <code>/design-sync</code> (before Dec 14, 2026, when standalone Claude Design closes).</li>
-      <li>Resume <code>/spec continue skeleton</code> at pause 2 (the Porchlight page), then pause 3 (technical plan).</li>
-      <li><code>/build skeleton</code>: git repo, <code>forge create</code>, Custom UI, Forge SQL, CI, tests.</li>
+      <li><code>/ship skeleton</code> (in progress): create the public GitHub repo, add the FORGE_EMAIL and FORGE_API_TOKEN secrets, open the PR, and watch CI run for the first time.</li>
+      <li><code>/spec catch-up-view</code>: pick a teammate and see their open work, read from Jira as the viewer.</li>
     </ol>
     <p><b>Files:</b> <code>OVERVIEW.md</code> · <code>DECISIONS.md</code> · <code>docs/specs/knowledge-handover/shape.md</code> · <code>docs/specs/skeleton.md</code></p>
   </section>

@@ -1,0 +1,10 @@
+{
+  "root": true,
+  "env": { "node": true, "es2023": true },
+  "parserOptions": {
+    "sourceType": "module",
+    "ecmaVersion": 2023
+  },
+  "extends": "eslint:recommended",
+  "ignorePatterns": ["static/", "e2e/", "node_modules/"]
+}

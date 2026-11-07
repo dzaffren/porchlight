@@ -1,0 +1,95 @@
+# Checks every push, and deploys main to Forge's development environment.
+#
+#   any push / pull request:  install → lint → unit tests (server + page) → build the page → forge lint
+#   push to main, checks green:  build the page → forge deploy -e development
+#
+# The e2e test is not run here: Atlassian's login needs a person (spec ledger O3).
+# Run it from the laptop after a deploy: cd porchlight && npm run e2e
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: porchlight
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            porchlight/package-lock.json
+            porchlight/static/porchlight-ui/package-lock.json
+
+      - name: Install the app and the page
+        run: |
+          npm ci
+          npm ci --prefix static/porchlight-ui
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests (server and page)
+        run: npm run test:all
+
+      - name: Build the page
+        run: npm run build:ui
+
+      # The Forge CLI is a pinned dev dependency (package-lock.json), so npx runs that exact version.
+      # forge lint refuses to run without a Forge login, so this step gets the token too.
+      # Install and build ran in earlier steps, so their install scripts never see it.
+      - name: Check the manifest
+        env:
+          FORGE_EMAIL: ${{ secrets.FORGE_EMAIL }}
+          FORGE_API_TOKEN: ${{ secrets.FORGE_API_TOKEN }}
+        run: |
+          npx forge settings set usage-analytics false
+          npx forge lint
+
+  deploy:
+    # Only main, only after the checks pass, and one deploy at a time.
+    needs: check
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: forge-deploy-development
+      cancel-in-progress: false
+    defaults:
+      run:
+        working-directory: porchlight
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            porchlight/package-lock.json
+            porchlight/static/porchlight-ui/package-lock.json
+
+      - name: Install and build the page
+        run: |
+          npm ci
+          npm ci --prefix static/porchlight-ui
+          npm run build:ui
+
+      # Only this step sees the token, so install scripts and the page build never do.
+      - name: Deploy to development
+        env:
+          # Stored as GitHub repository secrets (spec ledger O5). Never written into a file.
+          FORGE_EMAIL: ${{ secrets.FORGE_EMAIL }}
+          FORGE_API_TOKEN: ${{ secrets.FORGE_API_TOKEN }}
+        run: |
+          npx forge settings set usage-analytics false
+          npx forge deploy --non-interactive -e development
