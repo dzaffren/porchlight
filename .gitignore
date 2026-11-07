@@ -16,3 +16,6 @@ porchlight/playwright-report/
 
 # Windows crash dumps from Git Bash
 *.stackdump
+
+# Worktrees made for parallel build agents
+.claude/worktrees/

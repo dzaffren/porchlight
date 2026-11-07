@@ -7,9 +7,16 @@ modules:
       resolver:
         function: resolver
       title: Porchlight
+      # Two subpages in Jira's sidebar: Porchlight > Team and Porchlight > Notes
+      # (decision D20). The page reads the open route with view.createHistory().
+      pages:
+        - title: Team
+          route: team
+        - title: Notes
+          route: notes
 
   function:
-    # Answers invoke('listNotes') and invoke('saveNote') from the page.
+    # Answers the page's invoke() calls: the notes and the team list.
     - key: resolver
       handler: index.handler
     # Creates and updates the database tables.
@@ -36,6 +43,9 @@ permissions:
   scopes:
     # Look up the authors' display names as the viewer (decision D12).
     - read:jira-user
+    # Search a teammate's tickets, with their history and comments, as the viewer
+    # (catch-up-view scenarios 3 to 5).
+    - read:jira-work
   # No content.styles permission: inline styles stay blocked (decision D15).
 
 app:

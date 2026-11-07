@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Porchlight Catch-up</title>
+<link rel="stylesheet" href="../design-system/styles.css">
+<style>
+  /* Layout only. Every component and value comes from the Porchlight design system.
+     The selected team row uses .pl-row.is-selected, added to the system at pause 2. */
+  body { background: var(--ds-surface-sunken); }
+  .states { position: sticky; top: 0; z-index: 3; display: flex; flex-wrap: wrap; gap: var(--ds-space-100); align-items: center; justify-content: center;
+    padding: var(--ds-space-150) var(--ds-space-200); background: var(--pl-scrim); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid var(--ds-border); }
+  .states .pl-meta { margin: 0 var(--ds-space-050) 0 var(--ds-space-200); }
+  .states .pl-meta:first-child { margin-left: 0; }
+  .states [aria-pressed="true"] { background: var(--pl-unlit); border-color: var(--ds-border-bold); color: var(--ds-text-strong); }
+
+  .frame { max-width: 1200px; margin: 0 auto; padding: var(--ds-space-400) var(--ds-space-200) var(--ds-space-600); display: grid; gap: var(--ds-space-300); }
+  .title { display: flex; gap: var(--ds-space-150); align-items: center; }
+  .split { display: grid; grid-template-columns: minmax(280px, 340px) 1fr; gap: var(--ds-space-300); align-items: start; }
+  @media (max-width: 880px) { .split { grid-template-columns: 1fr; } }
+
+  /* Side-panel layout: the team list is the page, and the catch-up opens over it in .pl-panel. */
+  [data-layout="panel"] .frame { max-width: 760px; }
+  [data-layout="panel"] .split { grid-template-columns: 1fr; }
+  [data-layout="panel"] #pane { display: none; }
+
+  h2, h3 { margin: 0; color: var(--ds-text-strong); }
+  h2 { font-size: var(--ds-font-size-title); line-height: var(--ds-line-title); }
+  h3 { font-size: var(--ds-font-size-body); line-height: var(--ds-line-body); }
+  .stack { display: grid; gap: var(--ds-space-150); }
+  .sec-head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--ds-space-100); }
+
+  .team { background: var(--ds-surface); border: 1px solid var(--ds-border); border-radius: var(--ds-radius-300); padding: var(--ds-space-200); display: grid; gap: var(--ds-space-200); }
+  .team-row { grid-template-columns: 1fr auto; }
+  .pick { font: inherit; color: inherit; background: none; border: 0; padding: var(--ds-space-050) 0; margin: 0; text-align: left; cursor: pointer;
+    display: grid; grid-template-columns: auto 1fr; column-gap: var(--ds-space-150); align-items: center; min-width: 0; }
+  .pick:focus-visible { outline: 2px solid var(--ds-focus); outline-offset: 2px; border-radius: var(--ds-radius-100); }
+  .pick .pl-avatar { grid-row: span 2; }
+  .pick strong, .pick .pl-meta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pl-row .pl-key { min-width: 7ch; }
+  .result-row { grid-template-columns: auto 1fr auto; }
+
+  .pane { background: var(--ds-surface); border: 1px solid var(--ds-border); border-radius: var(--ds-radius-300); padding: var(--ds-space-300); display: grid; gap: var(--ds-space-300); align-content: start; }
+  .person { display: flex; gap: var(--ds-space-150); align-items: center; }
+  .person h2 { font-size: var(--ds-font-size-heading); line-height: var(--ds-line-heading); }
+  .person-text { display: grid; gap: var(--ds-space-025); }
+  .empty-row { color: var(--ds-text-subtlest); grid-template-columns: 1fr; }
+  .more { color: var(--ds-text-subtle); text-decoration: underline; }
+  .sk-row { grid-template-columns: auto 1fr; }
+  .sk-key { width: 56px; }
+  .pl-row .pl-chip { white-space: nowrap; }
+  .pl-panel .pl-row { grid-template-columns: auto 1fr auto auto; }
+  .pl-panel .pl-row > .pl-glyph { display: none; }
+  .pl-panel .pl-row .pl-meta.when { display: none; }
+
+  /* Review only: keep the panel below the state bar, and the Motion switch clear of it. */
+  [data-layout="panel"] .pl-panel { top: calc(var(--ds-space-600) + var(--ds-space-300)); }
+  [data-layout="panel"] .pl-motion { right: auto; left: var(--ds-space-200); }
+  .toast-slot { position: fixed; left: 50%; bottom: var(--ds-space-300); transform: translateX(-50%); z-index: 4; }
+  .pl-motion { top: auto; bottom: var(--ds-space-200); left: auto; right: var(--ds-space-200); transform: none; z-index: 4; }
+</style>
+</head>
+<body data-layout="split">
+  <!-- State switcher: for reviewing the design only. Not part of the product. -->
+  <nav class="states" aria-label="Preview states">
+    <span class="pl-meta">State</span>
+    <button class="pl-btn pl-btn--subtle" type="button" data-state="aisha">Aisha on leave</button>
+    <button class="pl-btn pl-btn--subtle" type="button" data-state="loading">Loading</button>
+    <button class="pl-btn pl-btn--subtle" type="button" data-state="nothing">Nothing in Jira</button>
+    <button class="pl-btn pl-btn--subtle" type="button" data-state="fail">Jira fails</button>
+    <button class="pl-btn pl-btn--subtle" type="button" data-state="many">63 open tickets</button>
+    <button class="pl-btn pl-btn--subtle" type="button" data-state="first">First visit</button>
+    <span class="pl-meta">Layout</span>
+    <button class="pl-btn pl-btn--subtle" type="button" data-layout-btn="split">Two panes</button>
+    <button class="pl-btn pl-btn--subtle" type="button" data-layout-btn="panel">Side panel</button>
+  </nav>
+
+  <main class="frame">
+    <header class="pl-page-header">
+      <div>
+        <h1 class="title"><svg class="pl-glyph pl-glyph--lit" aria-hidden="true"><use href="#lamp"/></svg>Porchlight</h1>
+        <p>Catch up on a teammate's work. Porchlight reads it from Jira as you.</p>
+      </div>
+    </header>
+
+    <div class="split">
+      <section class="team" aria-labelledby="team-title">
+        <div class="sec-head"><h2 id="team-title">Team</h2><span class="pl-meta" id="team-count"></span></div>
+        <div class="stack">
+          <div class="pl-field" id="add-field">
+            <label class="pl-field__label" for="search">Add a teammate</label>
+            <input class="pl-input" id="search" type="search" autocomplete="off" aria-describedby="add-help" aria-controls="results">
+            <span class="pl-field__help" id="add-help"><span id="add-help-text">Search Jira by name. Everyone on the site sees this list.</span></span>
+          </div>
+          <ul class="pl-list" id="results" hidden aria-label="Jira users"></ul>
+        </div>
+        <div id="team-body"></div>
+      </section>
+
+      <section class="pane" id="pane" aria-live="polite" aria-labelledby="pane-title"></section>
+    </div>
+  </main>
+
+  <aside class="pl-panel" id="panel" aria-labelledby="panel-title" aria-hidden="true">
+    <div class="pl-panel__head" id="panel-head"></div>
+    <div class="pl-panel__body" id="panel-body"></div>
+    <div class="pl-panel__foot">
+      <span class="pl-meta">Showing only tickets you can open.</span>
+      <button class="pl-btn pl-btn--subtle" type="button" id="panel-close">Close <span class="pl-kbd">Esc</span></button>
+    </div>
+  </aside>
+
+  <div class="toast-slot" id="toast-slot" aria-live="polite"></div>
+  <button class="pl-btn pl-btn--subtle pl-motion" id="motion" type="button" aria-pressed="false">Motion</button>
+
+<script data-sprite="../design-system/assets/icons.svg">
+  // Load the icon sprite into the page once, so every <use href="#id"> resolves locally.
+  fetch(document.currentScript.dataset.sprite).then((r) => r.text()).then((svg) => {
+    const box = document.createElement("div"); box.className = "pl-sprite"; box.setAttribute("aria-hidden", "true");
+    box.innerHTML = svg; document.body.prepend(box);
+  });
+</script>
+<script>
+  // ---------- Demo data. The real page reads people and tickets from Jira, as the viewer. ----------
+  const VIEWER = "Daniel Tan";
+  const DIRECTORY = ["Aisha Rahman", "Daniel Tan", "Mei Ling Goh", "Ravi Kumar", "Priya Nair", "Grace Lim", "Hafiz Osman"];
+  const initials = (name) => name.split(" ").map((w) => w[0]).slice(0, 2).join("");
+  const STATUS = { todo: ["To Do", "pl-lozenge--todo"], progress: ["In Progress", "pl-lozenge--progress"], review: ["In Review", "pl-lozenge--progress"] };
+
+  const AISHA = {
+    open: [
+      { key: "PAY-142", summary: "Retry failed bank transfers", status: "progress", when: "6 Nov" },
+      { key: "PAY-147", summary: "Show transfer status to customers", status: "progress", when: "5 Nov" },
+      { key: "PAY-139", summary: "Bank API timeout alerts", status: "review", when: "5 Nov" },
+      { key: "PAY-160", summary: "Refund file for the finance team", status: "todo", when: "4 Nov" },
+      { key: "PAY-151", summary: "Year-end batch job", status: "todo", when: "30 Oct" },
+      { key: "OPS-44", summary: "Rotate the bank API certificate", status: "todo", when: "28 Oct" },
+    ],
+    changes: [
+      { key: "PAY-142", text: "Moved to In Progress", when: "6 Nov" },
+      { key: "PAY-139", text: "Commented: “The alert fires after 3 timeouts in 5 minutes, the same as the retry limit.”", when: "5 Nov" },
+      { key: "PAY-147", text: "Moved to In Progress", when: "5 Nov" },
+      { key: "PAY-160", text: "Commented: “Waiting on finance for the refund file format.”", when: "4 Nov" },
+      { key: "PAY-139", text: "Moved to In Review", when: "31 Oct" },
+      { key: "PAY-133", text: "Moved to Done", when: "28 Oct" },
+    ],
+    blockers: [
+      { key: "PAY-147", summary: "Show transfer status to customers", status: "progress", by: { key: "OPS-31", summary: "Bank API sandbox access" } },
+      { key: "PAY-160", summary: "Refund file for the finance team", status: "todo", flagged: true },
+    ],
+    next: [
+      { key: "PAY-151", summary: "Year-end batch job", status: "todo", due: "Due 20 Dec" },
+      { key: "OPS-44", summary: "Rotate the bank API certificate", status: "todo", due: "Due 9 Jan" },
+      { key: "PAY-160", summary: "Refund file for the finance team", status: "todo", due: "No due date" },
+    ],
+  };
+  const NOTHING = { open: [], changes: [], blockers: [], next: [] };
+  const TOPICS = ["Settlement report", "Card refund rules", "Fraud score threshold", "Merchant onboarding form", "Payout schedule", "Chargeback emails", "Ledger export", "FX rate cache"];
+  const PRIYA = {
+    open: Array.from({ length: 63 }, (_, i) => ({ key: `PAY-${300 - i}`, summary: `${TOPICS[i % TOPICS.length]}: ${["review", "fix", "test", "update"][i % 4]}`,
+      status: i % 3 === 0 ? "progress" : "todo", when: `${Math.max(1, 7 - Math.floor(i / 9))} Nov` })),
+    total: 63,
+    changes: [{ key: "PAY-300", text: "Moved to In Progress", when: "7 Nov" }],
+    blockers: [],
+    next: [{ key: "PAY-298", summary: "Payout schedule: test", status: "todo", due: "Due 14 Nov" }],
+  };
+  const WORK = { "Aisha Rahman": AISHA, "Ravi Kumar": NOTHING, "Priya Nair": PRIYA, "Daniel Tan": NOTHING, "Hafiz Osman": NOTHING, "Grace Lim": NOTHING, "Mei Ling Goh": NOTHING };
+  const OPEN_LIMIT = 50;
+
+  let team = [], selected = null, mode = "aisha", failNext = false, graceRaced = false;
+  const $ = (id) => document.getElementById(id);
+  const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };   // textContent, never innerHTML, for Jira data
+  const glyph = (id) => { const s = document.createElementNS("http://www.w3.org/2000/svg", "svg"); s.setAttribute("class", "pl-glyph pl-glyph--sm"); s.setAttribute("aria-hidden", "true");
+    const u = document.createElementNS("http://www.w3.org/2000/svg", "use"); u.setAttribute("href", `#${id}`); s.appendChild(u); return s; };
+  const reducedMotion = () => document.documentElement.dataset.motion === "reduced";
+
+  // ---------- Team list ----------
+  function renderTeam() {
+    const body = $("team-body"); body.replaceChildren();
+    $("team-count").textContent = team.length ? `${team.length} ${team.length === 1 ? "person" : "people"}` : "";
+    if (!team.length) {
+      const e = el("div", "pl-empty");
+      e.innerHTML = `<svg class="pl-empty__art" viewBox="0 0 320 200" aria-hidden="true"><use href="#porch-scene"/></svg>`;
+      e.append(el("p", "pl-empty__title", "No one on the team yet"), el("p", null, "Add the people you work with, so anyone can catch up on their work."));
+      body.appendChild(e); return;
+    }
+    const list = el("ul", "pl-list"); list.setAttribute("aria-label", "Team");
+    team.forEach((m) => {
+      const row = el("li", "pl-row team-row");
+      if (selected === m.name) { row.classList.add("is-selected"); row.setAttribute("aria-current", "true"); }
+      const pick = el("button", "pick"); pick.type = "button";
+      pick.append(el("span", "pl-avatar", initials(m.name)), el("strong", null, m.name), el("span", "pl-meta", `Added by ${m.by} · ${m.when}`));
+      pick.setAttribute("aria-label", `Catch up on ${m.name}`);
+      pick.addEventListener("click", () => openCatchUp(m.name));
+      const remove = el("button", "pl-btn pl-btn--subtle", "Remove"); remove.type = "button";
+      remove.setAttribute("aria-label", `Take ${m.name} off the team`);
+      remove.addEventListener("click", () => removeMember(m.name));
+      row.append(pick, remove); list.appendChild(row);
+    });
+    body.appendChild(list);
+  }
+  function removeMember(name) {
+    team = team.filter((m) => m.name !== name);
+    if (selected === name) { selected = null; closePanel(); renderPane(); }
+    renderTeam(); toast(`${name} is off the team. Their Jira tickets are unchanged.`);
+  }
+
+  // ---------- Add a teammate: Jira user search ----------
+  const search = $("search"), results = $("results"), addField = $("add-field"), addHelp = $("add-help-text");
+  function setAddError(msg) {
+    addField.classList.toggle("pl-field--error", Boolean(msg));
+    search.setAttribute("aria-invalid", msg ? "true" : "false");
+    addHelp.textContent = msg || "Search Jira by name. Everyone on the site sees this list.";
+  }
+  function renderResults() {
+    const q = search.value.trim().toLowerCase(); results.replaceChildren();
+    if (!q) { results.hidden = true; return; }
+    const hits = DIRECTORY.filter((n) => n.toLowerCase().includes(q)).slice(0, 5);
+    results.hidden = false;
+    if (!hits.length) { const r = el("li", "pl-row empty-row"); r.append(el("span", null, `No Jira users match “${search.value.trim()}”.`)); results.appendChild(r); return; }
+    hits.forEach((name) => {
+      const r = el("li", "pl-row result-row");
+      const on = team.some((m) => m.name === name);
+      r.append(el("span", "pl-avatar", initials(name)), el("span", null, name));
+      if (on) r.append(el("span", "pl-meta", "On the team"));
+      else { const b = el("button", "pl-btn pl-btn--secondary", "Add"); b.type = "button"; b.setAttribute("aria-label", `Add ${name} to the team`); b.addEventListener("click", () => addMember(name)); r.append(b); }
+      results.appendChild(r);
+    });
+  }
+  function addMember(name) {
+    // Grace Lim shows the race: Mei Ling added her a moment ago, in another browser.
+    if (name === "Grace Lim" && !graceRaced) {
+      graceRaced = true; team.push({ name, by: "Mei Ling Goh", when: "Just now" }); renderTeam(); renderResults();
+      setAddError(`${name} is already on the team.`); return;
+    }
+    team.push({ name, by: VIEWER, when: "Just now" });
+    search.value = ""; setAddError(""); renderResults(); renderTeam();
+    toast(`${name} is on the team.`);
+  }
+  search.addEventListener("input", () => { setAddError(""); renderResults(); });
+
+  // ---------- Catch-up: the four sections ----------
+  function ticketRow(t, extra) {
+    const r = el("li", "pl-row");
+    const a = el("a", "pl-key", t.key); a.href = `#${t.key}`; a.title = `Open ${t.key} in Jira`;
+    r.append(glyph("ticket"), a, el("span", "pl-row__summary", t.summary || t.text));
+    if (t.status) { const [label, cls] = STATUS[t.status]; r.append(el("span", `pl-lozenge ${cls}`, label)); } else r.append(el("span"));
+    r.append(extra || el("span", "pl-meta when", t.when || t.due || ""));
+    return r;
+  }
+  function section(title, rows, emptyText, foot) {
+    const s = el("section", "stack");
+    const head = el("div", "sec-head"); head.append(el("h3", null, title), el("span", "pl-meta", rows.length ? String(foot ? foot.total : rows.length) : ""));
+    const list = el("ul", reducedMotion() ? "pl-list" : "pl-list pl-list--stagger");
+    if (!rows.length) { const r = el("li", "pl-row empty-row"); r.append(el("span", null, emptyText)); list.appendChild(r); }
+    else rows.forEach((r) => list.appendChild(r));
+    if (foot && foot.total > rows.length) {
+      const r = el("li", "pl-row empty-row"); const a = el("a", "more", `and ${foot.total - rows.length} more in Jira`); a.href = "#jira-search"; r.append(a); list.appendChild(r);
+    }
+    s.append(head, list); return s;
+  }
+  function catchUpSections(work) {
+    const open = work.open.slice(0, OPEN_LIMIT);
+    return [
+      section("Open work", open.map((t) => ticketRow(t)), "No open work.", { total: work.total || work.open.length }),
+      section("Latest changes", work.changes.map((t) => ticketRow(t)), "No changes in the last 14 days."),
+      section("Blockers", work.blockers.map((t) => {
+        let extra;
+        if (t.by) { extra = el("a", "pl-chip", null); extra.href = `#${t.by.key}`; extra.title = t.by.summary; extra.append(glyph("ticket"), document.createTextNode(`Blocked by ${t.by.key}`)); }
+        else extra = el("span", "pl-lozenge pl-lozenge--blocked", "Flagged");
+        return ticketRow(t, extra);
+      }), "No blockers."),
+      section("Next steps", work.next.map((t) => ticketRow({ ...t, when: t.due })), "No next steps."),
+    ];
+  }
+  function personHeader(name, titleId) {
+    const p = el("div", "person");
+    const text = el("div", "person-text"); const h = el("h2", null, name); h.id = titleId;
+    text.append(h, el("span", "pl-meta", "From Jira, as you · 10 Nov 2026 · Showing only tickets you can open."));
+    p.append(el("span", "pl-avatar pl-avatar--lg", initials(name)), text); return p;
+  }
+  function loadingBlocks() {
+    return ["Open work", "Latest changes", "Blockers", "Next steps"].map((t) => {
+      const s = el("section", "stack"); const head = el("div", "sec-head"); head.append(el("h3", null, t)); const list = el("ul", "pl-list");
+      for (let i = 0; i < 3; i++) { const r = el("li", "pl-row sk-row"); r.append(el("span", "pl-skeleton sk-key"), el("span", "pl-skeleton")); list.appendChild(r); }
+      s.append(head, list); return s;
+    }).concat(el("span", "pl-meta", "Loading from Jira…"));
+  }
+  function errorBlock(name) {
+    const m = el("div", "pl-message pl-message--error"); m.setAttribute("role", "alert");
+    const p = el("p"); p.append(el("strong", null, `Couldn't load ${name.split(" ")[0]}'s work from Jira.`), document.createTextNode(" Try again."));
+    const b = el("button", "pl-btn pl-btn--secondary", "Try again"); b.type = "button"; b.addEventListener("click", () => openCatchUp(name));
+    m.append(glyph("gap"), p, b); return [m];
+  }
+
+  // Where the catch-up shows: the right pane (two panes) or the side panel.
+  function target() { return document.body.dataset.layout === "panel" ? { head: $("panel-head"), body: $("panel-body") } : null; }
+  function show(name, blocks) {
+    const t = target();
+    if (t) {
+      t.head.replaceChildren(personHeader(name, "panel-title")); t.body.replaceChildren(...blocks);
+      $("panel").classList.add("is-open"); $("panel").setAttribute("aria-hidden", "false");
+    } else {
+      $("pane").replaceChildren(personHeader(name, "pane-title"), ...blocks);
+    }
+  }
+  function renderPane() {
+    if (selected) return;
+    const e = el("div", "pl-empty");
+    e.append(el("p", "pl-empty__title", "Pick a teammate"), el("p", null, "See their open work, latest changes, blockers and next steps, straight from Jira."));
+    const h = el("span"); h.id = "pane-title"; $("pane").replaceChildren(h, e);
+  }
+  function openCatchUp(name) {
+    selected = name; renderTeam();
+    if (mode === "loading") { show(name, loadingBlocks()); return; }
+    show(name, loadingBlocks());
+    setTimeout(() => {
+      if (selected !== name) return;
+      if (failNext) { failNext = false; show(name, errorBlock(name)); return; }   // the retry works
+      show(name, catchUpSections(WORK[name] || NOTHING));
+    }, reducedMotion() ? 0 : 450);
+  }
+  function closePanel() { $("panel").classList.remove("is-open"); $("panel").setAttribute("aria-hidden", "true"); }
+  $("panel-close").addEventListener("click", () => { closePanel(); selected = null; renderTeam(); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && $("panel").classList.contains("is-open")) { closePanel(); selected = null; renderTeam(); } });
+
+  function toast(msg) {
+    const slot = $("toast-slot"); slot.replaceChildren();
+    const t = el("div", "pl-toast"); t.setAttribute("role", "status");
+    const lamp = el("span", "pl-toast__lamp"); lamp.setAttribute("aria-hidden", "true");
+    t.append(lamp, document.createTextNode(msg)); slot.appendChild(t);
+    setTimeout(() => slot.replaceChildren(), 3200);
+  }
+
+  // ---------- Preview states ----------
+  const START = [
+    { name: "Daniel Tan", by: "Daniel Tan", when: "2 Nov" },
+    { name: "Aisha Rahman", by: "Daniel Tan", when: "3 Nov" },
+    { name: "Ravi Kumar", by: "Mei Ling Goh", when: "4 Nov" },
+    { name: "Priya Nair", by: "Aisha Rahman", when: "4 Nov" },
+  ];
+  function setState(s) {
+    mode = s; failNext = s === "fail"; graceRaced = false; selected = null;
+    document.querySelectorAll("[data-state]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.state === s)));
+    team = s === "first" ? [] : START.map((m) => ({ ...m }));
+    search.value = ""; setAddError(""); renderResults(); closePanel(); renderTeam(); renderPane();
+    const who = { aisha: "Aisha Rahman", loading: "Aisha Rahman", fail: "Aisha Rahman", nothing: "Ravi Kumar", many: "Priya Nair" }[s];
+    if (who) openCatchUp(who);
+  }
+  function setLayout(l) {
+    document.body.dataset.layout = l;
+    document.querySelectorAll("[data-layout-btn]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.layoutBtn === l)));
+    setState(mode);
+  }
+  document.querySelectorAll("[data-state]").forEach((b) => b.addEventListener("click", () => setState(b.dataset.state)));
+  document.querySelectorAll("[data-layout-btn]").forEach((b) => b.addEventListener("click", () => setLayout(b.dataset.layoutBtn)));
+  const params = new URLSearchParams(location.search);   // ?state=fail&layout=panel for review links
+  mode = params.get("state") || "aisha";
+
+  // ---------- Motion switch: follows the system unless the viewer chooses ----------
+  const sysReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let saved = null; try { saved = localStorage.getItem("pl-motion"); } catch (e) { /* follow the system */ }
+  let reduced = saved ? saved === "reduced" : sysReduced;
+  const motionBtn = $("motion");
+  const applyMotion = () => { document.documentElement.dataset.motion = reduced ? "reduced" : "full"; motionBtn.textContent = reduced ? "Motion: reduced" : "Motion: full"; motionBtn.setAttribute("aria-pressed", String(!reduced)); };
+  motionBtn.addEventListener("click", () => { reduced = !reduced; applyMotion(); try { localStorage.setItem("pl-motion", reduced ? "reduced" : "full"); } catch (e) { /* not remembered */ } });
+  applyMotion();
+  setLayout(params.get("layout") === "panel" ? "panel" : "split");
+</script>
+</body>
+</html>

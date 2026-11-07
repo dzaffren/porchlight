@@ -12,6 +12,7 @@
 import { sql, migrationRunner } from '@forge/sql';
 
 const V001_NAME = 'v001_create_notes';
+const V002_NAME = 'v002_create_team_members';
 
 // Forward: create the notes table.
 // - client_key is unique. The page sends a random key with each save, so a retried
@@ -32,9 +33,27 @@ export const V001_UP = `
 // its own. See rollbackV001 below.
 export const V001_DOWN = 'DROP TABLE IF EXISTS notes';
 
-// Register the migration with Forge's runner. enqueue() only adds it to a list;
-// nothing touches the database until run() is called.
-migrationRunner.enqueue(V001_NAME, V001_UP);
+// Forward: create the team list (spec catch-up-view, decision D16).
+// - One row per person on the team. Names are never stored; the page asks Jira for them.
+// - account_id is unique, so two people adding the same teammate make only one row.
+// - added_by_account_id comes from Forge's context, never from the page.
+// - added_at is set by the database, in UTC, like notes.created_at.
+export const V002_UP = `
+  CREATE TABLE IF NOT EXISTS team_members (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    account_id VARCHAR(128) NOT NULL,
+    added_by_account_id VARCHAR(128) NOT NULL,
+    added_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_team_account (account_id)
+  )
+`;
+
+// Backward: remove the team list. The notes table is not touched. See rollbackV002 below.
+export const V002_DOWN = 'DROP TABLE IF EXISTS team_members';
+
+// Register the migrations with Forge's runner, in the order they must run.
+// enqueue() only adds them to a list; nothing touches the database until run() is called.
+migrationRunner.enqueue(V001_NAME, V001_UP).enqueue(V002_NAME, V002_UP);
 
 /**
  * Run every migration that has not run yet on this installation.
@@ -92,5 +111,18 @@ export function ensureMigrated() {
 export async function rollbackV001() {
   await sql.executeDDL(V001_DOWN);
   await sql.prepare('DELETE FROM __migrations WHERE name = ?').bindParams(V001_NAME).execute();
+  migrationRun = null;
+}
+
+/**
+ * Reverse v002: drop the team_members table and remove its record from __migrations,
+ * so that running the migrations again recreates the table. Notes stay as they are.
+ *
+ * Like rollbackV001, it runs only by hand, on the development environment.
+ * It deletes the whole team list.
+ */
+export async function rollbackV002() {
+  await sql.executeDDL(V002_DOWN);
+  await sql.prepare('DELETE FROM __migrations WHERE name = ?').bindParams(V002_NAME).execute();
   migrationRun = null;
 }

@@ -1,5 +1,6 @@
 /* Page layout only. Every component and value comes from the Porchlight design system
-   (docs/design/design-system); this file only places them, as in docs/design/skeleton/preview.html. */
+   (docs/design/design-system); this file only places them, as in docs/design/skeleton/preview.html
+   (Notes) and docs/design/catch-up-view/preview.html (Team). */
 
 body { background: var(--ds-surface-sunken); }
 
@@ -22,6 +23,39 @@ body { background: var(--ds-surface-sunken); }
 .line--55 { width: 55%; }
 .line--70 { width: 70%; }
 .line--90 { width: 90%; }
+
+/* ---------- Team page: two panes, as in docs/design/catch-up-view/preview.html ---------- */
+.frame--wide { max-width: 1200px; }
+.split { display: grid; grid-template-columns: minmax(280px, 340px) 1fr; gap: var(--ds-space-300); align-items: start; }
+@media (max-width: 880px) { .split { grid-template-columns: 1fr; } }
+
+.split h2, .split h3 { margin: 0; color: var(--ds-text-strong); }
+.split h2 { font-size: var(--ds-font-size-title); line-height: var(--ds-line-title); }
+.split h3 { font-size: var(--ds-font-size-body); line-height: var(--ds-line-body); }
+.stack { display: grid; gap: var(--ds-space-150); }
+.sec-head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--ds-space-100); }
+
+/* The team list, and the person button inside each row. */
+.team { background: var(--ds-surface); border: 1px solid var(--ds-border); border-radius: var(--ds-radius-300); padding: var(--ds-space-200); display: grid; gap: var(--ds-space-200); }
+.team-row { grid-template-columns: 1fr auto; }
+.pick { font: inherit; color: inherit; background: none; border: 0; padding: var(--ds-space-050) 0; margin: 0; text-align: left; cursor: pointer;
+  display: grid; grid-template-columns: auto 1fr; column-gap: var(--ds-space-150); align-items: center; min-width: 0; }
+.pick:focus-visible { outline: 2px solid var(--ds-focus); outline-offset: 2px; border-radius: var(--ds-radius-100); }
+.pick .pl-avatar { grid-row: span 2; }
+.pick strong, .pick .pl-meta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pl-row .pl-key { min-width: 7ch; }
+.result-row { grid-template-columns: auto 1fr auto; }
+
+/* The catch-up pane. */
+.pane { background: var(--ds-surface); border: 1px solid var(--ds-border); border-radius: var(--ds-radius-300); padding: var(--ds-space-300); display: grid; gap: var(--ds-space-300); align-content: start; }
+.person { display: flex; gap: var(--ds-space-150); align-items: center; }
+.person h2 { font-size: var(--ds-font-size-heading); line-height: var(--ds-line-heading); }
+.person-text { display: grid; gap: var(--ds-space-025); }
+.empty-row { color: var(--ds-text-subtlest); grid-template-columns: 1fr; }
+.more { color: var(--ds-text-subtle); text-decoration: underline; }
+.sk-row { grid-template-columns: auto 1fr; }
+.sk-key { width: 56px; }
+.pl-row .pl-chip { white-space: nowrap; }
 
 .toast-slot { position: fixed; left: 50%; bottom: var(--ds-space-300); transform: translateX(-50%); }
 .pl-motion { top: auto; bottom: var(--ds-space-200); left: auto; right: var(--ds-space-200); transform: none; }

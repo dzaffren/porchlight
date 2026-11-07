@@ -37,7 +37,7 @@ Porchlight is a Jira app that shows what each teammate knows and why. The visual
 | Field | `.pl-field` > `.pl-field__label`, `.pl-input` / `.pl-textarea` / `.pl-select`, `.pl-field__help`; `.pl-field--error` |
 | Knowledge card | `.pl-card` + `--lit` or `--unlit`; children `.pl-card__glow` (empty span, first), `.pl-card__head`, `.pl-card__title`, `.pl-card__body`, `.pl-card__sources` |
 | Source chip | `.pl-chip` (a link to a ticket, PR, page or interview, with an icon) |
-| List | `.pl-list` > `.pl-row`, `.pl-row__summary`; `.pl-list--stagger` to animate in |
+| List | `.pl-list` > `.pl-row`, `.pl-row__summary`; `.pl-row.is-selected` for the row whose details are open; `.pl-list--stagger` to animate in |
 | Status / meta | `.pl-lozenge--*`, `.pl-meta` (dates, counts), `.pl-key` (issue keys), `.pl-avatar` (`--lg`) |
 | Person | `.pl-presence` > `.pl-presence__lamp`, `.pl-presence--away` |
 | Side panel | `.pl-panel.is-open` > `.pl-panel__head` (`.pl-panel__who`, `.pl-panel__name`), `.pl-panel__body`, `.pl-panel__foot` |
