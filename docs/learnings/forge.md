@@ -12,3 +12,8 @@ Learned while building the skeleton slice, 2026-11-06 to 2026-11-07.
 - **Forge's own packages carry audited advisories.** `@forge/sql` and `@forge/bridge` pull an old `glob` (through `@forge/manifest`), and `@forge/bridge` pulls `prosemirror-view` 1.41.5. npm's suggested fix is a breaking downgrade. Use `overrides` in `package.json` instead, and confirm with `npm audit` and a deploy.
 - **Give CI secrets to one step, not the job.** Installs, install scripts and builds then never run beside the token. Pin the Forge CLI as a dev dependency and call it with `npx forge`.
 - **`forge lint` needs a Forge login.** It reads only local files, but stops with "Not logged in" without credentials. In CI, give the lint step the token too.
+- **A deploy that adds a scope needs `--approve MAJOR_VERSION_RULE`.** Forge CLI 15 stops with "1 approval requested", because a scope change makes a major version. Deploy again with the flag, then run `forge install --upgrade`. A CI deploy of the same manifest later needs no approval.
+- **Jira's issue link API reads backwards.** To make PAY-2 "is blocked by" OPS-1, send `inwardIssue: OPS-1` and `outwardIssue: PAY-2` to `POST /rest/api/3/issueLink`. On PAY-2 the link then shows `inwardIssue: OPS-1` with `type.inward` = "is blocked by". Check the ticket page after creating a link.
+- **A Kanban project's To Do status may be called "Backlog".** Use `status.statusCategory.key` (`new`, `indeterminate`, `done`) for rules, and show `status.name` only as text.
+- **Custom UI subpages work.** `pages` on `jira:globalPage` shows Team and Notes in Jira's sidebar, the route is added to the URL, and `view.createHistory()` gives the page `/team` or `/notes`.
+

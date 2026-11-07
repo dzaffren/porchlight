@@ -1,6 +1,6 @@
 # Catch-up view
 
-**Version:** v1 · **Status:** Refined · **Type:** Feature · **Project type:** Web UI
+**Version:** v1 · **Status:** Built · **Type:** Feature · **Project type:** Web UI
 
 **Shape doc:** docs/specs/knowledge-handover/shape.md
 **Depends on:** skeleton
@@ -297,7 +297,7 @@ No new npm package. `view` comes from `@forge/bridge`, which the page already us
 | A teammate with nothing in Jira | `CatchUp.test.jsx` (empty answers → four empty lines) | `npm run test:ui` |
 | Jira does not answer | `CatchUp.test.jsx` (requestJira rejects → message; Try again → loads) | `npm run test:ui` |
 
-**E2E:** `e2e/catch-up.spec.js` opens Porchlight > Team on dzaffren.atlassian.net with the saved login, adds the logged-in person if missing, opens their catch-up, checks that Open work lists the demo ticket and that its key links to `/browse/<key>`, then takes them off and back on. It also checks that the sidebar's Notes link shows the notes page. Run with `npm run e2e` after `forge deploy`.
+**E2E:** `e2e/catch-up.spec.js` opens Porchlight > Team on dzaffren.atlassian.net with the saved login. If the logged-in person is on the list, it takes them off first. Then it adds them, reloads, opens their catch-up, checks the four sections, and checks that a key in Open work opens `/browse/<key>` in a new tab. `e2e/skeleton.spec.js` opens Notes at `…/notes`. Run both with `npm run e2e` after `forge deploy`. Passed on 2026-11-07 after the 3.0.0 deploy.
 
 ### Chunks
 
@@ -339,6 +339,11 @@ A owns the manifest, so the `pages` and the new scope land there. B codes agains
 | O14 | The e2e and the demo need open tickets assigned to the test account on dzaffren.atlassian.net, including one blocked and one flagged. Who makes them? | question | spec p3 | user | Resolved | Claude creates them during /build through Jira's own screens in the user's logged-in Chrome, from a list in the spec, after asking first. Made-up data only (shape O10). 2026-11-07 |
 | O15 | The e2e has one account, so it catches up on the logged-in person, not on a teammate | flag | spec p3 | user | Accepted risk | Unit tests prove the search uses the picked person's account ID, not the viewer's; one manual check with a second account before the demo. 2026-11-07 |
 | O16 | The new `read:jira-work` scope needs `forge install --upgrade`, and you approve the new permission in Jira | flag | spec p3 | user | Resolved | Part of /build: deploy, `install --non-interactive --upgrade`, then the user approves the permission in Jira. 2026-11-07 |
+| O17 | The plan said `addMember` returns `added: true` after `INSERT IGNORE`. Two people adding Aisha at the same moment would then both get "added". | flag | build | user | Decided alone | Chose: `added` comes from the INSERT's `affectedRows === 1`, tested in the fake database. It relies on Forge SQL (TiDB) reporting 0 rows for an ignored duplicate, as MySQL does; the e2e never races, so this is unproven on the real database. Other: always `added: true`. Undo: set `added: true` in `porchlight/src/db/team.js`. 2026-11-07 |
+| O18 | No scenario covers the team failing to load, a failed Jira user search, a failed add or a failed remove | flag | build | user | Decided alone | Chose: "Couldn't load the team. Reload the page to try again.", "Couldn't search Jira. Try again.", "Couldn't add {name}. Try again." (field errors), and a toast "Couldn't take {name} off the team. Try again." with the row kept. Other: no message. Undo: remove those branches in `TeamPage.jsx` and `AddTeammate.jsx`. 2026-11-07 |
+| O19 | The E2E paragraph said the test adds the person if missing, then takes them off and back on, and clicks the sidebar's Notes link | flag | build | user | Decided alone | Chose: take off first when present, then add, reload and catch up; the notes test opens `…/notes` by URL, and the sidebar was checked by hand on 2026-11-07. Other: the old order plus a sidebar click inside the frame's parent page. Undo: reorder the steps in `e2e/catch-up.spec.js`. Spec E2E paragraph updated. 2026-11-07 |
+| O20 | The preview drew the "and 13 more in Jira" link in amber, which means captured knowledge | flag | build | user | Decided alone | Chose: neutral subtle text with an underline, in the page and the preview. Other: keep amber. Undo: revert 99e3419. 2026-11-07 |
+| O21 | `forge logs` showed `porchlight.migrate v002_create_team_members=done` twice after the deploy: two function instances ran the migration at the same moment | flag | build | user | Decided alone | Chose: leave it. `CREATE TABLE IF NOT EXISTS` is harmless twice, and `rollbackV002` deletes every v002 row from `__migrations`. Other: a lock around `ensureMigrated`. Undo: n/a. For /review to judge. 2026-11-07 |
 
 _Never delete this section or its rows. See references/ledger.md._
 
