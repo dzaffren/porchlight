@@ -3,6 +3,7 @@
 //   e2e/skeleton.spec.js  — the Notes page (skeleton slice)
 //   e2e/catch-up.spec.js  — the Team page and a catch-up (catch-up-view slice)
 //   e2e/porch-status.spec.js — your porch light on the Team page (porch-status slice)
+//   e2e/ask-the-trail.spec.js — the Porchlight agent in Rovo Chat, on the demo site (ask-the-trail slice)
 // e2e/helpers.js holds what they share; it is not a test.
 //
 // Run order:
