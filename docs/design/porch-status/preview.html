@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Porchlight Porch Status</title>
+<link rel="stylesheet" href="../design-system/styles.css">
+<style>
+  /* Layout only. Every component and value comes from the Porchlight design system. */
+  body { background: var(--ds-surface-sunken); }
+  .states { position: sticky; top: 0; z-index: 3; display: flex; flex-wrap: wrap; gap: var(--ds-space-100); align-items: center; justify-content: center;
+    padding: var(--ds-space-150) var(--ds-space-200); background: var(--pl-scrim); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid var(--ds-border); }
+  .states .pl-meta { margin: 0 var(--ds-space-050) 0 var(--ds-space-200); }
+  .states .pl-meta:first-child { margin-left: 0; }
+  .states [aria-pressed="true"] { background: var(--pl-unlit); border-color: var(--ds-border-bold); color: var(--ds-text-strong); }
+
+  .frame { max-width: 1200px; margin: 0 auto; padding: var(--ds-space-400) var(--ds-space-200) var(--ds-space-600); display: grid; gap: var(--ds-space-300); }
+  .title { display: flex; gap: var(--ds-space-150); align-items: center; }
+  .split { display: grid; grid-template-columns: minmax(280px, 340px) 1fr; gap: var(--ds-space-300); align-items: start; }
+  @media (max-width: 880px) { .split { grid-template-columns: 1fr; } }
+  .split h2, .split h3 { margin: 0; color: var(--ds-text-strong); }
+  .split h2 { font-size: var(--ds-font-size-title); line-height: var(--ds-line-title); }
+  .split h3 { font-size: var(--ds-font-size-body); line-height: var(--ds-line-body); }
+  .stack { display: grid; gap: var(--ds-space-150); }
+  .sec-head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--ds-space-100); }
+  .column { display: grid; gap: var(--ds-space-200); align-content: start; }
+
+  .team, .mine { background: var(--ds-surface); border: 1px solid var(--ds-border); border-radius: var(--ds-radius-300); padding: var(--ds-space-200); display: grid; gap: var(--ds-space-150); }
+  .team-row { grid-template-columns: 1fr auto; }
+  .pick { font: inherit; color: inherit; background: none; border: 0; padding: var(--ds-space-050) 0; margin: 0; text-align: left; cursor: pointer;
+    display: grid; grid-template-columns: auto 1fr; column-gap: var(--ds-space-150); align-items: center; min-width: 0; }
+  .pick:focus-visible { outline: 2px solid var(--ds-focus); outline-offset: 2px; border-radius: var(--ds-radius-100); }
+  .pick .pl-avatar { grid-row: span 2; }
+  .name-line { display: grid; gap: var(--ds-space-025); justify-items: start; min-width: 0; }
+  .pick strong, .pick .pl-meta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .mine-now { display: flex; justify-content: space-between; align-items: center; gap: var(--ds-space-100); }
+  .mine-form { display: grid; gap: var(--ds-space-150); }
+  .mine-form[hidden] { display: none; }
+  .mine-fields { display: grid; grid-template-columns: 1fr 1fr; gap: var(--ds-space-100); }
+  .mine-actions { display: flex; gap: var(--ds-space-100); justify-content: flex-end; }
+  .header-mine { display: grid; gap: var(--ds-space-100); justify-items: end; }
+  .header-mine .mine-form { width: min(420px, 100%); background: var(--ds-surface); border: 1px solid var(--ds-border); border-radius: var(--ds-radius-300); padding: var(--ds-space-200); }
+  [data-place="card"] .header-mine { display: none; }
+  [data-place="header"] .mine { display: none; }
+
+  .pane { background: var(--ds-surface); border: 1px solid var(--ds-border); border-radius: var(--ds-radius-300); padding: var(--ds-space-300); display: grid; gap: var(--ds-space-300); align-content: start; }
+  .person { display: flex; gap: var(--ds-space-150); align-items: center; }
+  .person h2 { font-size: var(--ds-font-size-heading); line-height: var(--ds-line-heading); }
+  .person-text { display: grid; gap: var(--ds-space-050); }
+  .pl-row .pl-key { min-width: 7ch; }
+
+  /* PROPOSED for the system, tier 2 only: the presence lamp warms up when it turns on.
+     Only opacity and transform move; reduced motion stops it through the system's global rule. */
+  [data-tier="2"] .pl-presence--away.is-warming .pl-presence__lamp { animation: pl-lamp-warm var(--pl-dur-warm) var(--pl-ease-warm) both; }
+  [data-tier="2"] .pl-presence--away.is-warming { animation: pl-lamp-text var(--pl-dur-warm) var(--pl-ease-warm) both; }
+  @keyframes pl-lamp-warm { from { opacity: 0.15; transform: scale(0.5); } 60% { opacity: 1; transform: scale(1.25); } to { opacity: 1; transform: none; } }
+  @keyframes pl-lamp-text { from { opacity: 0.4; } to { opacity: 1; } }
+  .toast-slot { position: fixed; left: 50%; bottom: var(--ds-space-300); transform: translateX(-50%); z-index: 4; }
+  .pl-motion { top: auto; bottom: var(--ds-space-200); left: auto; right: var(--ds-space-200); transform: none; z-index: 4; }
+</style>
+</head>
+<body data-place="card" data-tier="1">
+  <!-- State switcher: for reviewing the design only. Not part of the product. -->
+  <nav class="states" aria-label="Preview states">
+    <span class="pl-meta">State</span>
+    <button class="pl-btn pl-btn--subtle" type="button" data-state="team">Team with porch lights</button>
+    <button class="pl-btn pl-btn--subtle" type="button" data-state="setting">Setting Away</button>
+    <button class="pl-btn pl-btn--subtle" type="button" data-state="leaving">Leaving warning</button>
+    <button class="pl-btn pl-btn--subtle" type="button" data-state="past">Past date</button>
+    <button class="pl-btn pl-btn--subtle" type="button" data-state="far">Over a year</button>
+    <button class="pl-btn pl-btn--subtle" type="button" data-state="ravi">Ravi is leaving</button>
+    <button class="pl-btn pl-btn--subtle" type="button" data-state="meiling">Mei Ling left</button>
+    <span class="pl-meta">Your porch light</span>
+    <button class="pl-btn pl-btn--subtle" type="button" data-place-btn="card">Card in Team column</button>
+    <button class="pl-btn pl-btn--subtle" type="button" data-place-btn="header">In the page header</button>
+    <span class="pl-meta">Motion tier</span>
+    <button class="pl-btn pl-btn--subtle" type="button" data-tier-btn="1">Tier 1</button>
+    <button class="pl-btn pl-btn--subtle" type="button" data-tier-btn="2">Tier 2</button>
+    <button class="pl-btn pl-btn--subtle" type="button" id="demo">Turn my light on</button>
+  </nav>
+
+  <main class="frame">
+    <header class="pl-page-header">
+      <div>
+        <h1 class="title"><svg class="pl-glyph pl-glyph--lit" aria-hidden="true"><use href="#lamp"/></svg>Porchlight</h1>
+        <p>Catch up on a teammate's work. Porchlight reads it from Jira as you.</p>
+      </div>
+      <div class="header-mine" id="header-mine"></div>
+    </header>
+
+    <div class="split">
+      <div class="column">
+        <section class="mine" id="mine" aria-labelledby="mine-title"></section>
+        <section class="team" aria-labelledby="team-title">
+          <div class="sec-head"><h2 id="team-title">Team</h2><span class="pl-meta" id="team-count"></span></div>
+          <ul class="pl-list" id="team" aria-label="Team"></ul>
+        </section>
+      </div>
+      <section class="pane" id="pane" aria-live="polite"></section>
+    </div>
+  </main>
+
+  <div class="toast-slot" id="toast-slot" aria-live="polite"></div>
+  <button class="pl-btn pl-btn--subtle pl-motion" id="motion" type="button" aria-pressed="false">Motion</button>
+
+<script data-sprite="../design-system/assets/icons.svg">
+  // Load the icon sprite into the page once, so every <use href="#id"> resolves locally.
+  fetch(document.currentScript.dataset.sprite).then((r) => r.text()).then((svg) => {
+    const box = document.createElement("div"); box.className = "pl-sprite"; box.setAttribute("aria-hidden", "true");
+    box.innerHTML = svg; document.body.prepend(box);
+  });
+</script>
+<script>
+  // ---------- Demo data. Today is 7 Nov 2026. The viewer is Aisha Rahman. ----------
+  const VIEWER = "Aisha Rahman";
+  const TODAY = "2026-11-07";
+  const MAX = "2027-11-07";
+  const fmt = (iso) => new Date(iso + "T12:00:00Z").toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+  const initials = (n) => n.split(" ").map((w) => w[0]).slice(0, 2).join("");
+  const START = () => [
+    { name: "Aisha Rahman", by: "Daniel Tan", when: "3 Nov", status: { kind: "here" } },
+    { name: "Daniel Tan", by: "Daniel Tan", when: "2 Nov", status: { kind: "here" } },
+    { name: "Ravi Kumar", by: "Mei Ling Goh", when: "4 Nov", status: { kind: "leaving", date: "2027-01-31" } },
+    { name: "Mei Ling Goh", by: "Daniel Tan", when: "2 Nov", status: { kind: "left" } },
+  ];
+  let team = START(), open = null, editing = false, draft = { kind: "away", date: "2026-11-20" }, fieldError = "";
+
+  const $ = (id) => document.getElementById(id);
+  const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
+  const me = () => team.find((m) => m.name === VIEWER);
+  const statusText = (s) => s.kind === "away" ? `Away until ${fmt(s.date)}` : s.kind === "leaving" ? `Leaving on ${fmt(s.date)}` : s.kind === "left" ? "Left" : "";
+
+  // The porch light: .pl-presence. ON (away, leaving, left) = read their work. OFF (here) = just ask them.
+  function presence(s, showHere) {
+    const on = s.kind !== "here";
+    if (!on && !showHere) return null;
+    const p = el("span", on ? "pl-presence pl-presence--away" : "pl-presence");
+    const lamp = el("span", "pl-presence__lamp"); lamp.setAttribute("aria-hidden", "true");
+    p.append(lamp, document.createTextNode(on ? statusText(s) : "Here, porch light off"));
+    return p;
+  }
+
+  // ---------- Your porch light: the only place a person changes their own status (D24) ----------
+  function mineForm() {
+    const f = el("form", "mine-form"); f.noValidate = true;
+    const fields = el("div", "mine-fields");
+    const kindField = el("div", "pl-field");
+    const kl = el("label", "pl-field__label", "Status"); kl.htmlFor = "kind";
+    const sel = el("select", "pl-select"); sel.id = "kind";
+    [["here", "Here"], ["away", "Away until"], ["leaving", "Leaving on"]].forEach(([v, t]) => { const o = el("option", null, t); o.value = v; if (draft.kind === v) o.selected = true; sel.appendChild(o); });
+    kindField.append(kl, sel);
+    const dateField = el("div", fieldError ? "pl-field pl-field--error" : "pl-field");
+    const dl = el("label", "pl-field__label", "Date"); dl.htmlFor = "date";
+    const date = el("input", "pl-input"); date.type = "date"; date.id = "date"; date.value = draft.date || ""; date.min = TODAY; date.max = MAX;
+    date.disabled = draft.kind === "here";
+    if (fieldError) date.setAttribute("aria-invalid", "true");
+    dateField.append(dl, date);
+    fields.append(kindField, dateField);
+    const help = el("span", "pl-field__help");
+    help.id = "mine-help";
+    help.textContent = fieldError || (draft.kind === "leaving" ? "Everyone on the team will see this." : draft.kind === "away" ? "Your porch light turns off by itself after this date." : "Your porch light is off: teammates just ask you.");
+    if (fieldError) help.classList.add("pl-field--error");
+    date.setAttribute("aria-describedby", "mine-help");
+    const helpWrap = el("div", fieldError ? "pl-field pl-field--error" : "pl-field"); helpWrap.appendChild(help);
+    const actions = el("div", "mine-actions");
+    const cancel = el("button", "pl-btn pl-btn--subtle", "Cancel"); cancel.type = "button";
+    const save = el("button", "pl-btn pl-btn--primary"); save.type = "submit";
+    save.innerHTML = '<svg class="pl-glyph pl-glyph--sm pl-glyph--lit" aria-hidden="true"><use href="#lamp"/></svg>';
+    save.appendChild(document.createTextNode("Save"));
+    actions.append(cancel, save);
+    f.append(fields, helpWrap, actions);
+    sel.addEventListener("change", () => { draft.kind = sel.value; fieldError = ""; render(); });
+    date.addEventListener("change", () => { draft.date = date.value; fieldError = ""; render(); });
+    cancel.addEventListener("click", () => { editing = false; fieldError = ""; render(); });
+    f.addEventListener("submit", (e) => {
+      e.preventDefault();
+      if (draft.kind !== "here") {
+        if (!draft.date || draft.date < TODAY) { fieldError = "Pick today or a later date."; render(); return; }
+        if (draft.date > MAX) { fieldError = "Pick a date within a year."; render(); return; }
+      }
+      me().status = draft.kind === "here" ? { kind: "here" } : { kind: draft.kind, date: draft.date };
+      editing = false; render(); warmMine();
+      toast(draft.kind === "here" ? "Your porch light is off." : `Your porch light is on: ${statusText(me().status)}.`);
+    });
+    return f;
+  }
+  function renderMine() {
+    const s = me().status;
+    const now = el("div", "mine-now");
+    now.append(presence(s, true));
+    const change = el("button", "pl-btn pl-btn--secondary", "Change"); change.type = "button";
+    change.setAttribute("aria-expanded", String(editing));
+    change.addEventListener("click", () => { editing = true; draft = s.kind === "here" ? { kind: "away", date: "2026-11-20" } : { ...s }; render(); });
+    if (!editing) now.append(change); // the open form replaces the button
+    // Card in the Team column
+    const card = $("mine"); card.replaceChildren();
+    card.dataset.me = "1";
+    const head = el("div", "sec-head"); const h = el("h2", null, "Your porch light"); h.id = "mine-title"; head.appendChild(h);
+    card.append(head, now.cloneNode(true));
+    // In the page header
+    const hdr = $("header-mine"); hdr.replaceChildren(now);
+    // Wire the cloned button too
+    const cardChange = card.querySelector("button"); if (cardChange) cardChange.addEventListener("click", () => change.click());
+    if (editing) {
+      if (document.body.dataset.place === "card") card.appendChild(mineForm()); else hdr.appendChild(mineForm());
+    }
+  }
+
+  // ---------- Team list: everyone's porch light, read only ----------
+  function renderTeam() {
+    const list = $("team"); list.replaceChildren();
+    $("team-count").textContent = `${team.length} people`;
+    team.forEach((m) => {
+      const row = el("li", "pl-row team-row");
+      if (open === m.name) { row.classList.add("is-selected"); row.setAttribute("aria-current", "true"); }
+      if (m.name === VIEWER) row.dataset.me = "1";
+      const pick = el("button", "pick"); pick.type = "button"; pick.setAttribute("aria-label", `Catch up on ${m.name}`);
+      const line = el("span", "name-line"); line.append(el("strong", null, m.name));
+      const p = presence(m.status, false); if (p) line.appendChild(p);
+      pick.append(el("span", "pl-avatar", initials(m.name)), line, el("span", "pl-meta", `Added by ${m.by} · ${m.when}`));
+      pick.addEventListener("click", () => { open = m.name; render(); });
+      const remove = el("button", "pl-btn pl-btn--subtle", "Remove"); remove.type = "button"; remove.setAttribute("aria-label", `Take ${m.name} off the team`);
+      row.append(pick, remove); list.appendChild(row);
+    });
+  }
+
+  // ---------- Catch-up header: the porch light beside the name ----------
+  function renderPane() {
+    const pane = $("pane"); pane.replaceChildren();
+    if (!open) { const e = el("div", "pl-empty"); e.append(el("p", "pl-empty__title", "Pick a teammate"), el("p", null, "See their open work, latest changes, blockers and next steps, straight from Jira.")); pane.appendChild(e); return; }
+    const m = team.find((x) => x.name === open);
+    const person = el("div", "person"); const text = el("div", "person-text");
+    if (m.name === VIEWER) person.dataset.me = "1";
+    text.append(el("h2", null, m.name));
+    const p = presence(m.status, true); text.appendChild(p);
+    text.appendChild(el("span", "pl-meta", m.status.kind === "here" ? "From Jira, as you · 7 Nov 2026 · Showing only tickets you can open. They're here: just ask them too." : "From Jira, as you · 7 Nov 2026 · Showing only tickets you can open."));
+    person.append(el("span", "pl-avatar pl-avatar--lg", initials(m.name)), text);
+    const sec = el("section", "stack"); const head = el("div", "sec-head"); head.append(el("h3", null, "Open work"), el("span", "pl-meta", "2"));
+    const list = el("ul", "pl-list pl-list--stagger");
+    [["PAY-1", "Retry failed bank transfers", "In Progress", "pl-lozenge--progress"], ["PAY-5", "Year-end batch job", "To Do", "pl-lozenge--todo"]].forEach(([k, s, st, cls]) => {
+      const r = el("li", "pl-row");
+      r.innerHTML = '<svg class="pl-glyph pl-glyph--sm" aria-hidden="true"><use href="#ticket"/></svg>';
+      const a = el("a", "pl-key", k); a.href = "#" + k;
+      r.append(a, el("span", "pl-row__summary", s), el("span", `pl-lozenge ${cls}`, st), el("span", "pl-meta", "7 Nov"));
+      list.appendChild(r);
+    });
+    sec.append(head, list);
+    pane.append(person, sec);
+  }
+
+  function render() { renderMine(); renderTeam(); renderPane(); }
+  // Tier 2: every porch light of yours that just turned on warms up once (card, your row, your catch-up).
+  function warmMine() { document.querySelectorAll('[data-me] .pl-presence--away').forEach((p) => p.classList.add("is-warming")); }
+  function setTier(t) {
+    document.body.dataset.tier = t;
+    document.querySelectorAll("[data-tier-btn]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.tierBtn === t)));
+  }
+  document.querySelectorAll("[data-tier-btn]").forEach((b) => b.addEventListener("click", () => setTier(b.dataset.tierBtn)));
+  document.getElementById("demo").addEventListener("click", () => {
+    // Replay the moment: light off, then Aisha saves "Away until 20 Nov".
+    editing = false; fieldError = ""; open = VIEWER; me().status = { kind: "here" }; render();
+    setTimeout(() => { me().status = { kind: "away", date: "2026-11-20" }; render(); warmMine(); toast("Your porch light is on: Away until 20 Nov."); }, 500);
+  });
+  function toast(msg) {
+    const slot = $("toast-slot"); slot.replaceChildren();
+    const t = el("div", "pl-toast"); t.setAttribute("role", "status");
+    const lamp = el("span", "pl-toast__lamp"); lamp.setAttribute("aria-hidden", "true");
+    t.append(lamp, document.createTextNode(msg)); slot.appendChild(t);
+    setTimeout(() => slot.replaceChildren(), 3200);
+  }
+
+  // ---------- Preview states ----------
+  function setState(s) {
+    document.querySelectorAll("[data-state]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.state === s)));
+    team = START(); open = null; editing = false; fieldError = ""; draft = { kind: "away", date: "2026-11-20" };
+    if (s === "setting") editing = true;
+    if (s === "leaving") { editing = true; draft = { kind: "leaving", date: "2027-01-31" }; }
+    if (s === "past") { editing = true; draft = { kind: "away", date: "2026-11-02" }; fieldError = "Pick today or a later date."; }
+    if (s === "far") { editing = true; draft = { kind: "leaving", date: "2027-12-10" }; fieldError = "Pick a date within a year."; }
+    if (s === "ravi") open = "Ravi Kumar";
+    if (s === "meiling") open = "Mei Ling Goh";
+    if (s === "team") { me().status = { kind: "away", date: "2026-11-20" }; open = "Aisha Rahman"; }
+    render();
+  }
+  function setPlace(p) {
+    document.body.dataset.place = p;
+    document.querySelectorAll("[data-place-btn]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.placeBtn === p)));
+    render();
+  }
+  document.querySelectorAll("[data-state]").forEach((b) => b.addEventListener("click", () => setState(b.dataset.state)));
+  document.querySelectorAll("[data-place-btn]").forEach((b) => b.addEventListener("click", () => setPlace(b.dataset.placeBtn)));
+  const params = new URLSearchParams(location.search);
+  document.body.dataset.place = params.get("place") === "header" ? "header" : "card";
+
+  // ---------- Motion switch: follows the system unless the viewer chooses ----------
+  const sysReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let saved = null; try { saved = localStorage.getItem("pl-motion"); } catch (e) { /* follow the system */ }
+  let reduced = saved ? saved === "reduced" : sysReduced;
+  const motionBtn = $("motion");
+  const applyMotion = () => { document.documentElement.dataset.motion = reduced ? "reduced" : "full"; motionBtn.textContent = reduced ? "Motion: reduced" : "Motion: full"; motionBtn.setAttribute("aria-pressed", String(!reduced)); };
+  motionBtn.addEventListener("click", () => { reduced = !reduced; applyMotion(); try { localStorage.setItem("pl-motion", reduced ? "reduced" : "full"); } catch (e) { /* not remembered */ } });
+  applyMotion();
+  setPlace(document.body.dataset.place);
+  setTier(params.get("tier") === "2" ? "2" : "1");
+  setState(params.get("state") || "team");
+</script>
+</body>
+</html>

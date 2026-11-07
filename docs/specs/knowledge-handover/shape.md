@@ -49,6 +49,7 @@ flowchart LR
   S2 --> S3["3 · handover-interview"] --> S4
   S1 --> S5["5 · code-trail"]
   S1 --> SP["1b · porch-status"]
+  SP --> AC["1c · away-from-calendar"]
   SP -. "a started handover sets 'Leaving'" .- S3
   S3 --> PI["3b · pass-it-on"]
   S3 --> ST["3c · street"]
@@ -60,6 +61,7 @@ flowchart LR
 | 0 | skeleton | A new Forge app with one Custom UI global page that saves and shows one item from Forge storage, deployed and installed on the dev site, with one end-to-end test. | Greenfield: proves the rails (create, Custom UI, storage, deploy, install, test) before any real work. |
 | 1 | catch-up-view | Pick a teammate and see their open work, latest changes, blockers and next steps, read from Jira as the viewer. Every line links to its ticket. | Video moment 1 (leave). Smallest thing worth shipping, and it needs no AI. |
 | 1b | porch-status | Each teammate's porch light shows their presence: Here (off), Away until a date, Leaving on a date, or Left (on). People set their own status; Left comes from Jira when an account is deactivated. Shown on the 3D street, name tags, dock and panel. Rules below. | Added 2026-11-02 after the design system made the porch light mean presence (D9). Small, and it can fold into catch-up-view if time is short. Needs only the skeleton's storage. |
+| 1c | away-from-calendar | Set a person's porch light to Away automatically from an out-of-office event in their connected calendar, read through Teamwork Graph (`ExternalCalendarEvent`, eventType `OUT_OF_OFFICE`) as the viewer. | Added 2026-11-07 at /spec porch-status (O7): Jira has no out-of-office field, and Teamwork Graph's calendar events are early access. Aims at the Teamwork Graph bonus. Needs porch-status. |
 | 2 | ask-the-trail | A Rovo agent answers "catch me up on A" from the same Jira trail, and every answer cites its source tickets. | Rovo bonus. Slices 3 and 4 reuse this agent. |
 | 3 | handover-interview | The app lists the gaps only the leaver can fill. The agent interviews the leaver, stores the answers with their source, and writes a standard handover pack to Confluence. | Video moment 2 (resign). Needs the agent from slice 2. |
 | 3b | pass-it-on | Every area of a leaver's work gets a new owner. The leaver proposes a teammate, the teammate accepts, and the team lead approves; then the light moves from the leaver's house to the receiver's, and the receiver's house gains a window. Areas still unowned on the leaving date stay on the leaver's house, marked "unowned". | Added 2026-11-02: a resignation or move must pass everything to the team, not only capture it (D11). Needs handover-interview's captured areas. |
@@ -68,7 +70,7 @@ flowchart LR
 | 5 | code-trail | Bitbucket commits and pull requests join the trail, linked to their tickets. | Adds what actually changed in code. Works without it, so it comes after the three moments. |
 | 6 | capture-ai-reasoning | A Forge MCP server lets Claude Code write its reasoning to the ticket as it works, so the "why" no longer dies with the chat. | The answer to the AI-era sentence of the problem, and the MCP bonus. Needs the store from slice 4. |
 
-Ten slices including the skeleton, porch-status, pass-it-on and street, four over the guideline of about six. The user chose to keep pass-it-on separate from handover-interview (2026-11-02), and the street separate from catch-up-view (2026-11-07, D17). porch-status is small and can fold into catch-up-view. If time runs short, slices 0–4 still make a complete submission.
+Eleven slices including the skeleton, porch-status, away-from-calendar, pass-it-on and street, five over the guideline of about six. The user chose to keep pass-it-on separate from handover-interview (2026-11-02), and the street separate from catch-up-view (2026-11-07, D17). porch-status is small and can fold into catch-up-view. If time runs short, slices 0–4 still make a complete submission.
 
 ### A handover is done when every window is lit AND passed on
 

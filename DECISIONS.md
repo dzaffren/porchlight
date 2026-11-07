@@ -163,3 +163,17 @@ Why: the /poc proved that `search/jql` with `expand: "changelog"` and the `comme
 Rejected: one changelog and one comment request per ticket (up to 40 requests per catch-up for the same data).
 Source: docs/specs/catch-up-view.md
 Status: active
+
+## D24 · 2026-11-07 · Only the person sets their porch light, and setting Leaving announces it
+
+Why: a porch light is the person's own signal (D9), and the brief says Porchlight must never feel like surveillance; a resignation may be confidential, so the person picks the moment by choosing when to set Leaving, and the form warns that everyone will see it.
+Rejected: anyone on the team sets anyone's status (open to misuse), a Jira admin can set it (a second path and a permission check), a hidden Leaving with a separate announce date (a hidden state that can leak), Leaving seen only by a team lead (needs a lead concept that pass-it-on owns).
+Source: docs/specs/porch-status.md
+Status: active
+
+## D25 · 2026-11-07 · Your porch light is a card at the top of the Team column
+
+Why: the person sets their own status (D24), so the control belongs beside the team list where they look for others; a card opens its form in place without moving the page, and the same lamp then shows on their row and catch-up.
+Rejected: a compact control in the page header (its open form pushed the title down, and the off state was too small to read).
+Source: docs/specs/porch-status.md
+Status: active
