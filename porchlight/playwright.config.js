@@ -2,7 +2,8 @@
 // pages inside Jira on the development site:
 //   e2e/skeleton.spec.js  — the Notes page (skeleton slice)
 //   e2e/catch-up.spec.js  — the Team page and a catch-up (catch-up-view slice)
-// e2e/helpers.js holds what both share; it is not a test.
+//   e2e/porch-status.spec.js — your porch light on the Team page (porch-status slice)
+// e2e/helpers.js holds what they share; it is not a test.
 //
 // Run order:
 //   1. npm run e2e:login   (once, or when the saved login expires) — you log in by hand
@@ -15,6 +16,10 @@ export default defineConfig({
   timeout: 90_000,
   expect: { timeout: 20_000 },
   retries: 0,
+  // One spec file at a time. catch-up.spec.js takes the signed-in person off the team and
+  // adds them back, and porch-status.spec.js reads that same person's team row, so running
+  // them side by side on the one real site would make them fail at random.
+  workers: 1,
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {
     baseURL: process.env.PL_SITE ?? 'https://dzaffren.atlassian.net',
