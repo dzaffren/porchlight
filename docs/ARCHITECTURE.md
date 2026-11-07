@@ -30,7 +30,7 @@ flowchart TB
         M["porchlight/src/db/migrate.js<br/>migrations, hourly trigger"]
         SQL[("Forge SQL<br/>notes · team_members")]
     end
-    J["Jira REST, as the viewer<br/>user/search · user/bulk · field<br/>search/jql · search/approximate-count"]
+    J["Jira REST, as the viewer<br/>user/search · user/bulk · field<br/>search/jql · search/approximate-count<br/>issue/key/changelog · issue/key/comment"]
     CI["GitHub Actions<br/>lint, tests, deploy main"]
     NP -- "invoke" --> RN --> SQL
     TP -- "invoke" --> RT --> SQL
@@ -46,7 +46,7 @@ flowchart TB
 | Team page | `porchlight/static/porchlight-ui/src/` (`TeamPage.jsx`, `TeamList.jsx`, `AddTeammate.jsx`, `CatchUp.jsx`) | The team list, the Jira user search to add a teammate, and one teammate's catch-up |
 | Notes page | `porchlight/static/porchlight-ui/src/NotesPage.jsx` | Write a note, see every note with its author's name |
 | Catch-up rules | `porchlight/static/porchlight-ui/src/catchup.js` | Plain functions that turn Jira's answers into open work, latest changes, blockers and next steps |
-| Jira reads | `porchlight/static/porchlight-ui/src/api.js` | Calls Jira REST with `requestJira`, as the viewer: user search, names, the Flagged field, `search/jql` and `search/approximate-count` |
+| Jira reads | `porchlight/static/porchlight-ui/src/api.js` | Calls Jira REST with `requestJira`, as the viewer: user search, names, the Flagged field, `search/jql` and `search/approximate-count`, plus `issue/{key}/changelog` and `issue/{key}/comment` to top up a ticket whose history or comments the search clipped |
 | Resolvers | `porchlight/src/resolvers/` | The only backend entry points. Notes: `listNotes`, `saveNote`. Team: `listTeam`, `addTeammate`, `removeTeammate`. The author or adder comes from Forge's context |
 | Database | `porchlight/src/db/` | The `notes` and `team_members` tables in Forge SQL, their reversible migrations, and the queries |
 | Shared rules | `porchlight/src/lib/` | The note length rule, used by both the page and the resolvers |
