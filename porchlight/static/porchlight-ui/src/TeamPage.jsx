@@ -138,7 +138,11 @@ export default function TeamPage() {
               tickets never show under another person's name. */}
           <CatchUp
             key={selected?.accountId ?? 'nobody'}
-            person={selected && { accountId: selected.accountId, name: nameOf(selected.accountId) }}
+            person={selected && {
+              accountId: selected.accountId,
+              name: nameOf(selected.accountId),
+              nameKnown: selected.accountId in names, // false → the row says "A teammate"
+            }}
           />
         </div>
       </main>

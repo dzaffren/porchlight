@@ -238,7 +238,9 @@ export default function CatchUp({ person }) {
     );
   }
 
-  const firstName = person.name.split(' ')[0];
+  // "Aisha's work", or "this teammate's work" when Jira's name lookup failed and the
+  // row only says "A teammate" (its first word would read "A's work").
+  const whose = person.nameKnown === false ? "this teammate's" : `${person.name.split(' ')[0]}'s`;
   return (
     <section className="pane" aria-live="polite" aria-labelledby={titleId}>
       <PersonHeader name={person.name} titleId={titleId} />
@@ -246,7 +248,7 @@ export default function CatchUp({ person }) {
       {state.status === 'error' && (
         <div className="pl-message pl-message--error" role="alert">
           <Glyph name="gap" />
-          <p><strong>Couldn&apos;t load {firstName}&apos;s work from Jira.</strong> Try again.</p>
+          <p><strong>Couldn&apos;t load {whose} work from Jira.</strong> Try again.</p>
           <button className="pl-btn pl-btn--secondary" type="button" onClick={tryAgain}>Try again</button>
         </div>
       )}

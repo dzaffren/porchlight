@@ -222,6 +222,15 @@ describe('CatchUp', () => {
     expect(within(still).getByRole('list').className).toBe('pl-list');
   });
 
+  it("says this teammate's work when their name could not be looked up", async () => {
+    // TeamPage shows "A teammate" when Jira's name lookup fails; the error must not say "A's work".
+    api.searchOpenWork.mockRejectedValue(new Error('Jira did not answer'));
+    render(<CatchUp person={{ accountId: AISHA, name: 'A teammate', nameKnown: false }} />);
+
+    const alert = await screen.findByRole('alert');
+    expect(alert.textContent).toContain("Couldn't load this teammate's work from Jira.");
+  });
+
   it('shows ticket text as text, never as HTML', async () => {
     api.searchOpenWork.mockResolvedValue({
       issues: [issue('PAY-9', '<img src=x onerror="alert(1)">', 'To Do', TODO)],
