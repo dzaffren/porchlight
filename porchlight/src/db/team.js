@@ -86,3 +86,15 @@ export async function addMember({ accountId, addedByAccountId }) {
   }
   return { member, added: insert.rows.affectedRows === 1 };
 }
+
+/**
+ * Take a person off the team. Only the row in Porchlight's own table goes:
+ * nothing in Jira changes, and the person can be added again later.
+ * Taking off someone who is not on the list changes nothing, and is not an error.
+ *
+ * @param {string} accountId
+ * @returns {Promise<void>}
+ */
+export async function removeMember(accountId) {
+  await sql.prepare('DELETE FROM team_members WHERE account_id = ?').bindParams(accountId).execute();
+}

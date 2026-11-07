@@ -1,6 +1,7 @@
 // The team resolvers the Porchlight page calls with invoke() from @forge/bridge:
 //   invoke('listTeam')
 //   invoke('addTeammate', { accountId })
+//   invoke('removeTeammate', { accountId })
 //
 // Anyone who can open Porchlight may change the team list (spec catch-up-view, decision D16).
 // Each person on the list shows who added them, and that adder always comes from
@@ -11,7 +12,7 @@
 //   - { ok: false, error } for an answer the page shows to the person.
 //   - A thrown error for anything else (database down, no signed-in user).
 import { ensureMigrated } from '../db/migrate.js';
-import { addMember, listMembers } from '../db/team.js';
+import { addMember, listMembers, removeMember } from '../db/team.js';
 import { signedInAccountId } from './context.js';
 
 // Atlassian account IDs look like "712020:6d1f0a3e-..." or, for older accounts,
@@ -67,4 +68,26 @@ export async function addTeammate(req) {
   // The proof line from the spec's non-functionals: `forge logs` shows one per add.
   console.log(`porchlight.team.added by=${addedByAccountId}`);
   return { ok: true, member };
+}
+
+/**
+ * Take one person off the team. Answers ok also when they were not on it, so a
+ * second click, or two people removing the same teammate, never shows an error.
+ *
+ * @param {{ payload: { accountId?: unknown }, context: { accountId?: string } }} req
+ * @returns {Promise<{ ok: true } | { ok: false, error: 'bad_request' }>}
+ */
+export async function removeTeammate(req) {
+  const removedByAccountId = signedInAccountId(req);
+  const accountId = payloadAccountId(req);
+  if (!accountId) {
+    return { ok: false, error: 'bad_request' };
+  }
+
+  await ensureMigrated();
+  await removeMember(accountId);
+
+  // The proof line from the spec's non-functionals: `forge logs` shows one per remove.
+  console.log(`porchlight.team.removed by=${removedByAccountId}`);
+  return { ok: true };
 }

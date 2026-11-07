@@ -171,6 +171,12 @@ async function run(query, params = []) {
     });
     return { rows: { affectedRows: 1, insertId: fake.nextId - 1 } };
   }
+  if (q.startsWith('DELETE FROM team_members WHERE account_id = ?')) {
+    requireTable('team_members');
+    const before = fake.team.length;
+    fake.team = fake.team.filter((m) => m.account_id !== params[0]);
+    return { rows: { affectedRows: before - fake.team.length } };
+  }
   const teamListQuery = q.match(
     /^SELECT account_id, added_by_account_id, added_at FROM team_members ORDER BY added_at ASC, id ASC LIMIT (\d+)$/,
   );

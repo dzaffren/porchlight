@@ -1,4 +1,5 @@
-// Unit tests for the team resolvers the page calls: listTeam and addTeammate. Scenarios 1 and 2 in docs/specs/catch-up-view.md, server side.
+// Unit tests for the three team resolvers the page calls: listTeam, addTeammate and
+// removeTeammate. Scenarios 1 and 2 in docs/specs/catch-up-view.md, server side.
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 vi.mock('@forge/sql', () => import('./fake-forge-sql.js'));
@@ -134,6 +135,15 @@ describe('bad account IDs', () => {
     expect(fake.statements).toEqual([]);
   });
 
+  it.each(BAD_ACCOUNT_IDS)('removeTeammate refuses %s and runs no SQL', async (_label, accountId) => {
+    const { fake, removeTeammate } = await load();
+
+    const result = await removeTeammate(request(DANIEL, { accountId }));
+
+    expect(result).toEqual({ ok: false, error: 'bad_request' });
+    expect(fake.statements).toEqual([]);
+  });
+
   it('accepts the longest allowed ID, 128 characters', async () => {
     const { addTeammate } = await load();
 
@@ -148,6 +158,56 @@ describe('bad account IDs', () => {
     const result = await addTeammate(request(DANIEL, { accountId: '5b10ac8d82e05b22cc7d4ef5' }));
 
     expect(result.ok).toBe(true);
+  });
+});
+
+describe('removeTeammate (scenario 2)', () => {
+  it('takes Ravi off the list for everyone, and he can be added again later', async () => {
+    const { fake, addTeammate, removeTeammate, listTeam } = await load();
+    for (const accountId of [AISHA, DANIEL, RAVI]) {
+      await addTeammate(request(DANIEL, { accountId }));
+    }
+
+    const before = fake.statements.length;
+    const removed = await removeTeammate(request(DANIEL, { accountId: RAVI }));
+    const sentByRemove = fake.statements.slice(before).map((s) => s.query);
+    const meiLing = await listTeam(request(MEI_LING));
+
+    expect(removed).toEqual({ ok: true });
+    expect(meiLing.members.map((m) => m.accountId)).toEqual([AISHA, DANIEL]);
+
+    // Taking Ravi off deletes one row in Porchlight's own table and nothing else.
+    // The resolvers never call Jira, so Ravi's tickets stay as they are.
+    expect(sentByRemove).toEqual(['DELETE FROM team_members WHERE account_id = ?']);
+
+    fake.tick(60);
+    const again = await addTeammate(request(DANIEL, { accountId: RAVI }));
+    expect(again.ok).toBe(true);
+    expect((await listTeam(request(MEI_LING))).members.map((m) => m.accountId)).toEqual([AISHA, DANIEL, RAVI]);
+  });
+
+  it('answers ok when the person was not on the list', async () => {
+    const { removeTeammate } = await load();
+
+    expect(await removeTeammate(request(DANIEL, { accountId: RAVI }))).toEqual({ ok: true });
+  });
+
+  it('passes the account ID as a parameter, never inside the SQL itself', async () => {
+    const { fake, removeTeammate } = await load();
+
+    await removeTeammate(request(DANIEL, { accountId: RAVI }));
+
+    const remove = fake.statements.find((s) => s.query.startsWith('DELETE FROM team_members'));
+    expect(remove.query).not.toContain(RAVI);
+    expect(remove.params).toEqual([RAVI]);
+  });
+
+  it('logs the proof line with the remover', async () => {
+    const { removeTeammate } = await load();
+
+    await removeTeammate(request(DANIEL, { accountId: RAVI }));
+
+    expect(console.log).toHaveBeenCalledWith(`porchlight.team.removed by=${DANIEL}`);
   });
 });
 
@@ -198,7 +258,7 @@ describe('listTeam', () => {
 });
 
 describe('every team resolver', () => {
-  it.each([['listTeam'], ['addTeammate']])(
+  it.each([['listTeam'], ['addTeammate'], ['removeTeammate']])(
     '%s refuses a caller with no signed-in account',
     async (name) => {
       const resolvers = await load();
@@ -207,7 +267,7 @@ describe('every team resolver', () => {
     },
   );
 
-  it.each([['listTeam'], ['addTeammate']])(
+  it.each([['listTeam'], ['addTeammate'], ['removeTeammate']])(
     '%s fails loudly when the database cannot be reached',
     async (name) => {
       const resolvers = await load();
