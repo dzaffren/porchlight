@@ -141,6 +141,56 @@ describe('setMyStatus (scenario 2: back early, the porch light goes off)', () =>
   });
 });
 
+describe('setMyStatus (scenario 3: Leaving becomes Left after the leaving date)', () => {
+  /** Ravi leaves on 31 Jan 2027; the test then moves the clock to the moment it asks about. */
+  async function raviLeavingOn31Jan() {
+    const loaded = await load();
+    setNow('2026-11-10T02:00:00Z');
+    await loaded.setMyStatus(request(RAVI, { kind: 'leaving', untilDate: '2027-01-31', timeZone: KUALA_LUMPUR }));
+    return loaded;
+  }
+
+  it.each([
+    ['set Here', { kind: 'here' }],
+    ['set Away', { kind: 'away', untilDate: '2027-02-10' }],
+    ['move the leaving date', { kind: 'leaving', untilDate: '2027-03-01' }],
+  ])('refuses to %s from 1 Feb 2027 00:00 in his time zone, and nothing changes', async (_label, choice) => {
+    const { fake, setMyStatus } = await raviLeavingOn31Jan();
+    const before = structuredClone(fake.porch);
+    // 1 Feb 2027 00:00 in Kuala Lumpur (UTC+8) is 31 Jan 16:00 UTC.
+    setNow('2027-01-31T16:00:00Z');
+    console.log.mockClear();
+    const sentBefore = fake.statements.length;
+
+    const answer = await setMyStatus(request(RAVI, { ...choice, timeZone: KUALA_LUMPUR }));
+
+    expect(answer).toEqual({ ok: false, error: 'left' });
+    expect(fake.porch).toEqual(before);
+    const writes = fake.statements.slice(sentBefore).filter((s) => /^\s*(INSERT|DELETE)/.test(s.query));
+    expect(writes).toEqual([]);
+    expect(console.log).not.toHaveBeenCalled();
+  });
+
+  it('still lets him change it at 23:59 on 31 Jan in his time zone', async () => {
+    const { setMyStatus } = await raviLeavingOn31Jan();
+    setNow('2027-01-31T15:59:00Z');
+
+    const answer = await setMyStatus(request(RAVI, { kind: 'here', timeZone: KUALA_LUMPUR }));
+
+    expect(answer).toEqual({ ok: true, status: { kind: 'here' } });
+  });
+
+  it('lets Away that has ended be replaced: only Leaving turns into Left', async () => {
+    const { setMyStatus } = await load();
+    await setMyStatus(request(AISHA, { kind: 'away', untilDate: '2026-11-20', timeZone: KUALA_LUMPUR }));
+    setNow('2026-11-21T02:00:00Z');
+
+    const answer = await setMyStatus(request(AISHA, { kind: 'away', untilDate: '2026-12-01', timeZone: KUALA_LUMPUR }));
+
+    expect(answer).toEqual({ ok: true, status: { kind: 'away', untilDate: '2026-12-01' } });
+  });
+});
+
 describe('listStatuses', () => {
   it('returns an empty list on a fresh install', async () => {
     const { listStatuses } = await load();
