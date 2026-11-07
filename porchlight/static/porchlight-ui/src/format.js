@@ -31,3 +31,30 @@ export function initials(name) {
 
 /** 2001 → "2,001". */
 export const formatNumber = (n) => n.toLocaleString('en-GB');
+
+const dayFormat = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' });
+
+/**
+ * Jira writes times as "2026-11-06T08:30:00.000+0000". Some browsers only read the
+ * offset with a colon ("+00:00"), so add one before parsing.
+ * @returns {number} milliseconds since 1970, like Date.parse
+ */
+export const parseJiraTime = (value) => Date.parse(value.replace(/([+-]\d\d)(\d\d)$/, '$1:$2'));
+
+/** A Jira time as the viewer's day: "6 Nov". Used for ticket dates and "Added by … · 6 Nov". */
+export const formatDay = (value) => dayFormat.format(new Date(parseJiraTime(value)));
+
+/**
+ * A ticket's due date: "Due 20 Dec", or "No due date".
+ * Jira sends a due date as a plain calendar day ("2026-12-20"), with no time zone, so it
+ * is read as that day in the viewer's zone. new Date("2026-12-20") would read it as
+ * midnight UTC, which is 19 Dec for anyone west of London.
+ */
+export function formatDue(due) {
+  if (!due) return 'No due date';
+  const [year, month, day] = due.split('-').map(Number);
+  return `Due ${dayFormat.format(new Date(year, month - 1, day))}`;
+}
+
+/** Today in the catch-up's header: "10 Nov 2026". */
+export const formatFullDate = (date) => dateFormat.format(date);
