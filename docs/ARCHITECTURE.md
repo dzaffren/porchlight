@@ -14,7 +14,7 @@ flowchart LR
 ```mermaid
 flowchart TB
     subgraph Browser["Jira page, sandboxed frame (Custom UI)"]
-        RS["porchlight/static/porchlight-ui<br/>React + Vite page<br/>main.jsx: route switch"]
+        RS["porchlight/static/porchlight-ui<br/>React + Vite page<br/>App.jsx: route switch"]
         TP["Team page<br/>team list · add teammate · catch-up"]
         NP["Notes page"]
         CU["catchup.js<br/>four sections from Jira's answers"]
@@ -42,7 +42,7 @@ flowchart TB
 
 | Component | Folder | What it does |
 | --------- | ------ | ------------ |
-| Page | `porchlight/static/porchlight-ui/` | The Porchlight page in Jira. `main.jsx` reads the route and shows Team or Notes, the two subpages in Jira's sidebar |
+| Page | `porchlight/static/porchlight-ui/` | The Porchlight page in Jira. `main.jsx` renders `App.jsx`, which reads the route with `view.createHistory()` and shows Team or Notes, the two subpages in Jira's sidebar |
 | Team page | `porchlight/static/porchlight-ui/src/` (`TeamPage.jsx`, `TeamList.jsx`, `AddTeammate.jsx`, `CatchUp.jsx`) | The team list, the Jira user search to add a teammate, and one teammate's catch-up |
 | Notes page | `porchlight/static/porchlight-ui/src/NotesPage.jsx` | Write a note, see every note with its author's name |
 | Catch-up rules | `porchlight/static/porchlight-ui/src/catchup.js` | Plain functions that turn Jira's answers into open work, latest changes, blockers and next steps |
