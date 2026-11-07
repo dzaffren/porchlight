@@ -1,8 +1,12 @@
 // The catch-up rules (decision D18), as plain functions.
 //
-// Each function takes Jira's own answers (from the searches in api.js) and returns
-// the rows one section of the catch-up shows. Nothing here talks to Jira or React,
-// so every rule is tested on its own in catchup.test.js.
+// Each function takes Jira's own answers (from the searches in catchup-jira.js) and
+// returns the rows one section of the catch-up shows. Nothing here talks to Jira or
+// React, so every rule is tested on its own in test/unit/catchup.test.js.
+//
+// Two callers share this file, so both give the same answer by the same rules (D32):
+//  - the page's catch-up panel (static/porchlight-ui imports it as @lib/catchup.js), and
+//  - the Rovo action, which runs in a Forge function on the backend.
 //
 //   open-work search ──┬─ toOpenWork  → "Open work"     (first 50, plus "and N more")
 //   (one request, D22) ├─ toBlockers  → "Blockers"      (flagged, or blocked by an unfinished ticket)
@@ -11,7 +15,6 @@
 //
 // Security: summaries and comments are typed by people in Jira. These functions only
 // copy them as strings; the components render them as text, never as HTML.
-import { parseJiraTime } from './format.js';
 
 const OPEN_WORK_LIMIT = 50;
 const NEXT_STEPS_LIMIT = 5;
@@ -22,6 +25,14 @@ const DAY_MS = 86_400_000;
 const DONE = 'done';
 const TO_DO = 'new';
 const BLOCKED_BY = 'is blocked by';
+
+/**
+ * Jira writes times as "2026-11-06T08:30:00.000+0000". Some browsers only read the
+ * offset with a colon ("+00:00"), so add one before parsing.
+ * It lives here, not in the page's format.js, so this file needs nothing from the page.
+ * @returns {number} milliseconds since 1970, like Date.parse
+ */
+export const parseJiraTime = (value) => Date.parse(value.replace(/([+-]\d\d)(\d\d)$/, '$1:$2'));
 
 /** The start of the latest-changes window: 14 days before now. */
 export function fourteenDaysBefore(now) {

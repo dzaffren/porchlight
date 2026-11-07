@@ -2,7 +2,7 @@
 //
 //   pick ─┬─ Flagged field → open-work search → (count, only if there is more than one page)
 //         └─ activity search (last 14 days, with history and comments)
-//         → catchup.js → Open work · Latest changes · Blockers · Next steps
+//         → @lib/catchup.js → Open work · Latest changes · Blockers · Next steps
 //   any request fails → "Couldn't load Aisha's work from Jira." + Try again
 //
 // Jira only returns tickets the viewer can open, so the pane says so in its header.
@@ -11,7 +11,9 @@
 // text children, so they show as text (like textContent), never as HTML.
 import { createContext, useContext, useEffect, useId, useState } from 'react';
 import * as api from './api.js';
-import { toBlockers, toChanges, toNextSteps, toOpenWork } from './catchup.js';
+// loadCatchUp reads Jira through api.js and sorts the answers into the four sections.
+// It lives in the backend's src/lib, so the Rovo action builds the same catch-up (D32).
+import { loadCatchUp } from '@lib/catchup-jira.js';
 import { formatDay, formatDue, formatFullDate, initials } from './format.js';
 import { Glyph } from './Glyph.jsx';
 import Presence from './Presence.jsx';
@@ -24,26 +26,6 @@ const LOZENGE = {
   indeterminate: 'pl-lozenge--progress',
   done: 'pl-lozenge--done',
 };
-
-/**
- * Read everything one catch-up needs from Jira and sort it into the four sections.
- * Rejects if any request fails, so the pane shows one error, never half a catch-up.
- */
-async function loadCatchUp(accountId) {
-  const openWork = api.findFlaggedFieldId().then(async (flaggedFieldId) => {
-    const search = await api.searchOpenWork(accountId, flaggedFieldId);
-    // search/jql gives no total, so count only when there is more than one page.
-    const total = search.isLast ? search.issues.length : await api.countOpenWork(accountId);
-    return { issues: search.issues, total, flaggedFieldId };
-  });
-  const [open, recent] = await Promise.all([openWork, api.searchRecentActivity(accountId)]);
-  return {
-    openWork: toOpenWork(open.issues, open.total),
-    changes: toChanges(recent, accountId, new Date()),
-    blockers: toBlockers(open.issues, open.flaggedFieldId),
-    nextSteps: toNextSteps(open.issues),
-  };
-}
 
 /** Rows rise in, 40ms apart. Reduced motion is handled by the design system's CSS. */
 const LIST_CLASS = 'pl-list pl-list--stagger';
@@ -237,7 +219,7 @@ export default function CatchUp({ person }) {
     if (!accountId) return undefined;
     // Ignore an answer for a person who is no longer picked, or for an older attempt.
     let current = true;
-    loadCatchUp(accountId).then(
+    loadCatchUp(api, accountId, new Date()).then(
       (work) => { if (current) setState({ status: 'ready', work }); },
       () => { if (current) setState({ status: 'error' }); },
     );
