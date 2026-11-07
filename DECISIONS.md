@@ -142,3 +142,24 @@ Why: Jira already draws a menu for an app's subpages, so Porchlight > Team and P
 Rejected: tabs inside the page (a new design-system piece for two links), notes under the team on one long page (a long catch-up pushes the notes far down).
 Source: docs/specs/catch-up-view.md
 Status: active
+
+## D21 · 2026-11-07 · Read tickets in the page as the viewer, never store them
+
+Why: Jira's permissions must hide tickets the viewer cannot open (scenario 3), and `requestJira` from the page runs as the viewer with no extra code; storing tickets would copy data that goes stale and that some viewers must not see.
+Rejected: reading through a resolver with `asUser()` (an extra hop and the `@forge/api` package for the same answer), caching tickets in Forge SQL (stale, and a permission leak between viewers).
+Source: docs/specs/catch-up-view.md
+Status: active
+
+## D22 · 2026-11-07 · One open-work search feeds open work, blockers and next steps
+
+Why: the 100 most recently updated open tickets, with their links and the Flagged field, hold everything three sections need, in one request; JQL for flags and link types depends on per-site field names.
+Rejected: one JQL search per section (three requests per catch-up, and `issueLinkType` or `Flagged` clauses that differ between sites).
+Source: docs/specs/catch-up-view.md
+Status: active
+
+## D23 · 2026-11-07 · Latest changes come from one search with each ticket's history and comments
+
+Why: the /poc proved that `search/jql` with `expand: "changelog"` and the `comment` field returns status moves and comments with their authors and times, so a person's 14 days cost one request; a clipped ticket is detected by `total` and topped up on its own.
+Rejected: one changelog and one comment request per ticket (up to 40 requests per catch-up for the same data).
+Source: docs/specs/catch-up-view.md
+Status: active
