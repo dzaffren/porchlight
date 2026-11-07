@@ -15,7 +15,8 @@ test('a saved note is listed first, with its author and today, after a reload', 
   // A unique note, so this run never matches a note from an earlier run.
   const text = `E2E check ${new Date().toISOString()}: payments retry 3 times because the bank API times out under load.`;
 
-  await page.goto(PAGE_PATH);
+  // Notes is a subpage of the Porchlight page (decision D20), at the /notes route.
+  await page.goto(`${PAGE_PATH}/notes`);
   const app = await porchlightFrame(page, 'Note for the next person');
 
   // The composer says who the note is saved as; the card must show the same name.
