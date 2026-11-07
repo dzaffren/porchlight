@@ -43,6 +43,23 @@ describe('fetchDisplayNames', () => {
     expect(names).toEqual({ '712020:aisha-rahman': 'Aisha Rahman', '712020:daniel-tan': 'Daniel Tan' });
   });
 
+  it('looks up more than 100 people in batches of 100, so no name is lost', async () => {
+    // A team of up to 200, plus who added them, can pass Jira's 100-a-request limit.
+    const ids = Array.from({ length: 150 }, (_, i) => `712020:person-${i}`);
+    requestJira.mockImplementation(async (url) => {
+      const asked = [...url.matchAll(/accountId=([^&]+)/g)].map((m) => decodeURIComponent(m[1]));
+      return reply(200, { values: asked.map((id) => ({ accountId: id, displayName: `Name of ${id}` })) });
+    });
+
+    const names = await fetchDisplayNames(ids);
+
+    expect(requestJira).toHaveBeenCalledTimes(2);
+    expect(requestJira.mock.calls[0][0].match(/accountId=/g)).toHaveLength(100);
+    expect(requestJira.mock.calls[1][0].match(/accountId=/g)).toHaveLength(50);
+    expect(Object.keys(names)).toHaveLength(150);
+    expect(names['712020:person-149']).toBe('Name of 712020:person-149');
+  });
+
   it('makes no request when there is nobody to look up', async () => {
     expect(await fetchDisplayNames([])).toEqual({});
     expect(requestJira).not.toHaveBeenCalled();

@@ -37,25 +37,36 @@ export async function fetchMyself() {
   return { accountId: me.accountId, displayName: me.displayName };
 }
 
+/** Jira's /user/bulk returns at most this many people per request. */
+const NAMES_PER_REQUEST = 100;
+
 /**
- * Current display names for a list of account IDs, in one request.
+ * Current display names for a list of account IDs, in as few requests as Jira allows.
  * Names are looked up each time rather than stored with the note, so a renamed
  * person shows their new name (decision D12).
  *
- * @param {string[]} accountIds - at most 100, the list limit
+ * @param {string[]} accountIds - any number; asked for in batches of 100
  * @returns {Promise<Record<string, string>>} accountId → display name
  */
 export async function fetchDisplayNames(accountIds) {
   if (accountIds.length === 0) {
     return {};
   }
-  const query = accountIds.map((id) => `accountId=${encodeURIComponent(id)}`).join('&');
-  const response = await requestJira(`/rest/api/3/user/bulk?maxResults=100&${query}`);
-  if (!response.ok) {
-    throw new Error(`Jira /user/bulk answered ${response.status}`);
+  // Jira answers at most 100 people per request, and a team list plus the people who
+  // added them can be more (the list holds up to 200). Ask in batches of 100, together.
+  const batches = [];
+  for (let i = 0; i < accountIds.length; i += NAMES_PER_REQUEST) {
+    batches.push(accountIds.slice(i, i + NAMES_PER_REQUEST));
   }
-  const page = await response.json();
-  return Object.fromEntries(page.values.map((user) => [user.accountId, user.displayName]));
+  const pages = await Promise.all(batches.map(async (batch) => {
+    const query = batch.map((id) => `accountId=${encodeURIComponent(id)}`).join('&');
+    const response = await requestJira(`/rest/api/3/user/bulk?maxResults=${NAMES_PER_REQUEST}&${query}`);
+    if (!response.ok) {
+      throw new Error(`Jira /user/bulk answered ${response.status}`);
+    }
+    return response.json();
+  }));
+  return Object.fromEntries(pages.flatMap((page) => page.values).map((user) => [user.accountId, user.displayName]));
 }
 
 // ---------------------------------------------------------------------------------
