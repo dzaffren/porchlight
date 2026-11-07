@@ -170,7 +170,7 @@ flowchart TB
         SQL[("Forge SQL<br/>notes")]
     end
     J["Jira REST<br/>GET /rest/api/3/user/bulk"]
-    UI -- "invoke('saveNote', {body, clientKey})" --> R
+    UI -- "invoke('saveNote', body + clientKey)" --> R
     UI -- "invoke('listNotes')" --> R
     R -- "INSERT / SELECT" --> SQL
     T -- "run()" --> M -- "CREATE TABLE IF NOT EXISTS" --> SQL
@@ -188,11 +188,11 @@ sequenceDiagram
     participant DB as Forge SQL notes
     A->>UI: types note, clicks Save
     UI->>UI: trim, 1–2,000 chars, else field error
-    UI->>R: invoke saveNote {body, clientKey: uuid}
+    UI->>R: invoke saveNote with body and clientKey (a uuid)
     R->>R: accountId from context (never from the payload), validate again
     R->>DB: INSERT … ON DUPLICATE KEY (client_key) do nothing
     DB-->>R: row (new or already saved)
-    R-->>UI: {id, body, authorAccountId, createdAt}
+    R-->>UI: the note: id, body, authorAccountId, createdAt
     UI->>UI: note warms in at the top, toast
     Note over UI,R: On error: message above Save, text kept, same clientKey on retry
 ```
