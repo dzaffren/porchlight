@@ -191,6 +191,87 @@ describe('setMyStatus (scenario 3: Leaving becomes Left after the leaving date)'
   });
 });
 
+describe('setMyStatus (scenario 5: a date outside today to one year ahead is not saved)', () => {
+  it.each([
+    ['Away until 2 Nov 2026', { kind: 'away', untilDate: '2026-11-02' }, 'past'],
+    ['Leaving on 10 Dec 2027', { kind: 'leaving', untilDate: '2027-12-10' }, 'too_far'],
+    ['Away until 8 Nov 2027, one day over a year', { kind: 'away', untilDate: '2027-11-08' }, 'too_far'],
+  ])('refuses %s, saves nothing and runs no SQL', async (_label, choice, error) => {
+    const { fake, setMyStatus } = await load();
+
+    const answer = await setMyStatus(request(AISHA, { ...choice, timeZone: KUALA_LUMPUR }));
+
+    expect(answer).toEqual({ ok: false, error });
+    expect(fake.statements).toEqual([]);
+    expect(console.log).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['today', '2026-11-07'],
+    ['exactly one year ahead', '2027-11-07'],
+  ])('accepts %s', async (_label, untilDate) => {
+    const { setMyStatus } = await load();
+
+    const answer = await setMyStatus(request(AISHA, { kind: 'away', untilDate, timeZone: KUALA_LUMPUR }));
+
+    expect(answer).toEqual({ ok: true, status: { kind: 'away', untilDate } });
+  });
+
+  it('checks "today" in the person\'s own time zone, not the server\'s', async () => {
+    const { setMyStatus } = await load();
+    // 6 Nov 17:00 UTC is already 7 Nov 01:00 in Kuala Lumpur, so 6 Nov has passed for Aisha.
+    setNow('2026-11-06T17:00:00Z');
+
+    const inKualaLumpur = await setMyStatus(request(AISHA, { kind: 'away', untilDate: '2026-11-06', timeZone: KUALA_LUMPUR }));
+    const inUtc = await setMyStatus(request(DANIEL, { kind: 'away', untilDate: '2026-11-06', timeZone: 'UTC' }));
+
+    expect(inKualaLumpur).toEqual({ ok: false, error: 'past' });
+    expect(inUtc.ok).toBe(true);
+  });
+});
+
+describe('setMyStatus refuses a changed request with bad_request, before any SQL', () => {
+  const GOOD = { kind: 'away', untilDate: '2026-11-20', timeZone: KUALA_LUMPUR };
+
+  it.each([
+    ['kind "left", which only the date or Jira can set', { kind: 'left' }],
+    ['kind "AWAY"', { kind: 'AWAY' }],
+    ['no kind', { kind: undefined }],
+    ['a number as kind', { kind: 1 }],
+    ['a date that is not a real day', { untilDate: '2026-02-30' }],
+    ['a date in words', { untilDate: '20 Nov 2026' }],
+    ['a date with a time', { untilDate: '2026-11-20T00:00:00Z' }],
+    ['no date for Away', { untilDate: undefined }],
+    ['a time zone Intl does not know', { timeZone: 'Mars/Olympus_Mons' }],
+    ['an empty time zone', { timeZone: '' }],
+    ['no time zone', { timeZone: undefined }],
+    ['a number as time zone', { timeZone: 8 }],
+  ])('refuses %s', async (_label, change) => {
+    const { fake, setMyStatus } = await load();
+
+    const answer = await setMyStatus(request(AISHA, { ...GOOD, ...change }));
+
+    expect(answer).toEqual({ ok: false, error: 'bad_request' });
+    expect(fake.statements).toEqual([]);
+  });
+
+  it('checks the time zone first: a bad zone with a past date is bad_request, not past', async () => {
+    const { setMyStatus } = await load();
+
+    const answer = await setMyStatus(request(AISHA, { kind: 'away', untilDate: '2026-11-02', timeZone: 'Mars/Olympus_Mons' }));
+
+    expect(answer).toEqual({ ok: false, error: 'bad_request' });
+  });
+
+  it('needs a known time zone for Here too', async () => {
+    const { setMyStatus } = await load();
+
+    const answer = await setMyStatus(request(AISHA, { kind: 'here' }));
+
+    expect(answer).toEqual({ ok: false, error: 'bad_request' });
+  });
+});
+
 describe('listStatuses', () => {
   it('returns an empty list on a fresh install', async () => {
     const { listStatuses } = await load();

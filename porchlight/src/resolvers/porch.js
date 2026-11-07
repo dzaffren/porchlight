@@ -10,7 +10,7 @@
 //   - { ok: true, ... } when it worked.
 //   - { ok: false, error } for an answer the page shows to the person.
 //   - A thrown error for anything else (database down, no signed-in user).
-import { effectiveStatus } from '../lib/porch.js';
+import { checkStatusDate, effectiveStatus, isKnownTimeZone, todayIn } from '../lib/porch.js';
 import { ensureMigrated } from '../db/migrate.js';
 import { deleteStatus, getStatus, listStatuses as listStoredStatuses, upsertStatus } from '../db/porch.js';
 import { signedInAccountId } from './context.js';
@@ -30,16 +30,43 @@ export async function listStatuses(req) {
   return { ok: true, statuses: await listStoredStatuses() };
 }
 
+// The answers from checkStatusDate that a real form can never send: only a changed request
+// can carry an unknown kind or a badly written date.
+const MALFORMED_CHOICE = ['bad_kind', 'bad_date'];
+
 /**
  * Set the signed-in person's own porch light.
  *
+ * The whole payload is untrusted. The page sends the person's own Jira time zone, because the
+ * resolver cannot ask Jira itself (no @forge/api, decision D21), and "today" must be the
+ * person's own day (scenario 5). The time zone only decides which day it is; it never decides
+ * whose row changes.
+ *
+ * Checks, in order:
+ *  1. The time zone is one Intl knows.               Else { ok: false, error: 'bad_request' }
+ *  2. The kind and date pass checkStatusDate.        Else 'bad_request', 'past' or 'too_far'
+ *  3. The stored choice has not already become Left. Else { ok: false, error: 'left' }
+ *
  * @param {{ payload: { kind?: unknown, untilDate?: unknown, timeZone?: unknown },
  *           context: { accountId?: string } }} req
+ * @returns {Promise<{ ok: true, status: { kind: 'here' } | { kind: 'away' | 'leaving', untilDate: string } }
+ *                 | { ok: false, error: 'bad_request' | 'past' | 'too_far' | 'left' }>}
  */
 export async function setMyStatus(req) {
   const accountId = signedInAccountId(req);
   const { kind, untilDate, timeZone } = req.payload ?? {};
   const now = new Date();
+
+  if (!isKnownTimeZone(timeZone)) {
+    return { ok: false, error: 'bad_request' };
+  }
+
+  // The same date rule the page runs before sending. The page's check can be skipped by anyone
+  // who calls the resolver directly, so it runs again here, with the server's clock.
+  const check = checkStatusDate(kind, untilDate, todayIn(timeZone, now));
+  if (!check.ok) {
+    return { ok: false, error: MALFORMED_CHOICE.includes(check.error) ? 'bad_request' : check.error };
+  }
 
   // Left is final (scenario 3): once the stored Leaving date has passed in the person's own
   // day, nobody can change their porch light again, not even to Here. The person is calling,
