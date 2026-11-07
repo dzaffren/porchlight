@@ -112,7 +112,8 @@ flowchart LR
   C1 --> C2["pause 2 · the screens<br/>DONE · approved"]
   C2 --> C3["pause 3 · how it's built<br/>DONE · Refined"]
   C3 --> C4["/build catch-up-view<br/>DONE · Built, live on dev"]
-  C4 --> C5["/review catch-up-view<br/>NEXT"]
+  C4 --> C5["/review catch-up-view<br/>DONE · 7 of 11 findings fixed"]
+  C5 --> C6["/ship catch-up-view<br/>NEXT"]
     </pre></div>
     <p>The skeleton is built and live on dzaffren.atlassian.net (development): 58 unit tests (31 server, 27 page) and the real-site Playwright test pass. The idea is shaped and the design system is approved: dark only, the "Lit window" style, a 3D street of windows, and the porch light as presence. See the <a href="design/design-system/">design system</a> and the <a href="design/design-system/street/index.html">street</a>.</p>
     <table>
@@ -137,7 +138,7 @@ flowchart LR
     <p><b>Next steps:</b></p>
     <ol>
       <li>Optional: push the design system to Claude Design with <code>/design-sync</code> (before Dec 14, 2026, when standalone Claude Design closes).</li>
-      <li><code>/review catch-up-view</code>: an independent review of the built slice (175 unit tests and 2 e2e tests pass; version 3.0.0 is live on dzaffren.atlassian.net, development).</li>
+      <li><code>/ship catch-up-view</code>: open the PR and merge. The review fixed 7 of 11 raw findings; 179 unit tests and both e2e tests pass on dzaffren.atlassian.net (development).</li>
       <li>Update the GitHub secret <code>FORGE_API_TOKEN</code> with your new token, so CI can deploy again.</li>
     </ol>
     <p><b>Files:</b> <code>OVERVIEW.md</code> · <code>DECISIONS.md</code> · <code>docs/specs/knowledge-handover/shape.md</code> · <code>docs/specs/skeleton.md</code></p>

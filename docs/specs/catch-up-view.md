@@ -319,6 +319,18 @@ A owns the manifest, so the `pages` and the new scope land there. B codes agains
 | The fake database passes what real Forge SQL refuses (lesson from the skeleton) | The e2e adds and removes a teammate on the real site after every deploy |
 | The new scope is not granted until `install --upgrade` | Part of /build, as in the skeleton (O16) |
 
+## Review
+
+2026-11-07 · 11 raw findings, 7 survived, 7 fixed.
+
+- correctness · `porchlight/static/porchlight-ui/src/CatchUp.jsx:241` · say "this teammate's work" when the name lookup failed · `8efd172`
+- correctness · `porchlight/static/porchlight-ui/src/TeamPage.jsx:23` · look up names in batches of 100 · `4e1755f`
+- correctness · `porchlight/static/porchlight-ui/src/TeamPage.jsx:72` · only the newest team read changes the list; a remove reads again · `d6f90bb`
+- correctness · `porchlight/static/porchlight-ui/src/CatchUp.jsx:61` · ticket links carry the full Jira site address · `babcd37`
+- quality · `porchlight/static/porchlight-ui/src/CatchUp.jsx:48` · leave reduced motion to the design system's CSS · `7f5e690`
+- quality · `docs/ARCHITECTURE.md:45` · name App.jsx as the route switch · `e017eae`
+- quality · `docs/ARCHITECTURE.md:49` · list the per-ticket history and comment calls · `b0805ac`
+
 ## Open items
 
 | ID | What | Type | Raised at | Owner | Status | Answer |
@@ -344,6 +356,7 @@ A owns the manifest, so the `pages` and the new scope land there. B codes agains
 | O19 | The E2E paragraph said the test adds the person if missing, then takes them off and back on, and clicks the sidebar's Notes link | flag | build | user | Decided alone | Chose: take off first when present, then add, reload and catch up; the notes test opens `…/notes` by URL, and the sidebar was checked by hand on 2026-11-07. Other: the old order plus a sidebar click inside the frame's parent page. Undo: reorder the steps in `e2e/catch-up.spec.js`. Spec E2E paragraph updated. 2026-11-07 |
 | O20 | The preview drew the "and 13 more in Jira" link in amber, which means captured knowledge | flag | build | user | Decided alone | Chose: neutral subtle text with an underline, in the page and the preview. Other: keep amber. Undo: revert 99e3419. 2026-11-07 |
 | O21 | `forge logs` showed `porchlight.migrate v002_create_team_members=done` twice after the deploy: two function instances ran the migration at the same moment | flag | build | user | Decided alone | Chose: leave it. `CREATE TABLE IF NOT EXISTS` is harmless twice, and `rollbackV002` deletes every v002 row from `__migrations`. Other: a lock around `ensureMigrated`. Undo: n/a. For /review to judge. 2026-11-07 |
+| O22 | Review fix 8efd172 adds copy no scenario had: when the name lookup failed, the error says "Couldn't load this teammate's work from Jira." Scenario 5's message for a known name is unchanged | flag | review | user | Decided alone | Chose: "this teammate's work". Other: "their work", or hide the name row's fallback. Undo: change `whose` in `porchlight/static/porchlight-ui/src/CatchUp.jsx`. 2026-11-07 |
 
 _Never delete this section or its rows. See references/ledger.md._
 

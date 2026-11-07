@@ -16,4 +16,4 @@ Learned while building the skeleton slice, 2026-11-06 to 2026-11-07.
 - **Jira's issue link API reads backwards.** To make PAY-2 "is blocked by" OPS-1, send `inwardIssue: OPS-1` and `outwardIssue: PAY-2` to `POST /rest/api/3/issueLink`. On PAY-2 the link then shows `inwardIssue: OPS-1` with `type.inward` = "is blocked by". Check the ticket page after creating a link.
 - **A Kanban project's To Do status may be called "Backlog".** Use `status.statusCategory.key` (`new`, `indeterminate`, `done`) for rules, and show `status.name` only as text.
 - **Custom UI subpages work.** `pages` on `jira:globalPage` shows Team and Notes in Jira's sidebar, the route is added to the URL, and `view.createHistory()` gives the page `/team` or `/notes`.
-
+- **A relative link in Custom UI points at the frame's own host.** `href="/browse/PAY-1"` opens a dead page on middle-click or "Open in new tab". Build the href from `siteUrl` in `view.getContext()`, and keep `router.open` for a plain click.
