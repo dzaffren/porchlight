@@ -50,11 +50,15 @@ export const fake = {
 /** Format a Date the way MySQL returns a DATETIME: "2026-11-06 09:00:00". */
 const toDatetime = (date) => date.toISOString().slice(0, 19).replace('T', ' ');
 
-function requireNotesTable() {
-  if (!fake.tables.has('notes')) {
-    throw new Error("Table 'notes' doesn't exist");
+/** Fail like MySQL when a statement uses a table that no migration has created yet. */
+function requireTable(name) {
+  if (!fake.tables.has(name)) {
+    throw new Error(`Table '${name}' doesn't exist`);
   }
 }
+
+/** A team row as the SELECTs return it: the three asked-for columns, without the id. */
+const withoutId = ({ id, ...rest }) => ({ ...rest }); // eslint-disable-line no-unused-vars
 
 /** Run one statement against the in-memory state. */
 async function run(query, params = []) {
@@ -101,7 +105,7 @@ async function run(query, params = []) {
     return { rows: { affectedRows: 0 } };
   }
   if (q.startsWith('INSERT INTO notes (client_key, body, author_account_id) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE')) {
-    requireNotesTable();
+    requireTable('notes');
     const [clientKey, body, authorAccountId] = params;
     const exists = fake.notes.some((n) => n.client_key === clientKey);
     if (!exists) {
@@ -116,7 +120,7 @@ async function run(query, params = []) {
     return { rows: { affectedRows: exists ? 0 : 1, insertId: exists ? 0 : fake.nextId - 1 } };
   }
   if (q.startsWith('SELECT id, body, author_account_id, created_at FROM notes WHERE client_key = ? AND author_account_id = ?')) {
-    requireNotesTable();
+    requireTable('notes');
     const [clientKey, authorAccountId] = params;
     const rows = fake.notes
       .filter((n) => n.client_key === clientKey && n.author_account_id === authorAccountId)
@@ -125,7 +129,7 @@ async function run(query, params = []) {
   }
   const listQuery = q.match(/^SELECT id, body, author_account_id, created_at FROM notes ORDER BY created_at DESC, id DESC LIMIT (\d+)$/);
   if (listQuery) {
-    requireNotesTable();
+    requireTable('notes');
     const limit = Number(listQuery[1]);
     const rows = [...fake.notes]
       .sort((a, b) => (a.created_at === b.created_at ? b.id - a.id : a.created_at < b.created_at ? 1 : -1))
@@ -146,6 +150,38 @@ async function run(query, params = []) {
     fake.tables.delete('team_members');
     fake.team = [];
     return { rows: { affectedRows: 0 } };
+  }
+  if (q.startsWith('SELECT account_id, added_by_account_id, added_at FROM team_members WHERE account_id = ?')) {
+    requireTable('team_members');
+    const rows = fake.team.filter((m) => m.account_id === params[0]).map(withoutId);
+    return { rows };
+  }
+  if (q.startsWith('INSERT IGNORE INTO team_members (account_id, added_by_account_id) VALUES (?, ?)')) {
+    requireTable('team_members');
+    const [accountId, addedByAccountId] = params;
+    // The unique key on account_id: a second insert for the same person changes nothing.
+    if (fake.team.some((m) => m.account_id === accountId)) {
+      return { rows: { affectedRows: 0, insertId: 0 } };
+    }
+    fake.team.push({
+      id: fake.nextId++,
+      account_id: accountId,
+      added_by_account_id: addedByAccountId,
+      added_at: toDatetime(fake.now),
+    });
+    return { rows: { affectedRows: 1, insertId: fake.nextId - 1 } };
+  }
+  const teamListQuery = q.match(
+    /^SELECT account_id, added_by_account_id, added_at FROM team_members ORDER BY added_at ASC, id ASC LIMIT (\d+)$/,
+  );
+  if (teamListQuery) {
+    requireTable('team_members');
+    const limit = Number(teamListQuery[1]);
+    const rows = [...fake.team]
+      .sort((a, b) => (a.added_at === b.added_at ? a.id - b.id : a.added_at < b.added_at ? -1 : 1))
+      .slice(0, limit)
+      .map(withoutId);
+    return { rows };
   }
 
   throw new Error(`fake-forge-sql does not understand: ${q}`);
