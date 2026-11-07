@@ -26,7 +26,9 @@ export function saveNote({ body, clientKey }) {
 /**
  * Who is looking at the page. requestJira runs as the viewer, so Jira's own
  * permissions apply (the read:jira-user scope in manifest.yml allows it).
- * @returns {Promise<{ accountId: string, displayName: string }>}
+ * The time zone is the one the viewer set in their Atlassian profile, such as
+ * "Asia/Kuala_Lumpur". The porch light form checks dates in it, and sends it on save.
+ * @returns {Promise<{ accountId: string, displayName: string, timeZone: string | undefined }>}
  */
 export async function fetchMyself() {
   const response = await requestJira('/rest/api/3/myself');
@@ -34,21 +36,24 @@ export async function fetchMyself() {
     throw new Error(`Jira /myself answered ${response.status}`);
   }
   const me = await response.json();
-  return { accountId: me.accountId, displayName: me.displayName };
+  return { accountId: me.accountId, displayName: me.displayName, timeZone: me.timeZone };
 }
 
 /** Jira's /user/bulk returns at most this many people per request. */
 const NAMES_PER_REQUEST = 100;
 
 /**
- * Current display names for a list of account IDs, in as few requests as Jira allows.
- * Names are looked up each time rather than stored with the note, so a renamed
- * person shows their new name (decision D12).
+ * What Jira says about each person: their current name, whether the account is active,
+ * and their profile's time zone. All of it is looked up each time, never stored
+ * (decisions D12 and D27), so a renamed or deactivated person shows as they are now.
+ *
+ * A person Jira leaves out of its answer is left out here too. The page then keeps their
+ * stored porch light, rather than guess that they have left (risk O3).
  *
  * @param {string[]} accountIds - any number; asked for in batches of 100
- * @returns {Promise<Record<string, string>>} accountId → display name
+ * @returns {Promise<Record<string, { displayName: string, active: boolean, timeZone: string | undefined }>>}
  */
-export async function fetchDisplayNames(accountIds) {
+export async function fetchPeople(accountIds) {
   if (accountIds.length === 0) {
     return {};
   }
@@ -66,7 +71,24 @@ export async function fetchDisplayNames(accountIds) {
     }
     return response.json();
   }));
-  return Object.fromEntries(pages.flatMap((page) => page.values).map((user) => [user.accountId, user.displayName]));
+  // Keep only the three fields the page uses; Jira sends more (such as email addresses).
+  return Object.fromEntries(pages.flatMap((page) => page.values).map((user) => [
+    user.accountId,
+    { displayName: user.displayName, active: user.active, timeZone: user.timeZone },
+  ]));
+}
+
+/**
+ * Current display names for a list of account IDs, in as few requests as Jira allows.
+ * Names are looked up each time rather than stored with the note, so a renamed
+ * person shows their new name (decision D12). It is the same request as fetchPeople.
+ *
+ * @param {string[]} accountIds
+ * @returns {Promise<Record<string, string>>} accountId → display name
+ */
+export async function fetchDisplayNames(accountIds) {
+  const people = await fetchPeople(accountIds);
+  return Object.fromEntries(Object.entries(people).map(([accountId, person]) => [accountId, person.displayName]));
 }
 
 // ---------------------------------------------------------------------------------
@@ -96,6 +118,37 @@ export function addTeammate(accountId) {
 /** Take one person off the team. Same answers as addTeammate. Jira is not touched. */
 export function removeTeammate(accountId) {
   return invoke('removeTeammate', { accountId });
+}
+
+// ---------------------------------------------------------------------------------
+// Porch lights (resolvers in src/resolvers/porch.js, stored in Forge SQL).
+// Only what a person chose is stored: "away until" or "leaving on" a date. Here has no
+// row, and Left is never stored; @lib/porch.js works both out when the page shows them.
+// ---------------------------------------------------------------------------------
+
+/**
+ * Everyone's stored porch light, from the listStatuses resolver.
+ * @returns {Promise<Array<{ accountId: string, kind: 'away' | 'leaving', untilDate: string }>>}
+ */
+export async function fetchStatuses() {
+  const result = await invoke('listStatuses');
+  if (!result?.ok) {
+    throw new Error('listStatuses did not return statuses');
+  }
+  return result.statuses;
+}
+
+/**
+ * Set the viewer's own porch light. The resolver takes whose row it is from Forge's
+ * context, never from the page, so nobody can set someone else's.
+ *
+ * @param {{ kind: 'here' | 'away' | 'leaving', untilDate: string | null, timeZone: string }} choice
+ *   timeZone is the viewer's own, so the resolver checks "today" in their day.
+ * @returns {Promise<{ ok: true, status: unknown } | { ok: false, error: 'bad_request' | 'past' | 'too_far' | 'left' }>}
+ *   Rejects when the call itself failed.
+ */
+export function setMyStatus({ kind, untilDate, timeZone }) {
+  return invoke('setMyStatus', { kind, untilDate, timeZone });
 }
 
 // ---------------------------------------------------------------------------------

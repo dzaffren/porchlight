@@ -11,6 +11,8 @@ import {
   fetchDisplayNames,
   fetchMyself,
   fetchNotes,
+  fetchPeople,
+  fetchStatuses,
   fetchTeam,
   openInJira,
   openWorkJql,
@@ -18,6 +20,7 @@ import {
   searchOpenWork,
   searchRecentActivity,
   searchUsers,
+  setMyStatus,
 } from './api.js';
 
 /** A minimal stand-in for the fetch-style Response that requestJira returns. */
@@ -72,12 +75,81 @@ describe('fetchDisplayNames', () => {
   });
 });
 
-describe('fetchMyself', () => {
-  it("returns the viewer's account ID and name", async () => {
-    requestJira.mockResolvedValue(reply(200, { accountId: '712020:aisha-rahman', displayName: 'Aisha Rahman', emailAddress: 'not-needed' }));
+describe('fetchPeople', () => {
+  it("returns each person's name, active flag and time zone from one user/bulk request", async () => {
+    requestJira.mockResolvedValue(reply(200, {
+      values: [
+        { accountId: '712020:aisha-rahman', displayName: 'Aisha Rahman', active: true, timeZone: 'Asia/Kuala_Lumpur', emailAddress: 'not-needed' },
+        { accountId: '712020:mei-ling-goh', displayName: 'Mei Ling Goh', active: false, timeZone: 'Asia/Singapore' },
+      ],
+    }));
 
-    expect(await fetchMyself()).toEqual({ accountId: '712020:aisha-rahman', displayName: 'Aisha Rahman' });
+    const people = await fetchPeople(['712020:aisha-rahman', '712020:mei-ling-goh']);
+
+    expect(requestJira).toHaveBeenCalledTimes(1);
+    expect(requestJira).toHaveBeenCalledWith(
+      '/rest/api/3/user/bulk?maxResults=100&accountId=712020%3Aaisha-rahman&accountId=712020%3Amei-ling-goh',
+    );
+    expect(people).toEqual({
+      '712020:aisha-rahman': { displayName: 'Aisha Rahman', active: true, timeZone: 'Asia/Kuala_Lumpur' },
+      '712020:mei-ling-goh': { displayName: 'Mei Ling Goh', active: false, timeZone: 'Asia/Singapore' },
+    });
+  });
+
+  it('leaves out a person Jira did not answer for, so the page never guesses "Left"', async () => {
+    requestJira.mockResolvedValue(reply(200, { values: [{ accountId: '712020:aisha-rahman', displayName: 'Aisha Rahman', active: true }] }));
+
+    const people = await fetchPeople(['712020:aisha-rahman', '712020:gone']);
+
+    expect(Object.keys(people)).toEqual(['712020:aisha-rahman']);
+    expect(people['712020:aisha-rahman'].timeZone).toBeUndefined();
+  });
+
+  it('looks up more than 100 people in batches of 100', async () => {
+    const ids = Array.from({ length: 101 }, (_, i) => `712020:person-${i}`);
+    requestJira.mockImplementation(async (url) => {
+      const asked = [...url.matchAll(/accountId=([^&]+)/g)].map((m) => decodeURIComponent(m[1]));
+      return reply(200, { values: asked.map((id) => ({ accountId: id, displayName: id, active: true })) });
+    });
+
+    expect(Object.keys(await fetchPeople(ids))).toHaveLength(101);
+    expect(requestJira).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('fetchMyself', () => {
+  it("returns the viewer's account ID, name and Jira time zone", async () => {
+    requestJira.mockResolvedValue(reply(200, {
+      accountId: '712020:aisha-rahman', displayName: 'Aisha Rahman', timeZone: 'Asia/Kuala_Lumpur', emailAddress: 'not-needed',
+    }));
+
+    expect(await fetchMyself()).toEqual({ accountId: '712020:aisha-rahman', displayName: 'Aisha Rahman', timeZone: 'Asia/Kuala_Lumpur' });
     expect(requestJira).toHaveBeenCalledWith('/rest/api/3/myself');
+  });
+});
+
+describe('porch light resolvers', () => {
+  it('fetchStatuses returns the stored statuses from listStatuses', async () => {
+    const statuses = [{ accountId: '712020:aisha-rahman', kind: 'away', untilDate: '2026-11-20' }];
+    invoke.mockResolvedValue({ ok: true, statuses });
+
+    expect(await fetchStatuses()).toEqual(statuses);
+    expect(invoke).toHaveBeenCalledWith('listStatuses');
+  });
+
+  it('fetchStatuses fails when the resolver does not answer ok', async () => {
+    invoke.mockResolvedValue({ ok: false, error: 'db_down' });
+
+    await expect(fetchStatuses()).rejects.toThrow();
+  });
+
+  it("setMyStatus sends the kind, date and time zone, and passes the resolver's answer back", async () => {
+    invoke.mockResolvedValue({ ok: false, error: 'past' });
+
+    const answer = await setMyStatus({ kind: 'away', untilDate: '2026-11-02', timeZone: 'Asia/Kuala_Lumpur' });
+
+    expect(answer).toEqual({ ok: false, error: 'past' });
+    expect(invoke).toHaveBeenCalledWith('setMyStatus', { kind: 'away', untilDate: '2026-11-02', timeZone: 'Asia/Kuala_Lumpur' });
   });
 });
 
