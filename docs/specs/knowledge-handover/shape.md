@@ -131,7 +131,7 @@ stateDiagram-v2
 
 | ID | What | Type | Raised at | Owner | Status | Answer |
 | -- | ---- | ---- | --------- | ----- | ------ | ------ |
-| O1 | Do Rovo agents from a Forge app run on the dev site and on the judges' site? | unproven | shape | poc | Handed to ask-the-trail | /poc at the start of that slice, 2026-11-01 |
+| O1 | Do Rovo agents from a Forge app run on the dev site and on the judges' site? | unproven | shape | poc | Handed to ask-the-trail | /poc 2026-11-07: yes where Rovo is on. dzaffren.atlassian.net (free site, Gmail account) has no Rovo Chat, so no agent can run there. On the free Forge demo site one-atlas-jddo.atlassian.net (expires 2027-02-05) a minimal hello-forge `rovo:agent` with one `action` installed, showed in Browse agents, and answered with the action's text. No extra scope; the build stayed eligible for Runs on Atlassian. Judges need a site with Rovo (Standard or above, or a demo site); say so in the submission. Spike code deleted. |
 | O2 | Can one Forge app span Jira and Confluence (write the handover pack)? | unproven | shape | poc | Handed to handover-interview | /poc in that slice, 2026-11-01 |
 | O3 | Can the same Forge app also read Bitbucket? | unproven | shape | poc | Handed to code-trail | /poc in that slice, 2026-11-01 |
 | O4 | How the Forge MCP server module works today, and whether Claude Code can connect and write to it | unproven | shape | poc | Handed to capture-ai-reasoning | /poc in that slice, 2026-11-01 |

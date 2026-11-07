@@ -17,3 +17,6 @@ Learned while building the skeleton slice, 2026-11-06 to 2026-11-07.
 - **A Kanban project's To Do status may be called "Backlog".** Use `status.statusCategory.key` (`new`, `indeterminate`, `done`) for rules, and show `status.name` only as text.
 - **Custom UI subpages work.** `pages` on `jira:globalPage` shows Team and Notes in Jira's sidebar, the route is added to the URL, and `view.createHistory()` gives the page `/team` or `/notes`.
 - **A relative link in Custom UI points at the frame's own host.** `href="/browse/PAY-1"` opens a dead page on middle-click or "Open in new tab". Build the href from `siteUrl` in `view.getContext()`, and keep `router.open` for a plain click.
+- **A free developer site may have no Rovo Chat.** dzaffren.atlassian.net shows Rovo as available but has no Chat, so a Forge `rovo:agent` cannot run there. `forge site provision` makes one free demo site (90 days) with Rovo; `forge install --demo-site` installs on it. A `rovo:agent` with one `action` needs no extra scope and keeps Runs on Atlassian eligibility.
+- **Re-running `forge site provision` is safe.** With a site already made, it prints the existing demo site and its expiry instead of making another.
+
