@@ -15,6 +15,54 @@ modules:
         - title: Notes
           route: notes
 
+  # The Porchlight agent in Rovo Chat (spec ask-the-trail). A person asks it
+  # "Catch me up on Aisha", and Rovo's model answers from the action below.
+  # It needs a site with Rovo on (shape O1); Team and Notes work without it.
+  rovo:agent:
+    - key: porchlight-agent
+      name: Porchlight
+      description: >-
+        Catches you up on a teammate's Jira work: open work, the last 14 days,
+        blockers and next steps, with a link to every ticket.
+      # The instructions for the model live in a file, so they diff like code.
+      # "agent-prompts" is the resource at the bottom of this file.
+      prompt: resource:agent-prompts;porchlight-agent.md
+      conversationStarters:
+        - Catch me up on a teammate
+        - What's blocking a teammate?
+        - What is a teammate doing next?
+      actions:
+        - porchlight-catch-up
+
+  # The one thing the agent can do: read one person's catch-up as the asker.
+  action:
+    - key: porchlight-catch-up
+      name: Catch up on a person
+      function: rovo-catch-up
+      # GET: the action only reads, so Rovo never asks the asker to confirm it.
+      actionVerb: GET
+      description: >-
+        Finds one person in Jira by name and returns their porch light, open
+        work, changes in the last 14 days, blockers and next steps. Call it
+        for any question about one person's work.
+      # The model writes these in its own words, so the function treats both
+      # as untrusted text (src/rovo/catch-up.js).
+      inputs:
+        person:
+          title: Person
+          type: string
+          required: true
+          description: >-
+            The name the asker typed, such as "Aisha" or "Aisha Rahman", or
+            "me" when the asker means themselves.
+        accountId:
+          title: Account ID
+          type: string
+          required: false
+          description: >-
+            Only on the second call, after the asker picks one of several
+            matches: that person's accountId from the first answer.
+
   function:
     # Answers the page's invoke() calls: the notes and the team list.
     - key: resolver
@@ -22,6 +70,9 @@ modules:
     # Creates and updates the database tables.
     - key: migrate
       handler: index.migrate
+    # Answers the Porchlight agent's catch-up action in Rovo Chat.
+    - key: rovo-catch-up
+      handler: index.catchUp
 
   # Forge runs migrations from a trigger. The resolvers also run them on their
   # first call, so the app works before the first hourly run (spec ledger O7).
@@ -38,6 +89,9 @@ modules:
 resources:
   - key: main
     path: static/porchlight-ui/dist
+  # The Rovo agent's prompt files (prompts/porchlight-agent.md).
+  - key: agent-prompts
+    path: prompts
 
 permissions:
   scopes:
