@@ -2,7 +2,7 @@
 // lights in docs/specs/porch-status.md, page side.
 // The Forge bridge only works inside Jira, so ./api.js is replaced with test doubles here.
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, cleanup, within, waitFor } from '@testing-library/react';
+import { act, render, screen, cleanup, within, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 vi.mock('./api.js', () => ({
@@ -326,6 +326,24 @@ describe('TeamPage porch lights', () => {
     await screen.findByRole('button', { name: 'Catch up on Aisha Rahman' });
 
     expect(rowOf('Aisha Rahman').querySelector('.pl-presence')?.textContent ?? null).toBe(text);
+  });
+
+  it('turns Aisha\'s lamp off on a page left open past the end of her date (review F10)', async () => {
+    // Fake setInterval too, so the test can move the page's clock on without waiting.
+    vi.useFakeTimers({ toFake: ['Date', 'setInterval', 'clearInterval'] });
+    vi.setSystemTime(new Date('2026-11-20T15:59:30.000Z')); // 23:59:30 on 20 Nov in Kuala Lumpur
+    api.fetchTeam.mockResolvedValue([DANIEL_ROW, AISHA_ROW]);
+    api.fetchStatuses.mockResolvedValue([away(AISHA, '2026-11-20')]);
+    render(<TeamPage />);
+    await screen.findByRole('button', { name: 'Catch up on Aisha Rahman' });
+    expect(rowOf('Aisha Rahman').querySelector('.pl-presence').textContent).toBe('Away until 20 Nov');
+
+    // A minute later it is 21 Nov in Kuala Lumpur. Nobody clicks, saves or reloads.
+    act(() => {
+      vi.advanceTimersByTime(60_000);
+    });
+
+    expect(rowOf('Aisha Rahman').querySelector('.pl-presence')).toBeNull();
   });
 
   it('turns the porch light off at once when Aisha sets Here (scenario 2)', async () => {

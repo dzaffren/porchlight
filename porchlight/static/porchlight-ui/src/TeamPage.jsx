@@ -10,6 +10,7 @@
 //
 // What each lamp shows is worked out on every render by effectiveStatus in @lib/porch.js,
 // from the stored choice, the person's Jira time zone and Jira's `active` flag (D26).
+// A one-minute clock redraws the page, so lamps stay right on a page left open.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { effectiveStatus, isKnownTimeZone } from '@lib/porch.js';
 import * as api from './api.js';
@@ -46,6 +47,12 @@ async function readTeam() {
 /** The browser's own time zone, for when Jira does not give the viewer's. */
 const browserTimeZone = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
 
+// How often the page looks at the clock again. A lamp changes when a date ends in someone's
+// own time zone, which can be any minute of the viewer's day, so a page left open must work
+// every lamp out again on its own (review finding F10). Once a minute is plenty for a lamp,
+// and redrawing a team of 5 to 50 rows costs nothing.
+const CLOCK_TICK_MS = 60_000;
+
 export default function TeamPage() {
   const [status, setStatus] = useState('loading'); // 'loading' | 'ready' | 'error'
   const [members, setMembers] = useState([]);
@@ -54,6 +61,14 @@ export default function TeamPage() {
   const [me, setMe] = useState(null); // the viewer: { accountId, displayName, timeZone }
   const [selectedId, setSelectedId] = useState(null);
   const [toast, setToast] = useState(null);
+  // "Now", for every lamp on the page. Updating it each minute redraws the page, so an Away
+  // that ends turns off, and a Leaving that ends turns into Left, with nobody clicking.
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), CLOCK_TICK_MS);
+    return () => clearInterval(timer);
+  }, []);
 
   const showTeam = useCallback((team) => {
     setMembers(team.members);
@@ -105,8 +120,8 @@ export default function TeamPage() {
   // What one person's porch light shows right now. A person missing from Jira's answer
   // has no entry in `people`, so effectiveStatus keeps their stored status (risk O3).
   const statusOf = useCallback(
-    (accountId) => effectiveStatus(statuses[accountId], people[accountId], new Date(), viewerTimeZone),
-    [statuses, people, viewerTimeZone],
+    (accountId) => effectiveStatus(statuses[accountId], people[accountId], now, viewerTimeZone),
+    [statuses, people, now, viewerTimeZone],
   );
   const memberIds = useMemo(() => new Set(members.map((m) => m.accountId)), [members]);
   const say = (text) => setToast({ id: crypto.randomUUID(), text });
@@ -178,7 +193,7 @@ export default function TeamPage() {
   const myStatus = me && effectiveStatus(
     statuses[me.accountId],
     people[me.accountId] ?? { timeZone: me.timeZone },
-    new Date(),
+    now,
     viewerTimeZone,
   );
 
