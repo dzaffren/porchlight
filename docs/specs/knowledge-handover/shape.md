@@ -51,6 +51,8 @@ flowchart LR
   S1 --> SP["1b · porch-status"]
   SP -. "a started handover sets 'Leaving'" .- S3
   S3 --> PI["3b · pass-it-on"]
+  S3 --> ST["3c · street"]
+  S1 -. "a house opens the catch-up panel" .- ST
 ```
 
 | # | Slice | What ships | Why this order |
@@ -61,11 +63,12 @@ flowchart LR
 | 2 | ask-the-trail | A Rovo agent answers "catch me up on A" from the same Jira trail, and every answer cites its source tickets. | Rovo bonus. Slices 3 and 4 reuse this agent. |
 | 3 | handover-interview | The app lists the gaps only the leaver can fill. The agent interviews the leaver, stores the answers with their source, and writes a standard handover pack to Confluence. | Video moment 2 (resign). Needs the agent from slice 2. |
 | 3b | pass-it-on | Every area of a leaver's work gets a new owner. The leaver proposes a teammate, the teammate accepts, and the team lead approves; then the light moves from the leaver's house to the receiver's, and the receiver's house gains a window. Areas still unowned on the leaving date stay on the leaver's house, marked "unowned". | Added 2026-11-02: a resignation or move must pass everything to the team, not only capture it (D11). Needs handover-interview's captured areas. |
+| 3c | street | The 3D street of windows (D7): one house for each person on the team list, one window for each area, lit when captured. Opening a house opens that person's catch-up panel. | Added 2026-11-07 at /spec catch-up-view (D17): lit windows mean captured knowledge, so the street needs handover-interview's areas first. |
 | 4 | why-later | From any ticket, "why is it like this?" is answered from the trail, the interviews and the handover packs, after the person has left. An issue panel shows it. | Video moment 3 (breaks later). With slices 1–4, all three moments work. |
 | 5 | code-trail | Bitbucket commits and pull requests join the trail, linked to their tickets. | Adds what actually changed in code. Works without it, so it comes after the three moments. |
 | 6 | capture-ai-reasoning | A Forge MCP server lets Claude Code write its reasoning to the ticket as it works, so the "why" no longer dies with the chat. | The answer to the AI-era sentence of the problem, and the MCP bonus. Needs the store from slice 4. |
 
-Nine slices including the skeleton, porch-status and pass-it-on, three over the guideline of about six. The user chose to keep pass-it-on separate from handover-interview (2026-11-02). porch-status is small and can fold into catch-up-view. If time runs short, slices 0–4 still make a complete submission.
+Ten slices including the skeleton, porch-status, pass-it-on and street, four over the guideline of about six. The user chose to keep pass-it-on separate from handover-interview (2026-11-02), and the street separate from catch-up-view (2026-11-07, D17). porch-status is small and can fold into catch-up-view. If time runs short, slices 0–4 still make a complete submission.
 
 ### A handover is done when every window is lit AND passed on
 

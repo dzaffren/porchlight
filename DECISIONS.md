@@ -107,3 +107,38 @@ Why: Custom UI blocks inline `style` attributes by default, and the design syste
 Rejected: adding `permissions.content.styles: unsafe-inline` (loosens the policy for the whole app, and developers report it does not cover every case).
 Source: docs/specs/skeleton.md
 Status: active
+
+## D16 · 2026-11-07 · A team list kept in Porchlight
+
+Why: the catch-up view, and later the street and porch-status, need a stable list of teammates that works on the judges' site with no setup; anyone who can open Porchlight adds or removes people from a Jira user search, and each entry shows who added it.
+Rejected: Atlassian Teams (nobody has checked that a Forge app can read Teams as the viewer), a user search each time (nothing kept for the street or status), a Jira-admin-only list (a dead end for ordinary users of a demo team).
+Source: docs/specs/catch-up-view.md
+Status: active
+
+## D17 · 2026-11-07 · The 3D street is its own slice, after handover-interview
+
+Why: a lit window means captured knowledge (D7), and nothing is captured before handover-interview, so a street in catch-up-view would show only dark windows; the street stays the signature, and opening a house will open the catch-up panel built here.
+Rejected: the street in catch-up-view with every window dark (flat in video moment 1, and about twice the slice), windows lit by recent Jira activity (goes against D7, and comes close to watching people).
+Source: docs/specs/catch-up-view.md
+Status: active
+
+## D18 · 2026-11-07 · The catch-up panel reads only Jira, with fixed rules for each section
+
+Why: every line must link to its source ticket (the shape's rule from the evidence), and the rules must work on any Jira site: blockers are flagged tickets or "is blocked by" links to unfinished tickets; next steps are To Do tickets by due date, then priority; latest changes are the person's own status moves and comments in the last 14 days, which covers a two-week leave.
+Rejected: a status named "Blocked" (depends on each project's workflow), flagged only (misses blocking links), To Do in the active sprint only (misses Kanban and business projects), next steps the person types (empty until written; that is handover-interview's job), 7 days of changes (a two-week leave loses its first week), changes made by anyone (too much noise), the skeleton's notes in the panel (they have no ticket link).
+Source: docs/specs/catch-up-view.md
+Status: active
+
+## D19 · 2026-11-07 · Catch-up view in two panes, with a selected-row look in the design system
+
+Why: a ticket row needs room for the key, the title, the status and a date, and a person covering for a teammate switches between people often; two panes keep the list and the catch-up side by side, and `.pl-row.is-selected` shows whose catch-up is open, in neutral, because open is not captured.
+Rejected: the team list with the street's 400px side panel over it (titles get cut off, and the panel must close to pick someone else), no selected look (the list does not show where you are).
+Source: docs/specs/catch-up-view.md
+Status: active
+
+## D20 · 2026-11-07 · Move between Team and Notes through Jira's sidebar
+
+Why: Jira already draws a menu for an app's subpages, so Porchlight > Team and Porchlight > Notes look native and need nothing new in the design system.
+Rejected: tabs inside the page (a new design-system piece for two links), notes under the team on one long page (a long catch-up pushes the notes far down).
+Source: docs/specs/catch-up-view.md
+Status: active

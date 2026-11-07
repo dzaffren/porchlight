@@ -90,6 +90,9 @@ th, td { text-align: left; padding: 6px; border-bottom: 1px solid var(--line); v
       <a href="#pass-it-on">Pass it on</a>
       <a href="#skeleton-p2">Skeleton: page</a>
       <a href="#skeleton-p3">Skeleton: build plan</a>
+      <a href="#catchup-p1">Catch-up view: scope</a>
+      <a href="#catchup-p2">Catch-up view: screens</a>
+      <a href="#catchup-p3">Catch-up view: build plan</a>
     </nav>
   </header>
 
@@ -104,8 +107,11 @@ flowchart LR
   P2 --> P3["/spec skeleton · pause 3<br/>DONE · Refined"]
   P3 --> B["/build skeleton<br/>DONE · Built"]
   B --> R["/review skeleton<br/>DONE · 9 of 10 findings fixed"]
-  R --> S["/ship skeleton<br/>IN PROGRESS · docs marked Shipped, PR next"]
-  S --> N["/spec catch-up-view<br/>NEXT"]
+  R --> S["/ship skeleton<br/>DONE · Shipped"]
+  S --> C1["/spec catch-up-view · pause 1<br/>DONE · approved"]
+  C1 --> C2["pause 2 · the screens<br/>DONE · approved"]
+  C2 --> C3["pause 3 · how it's built<br/>DONE · Refined"]
+  C3 --> C4["/build catch-up-view<br/>NEXT"]
     </pre></div>
     <p>The skeleton is built and live on dzaffren.atlassian.net (development): 58 unit tests (31 server, 27 page) and the real-site Playwright test pass. The idea is shaped and the design system is approved: dark only, the "Lit window" style, a 3D street of windows, and the porch light as presence. See the <a href="design/design-system/">design system</a> and the <a href="design/design-system/street/index.html">street</a>.</p>
     <table>
@@ -130,8 +136,7 @@ flowchart LR
     <p><b>Next steps:</b></p>
     <ol>
       <li>Optional: push the design system to Claude Design with <code>/design-sync</code> (before Dec 14, 2026, when standalone Claude Design closes).</li>
-      <li><code>/ship skeleton</code> (in progress): create the public GitHub repo, add the FORGE_EMAIL and FORGE_API_TOKEN secrets, open the PR, and watch CI run for the first time.</li>
-      <li><code>/spec catch-up-view</code>: pick a teammate and see their open work, read from Jira as the viewer.</li>
+      <li><code>/build catch-up-view</code>: running it approves the plan in section 21 and records D21 to D23.</li>
     </ol>
     <p><b>Files:</b> <code>OVERVIEW.md</code> · <code>DECISIONS.md</code> · <code>docs/specs/knowledge-handover/shape.md</code> · <code>docs/specs/skeleton.md</code></p>
   </section>
@@ -617,6 +622,120 @@ flowchart TB
       <li><b>Chunks:</b> A app and data · B page and design-system class rewrite · C e2e and CI.</li>
       <li><b>Riskiest choice:</b> running the table migration from the first resolver call (O7, accepted: the first deploy proves it).</li>
     </ul>
+  </section>
+
+  <section id="catchup-p1">
+    <div class="num">19 · Spec: catch-up-view</div>
+    <h2>Catch-up view: scope and acceptance</h2>
+    <p class="analogy">Think of a shift handover board at a hospital. The nurse coming on duty does not phone the one who went home. They read the board: what is open, what changed today, what is stuck, what is next. Catch-up view is that board for one teammate, filled from Jira.</p>
+    <div class="diagram"><pre class="mermaid">
+flowchart LR
+    D((Daniel Tan)) -- "Apps → Porchlight → Team" --> T[Team list]
+    T -- "Add teammate: search Jira users" --> S[(team_members)]
+    S -- "saved, seen by everyone" --> T
+    T -- "picks Aisha Rahman" --> C["Aisha's catch-up"]
+    J["Jira, called as Daniel"] -- "only tickets Daniel can open" --> C
+    C -- "Open work · Latest changes · Blockers · Next steps" --> L[Each line]
+    L -- "opens" --> K["PAY-142 in Jira"]
+    J -. "no answer" .-> E["'Couldn't load Aisha's work' + Try again"]
+    </pre></div>
+    <p>Daniel adds Aisha to the shared team list, picks her, and Porchlight reads her work from Jira as Daniel. He sees only tickets he can already open, and every line opens its ticket.</p>
+
+    <h2 style="font-size:18px">The four sections</h2>
+    <table>
+      <thead><tr><th>Section</th><th>What counts</th><th>How many</th></tr></thead>
+      <tbody>
+        <tr><td>Open work</td><td>Assigned to them, not done, most recently updated first</td><td>Up to 50, then "and N more in Jira"</td></tr>
+        <tr><td>Latest changes</td><td>Status moves and comments they made, newest first</td><td>Last 14 days</td></tr>
+        <tr><td>Blockers</td><td>Their open tickets that are flagged, or "is blocked by" a ticket not done</td><td>All</td></tr>
+        <tr><td>Next steps</td><td>Their To Do tickets, by due date, then priority; no due date last</td><td>First 5</td></tr>
+      </tbody>
+    </table>
+
+    <h2 style="font-size:18px">Acceptance scenarios</h2>
+    <ol>
+      <li><b>Add a teammate.</b> Daniel adds Aisha Rahman from a Jira user search. Everyone sees her with "Added by Daniel Tan". Adding her twice says "Aisha Rahman is already on the team."</li>
+      <li><b>Take a teammate off.</b> Ravi Kumar moved team; Daniel takes him off. Nothing changes in Jira, and he can be added again.</li>
+      <li><b>Catch up on a teammate on leave.</b> On 10 Nov, Daniel sees Aisha's 6 open tickets, her changes since 27 Oct, PAY-147 blocked by OPS-31 and flagged PAY-160, and her next 5 To Do tickets. HR-12, in a project Daniel cannot open, is not shown. "Showing only tickets you can open."</li>
+      <li><b>Nothing in Jira.</b> Each section says it is empty: "No open work." "No changes in the last 14 days." "No blockers." "No next steps."</li>
+      <li><b>Jira does not answer.</b> "Couldn't load Aisha's work from Jira. Try again." The team list still shows.</li>
+    </ol>
+    <p><b>Slice test:</b> passes all four: every layer (page, resolvers, a team table, Jira as the viewer, deploy); one e2e walks it; worth shipping as video moment 1; 5 scenarios, 2 areas.</p>
+    <p><b>Moved out:</b> the 3D street becomes its own slice, <b>3c · street</b>, after handover-interview, because a lit window means captured knowledge and nothing is captured yet (D17). Presence goes to porch-status; notes stay out of the panel (D18).</p>
+    <p><b>Decisions drafted:</b> D16 a team list kept in Porchlight · D17 the street is its own slice · D18 the panel reads only Jira, with fixed rules per section. Full text in <code>docs/specs/catch-up-view.md</code>.</p>
+  </section>
+
+  <section id="catchup-p2">
+    <div class="num">20 · Spec: catch-up-view</div>
+    <h2>Catch-up view pause 2: the screens</h2>
+    <p class="analogy">Think of an email app: folders on the left, the open message on the right. The team is the folder list, and a teammate's catch-up is the open message. Jira's own sidebar switches between Team and Notes, the way a file explorer switches folders.</p>
+    <p><a href="design/catch-up-view/preview.html">Open the preview</a> · <a href="design/catch-up-view/navigation.html">the three navigation options</a></p>
+    <div class="diagram"><pre class="mermaid">
+flowchart LR
+    F["First visit<br/>empty porch"] -- "search + Add" --> T["Team list"]
+    T -- "Remove" --> R["Row gone + toast"]
+    T -- "picks a teammate" --> L["Loading<br/>skeleton rows"]
+    L --> C["Catch-up<br/>4 sections, rows rise in"]
+    L --> N["Nothing in Jira<br/>'No open work.'"]
+    L --> E["Error + Try again"]
+    E -- "Try again" --> L
+    </pre></div>
+    <table>
+      <thead><tr><th>Decided</th><th>Answer</th></tr></thead>
+      <tbody>
+        <tr><td>Layout</td><td>Two panes: team on the left, catch-up on the right (D19)</td></tr>
+        <tr><td>Selected row</td><td>New <code>.pl-row.is-selected</code> in the design system, neutral, never amber (D19)</td></tr>
+        <tr><td>Team and Notes</td><td>Jira's sidebar: Porchlight &gt; Team, Porchlight &gt; Notes (D20). Not yet proven for Custom UI (O12)</td></tr>
+        <tr><td>Motion</td><td>Tier 2: rows rise in 40ms apart when a catch-up opens; toasts on add and remove</td></tr>
+        <tr><td>Colour</td><td>Ticket rows are neutral. Amber stays for captured knowledge, which arrives in handover-interview</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="catchup-p3">
+    <div class="num">21 · Spec: catch-up-view</div>
+    <h2>Catch-up view pause 3: how it's built (Refined)</h2>
+    <p class="analogy">Porchlight keeps only the guest list (who is on the team). For everything about tickets it asks Jira at the door, as you, every time. That is why you never see a ticket you could not open in Jira yourself, and why nothing about tickets goes stale in our database.</p>
+    <div class="diagram"><pre class="mermaid">
+flowchart TB
+  subgraph Browser["Jira page, sandboxed frame (Custom UI)"]
+    R["main.jsx: route /team or /notes"]
+    TP["TeamPage: TeamList, AddTeammate, CatchUp"]
+    CU["catchup.js: plain rules for the 4 sections"]
+    R --> TP --> CU
+  end
+  subgraph Forge["Forge (Atlassian cloud)"]
+    RT["team resolvers: list, add, remove"]
+    SQL[("Forge SQL: notes, team_members")]
+  end
+  J["Jira REST as the viewer: user search, field, search/jql, approximate-count"]
+  TP -- "invoke" --> RT --> SQL
+  TP -- "requestJira" --> J
+    </pre></div>
+    <div class="diagram"><pre class="mermaid">
+sequenceDiagram
+  participant D as Daniel
+  participant CU as CatchUp
+  participant J as Jira (as Daniel)
+  D->>CU: picks Aisha
+  CU->>J: search: Aisha's open tickets (100) with links + Flagged
+  CU->>J: search: updatedBy(Aisha, -14d) with history + comments
+  J-->>CU: only tickets Daniel can open
+  CU->>CU: open work, blockers, next steps, changes
+  CU-->>D: four sections
+    </pre></div>
+    <table>
+      <thead><tr><th>Piece</th><th>Answer</th></tr></thead>
+      <tbody>
+        <tr><td>Stored</td><td>One new table, <code>team_members</code> (who, added by, when). No tickets stored (D21)</td></tr>
+        <tr><td>Jira requests per catch-up</td><td>2, plus a count when the list is long (D22, D23)</td></tr>
+        <tr><td>Proven by /poc</td><td>One search returns each ticket's status moves and comments (O13). Test write on KAN-1 undone</td></tr>
+        <tr><td>New scope</td><td><code>read:jira-work</code>, then <code>forge install --upgrade</code>; you approve it in Jira</td></tr>
+        <tr><td>Chunks</td><td>A team data · B page · C e2e and docs</td></tr>
+        <tr><td>Demo data</td><td>Claude creates made-up PAY and OPS tickets in your Chrome during /build, after asking</td></tr>
+        <tr><td>Riskiest choice</td><td>Blockers and next steps come only from the 100 most recently updated open tickets</td></tr>
+      </tbody>
+    </table>
   </section>
 
   <footer>Local page: run <code>python -m http.server 3000 -d docs</code> in <code>Codegeist/</code>, then open http://localhost:3000/overview.html. Updated at every zuko stage.</footer>
