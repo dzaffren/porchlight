@@ -121,20 +121,28 @@ test('the Porchlight agent catches you up in Rovo Chat, and answers a narrow que
   // Name the account in the report, so a failure says whose tickets the agent read.
   testInfo.annotations.push({ type: 'account', description: `${displayName} (${accountId})` });
 
-  // The elements of Rovo Chat. It sits in Jira's own page, not in a frame.
-  const openChat = page.getByRole('button', { name: 'Open Rovo Chat', exact: true });
+  // The elements of Rovo Chat. It sits in Jira's own page, not in a frame. Two buttons open
+  // it: the round "Open Rovo Chat" at the bottom right and "Ask Rovo" in the top bar. The
+  // round one is not always there, so take whichever shows first.
+  const openChat = page
+    .getByRole('button', { name: 'Open Rovo Chat', exact: true })
+    .or(page.getByRole('button', { name: 'Ask Rovo', exact: true }))
+    .first();
   // The prompt changes its name once a chat has a message in it, so accept both names.
   const prompt = page.getByRole('textbox', {
     name: /^(Ask, @mention, or \/ for actions|Describe what you want to know or do next)$/,
   });
   const agentPicker = page.getByRole('button', { name: /^Change agent - / });
 
-  // Step 1, scenario 1: open Rovo Chat. The panel may still be open from an earlier visit,
-  // and clicking the button then could close it, so click only when the prompt is missing.
+  // Step 1, scenario 1: open Rovo Chat. The panel may still be opening from an earlier visit,
+  // and a click then closes it again, so click only while the prompt is missing, give the
+  // panel 10 seconds, and try again until it stays open (toPass repeats the block).
   await page.goto('/jira/for-you');
   await expect(openChat.or(prompt).first(), 'Jira shows Rovo Chat or its button').toBeVisible({ timeout: 60_000 });
-  if (!(await prompt.isVisible())) await openChat.click();
-  await expect(prompt).toBeVisible();
+  await expect(async () => {
+    if (!(await prompt.isVisible())) await openChat.click({ timeout: 5_000 });
+    await expect(prompt).toBeVisible({ timeout: 10_000 });
+  }, 'Rovo Chat opens and stays open').toPass({ timeout: 60_000 });
 
   // The Rovo panel: the innermost <div> that holds both the agent picker (at the top) and
   // the prompt (at the bottom), so the chat between them is inside it. Jira's own page also
