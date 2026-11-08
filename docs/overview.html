@@ -130,10 +130,11 @@ flowchart LR
   AT2 --> AT3["/poc O9 · asUser in a Rovo action<br/>DONE · all three yes"]
   AT3 --> AT4["pause 3 · how it's built<br/>DONE · Refined"]
   AT4 --> AT5["/build ask-the-trail<br/>DONE · Built, live on dev 3.6.0"]
-  AT5 --> AT6["/review ask-the-trail<br/>NEXT"]
+  AT5 --> AT6["/review ask-the-trail<br/>DONE · 13 raw, 1 survived, 1 fixed"]
+  AT6 --> AT7["/ship ask-the-trail<br/>NEXT"]
   O1 -.-> AT
     </pre></div>
-    <p><b>Now:</b> ask-the-trail is Built (<a href="#trail-built">section 27</a>); <code>/review ask-the-trail</code> is next. The Porchlight agent answers "catch me up" and "what's blocking" in Rovo Chat on the demo site, with every ticket linked. 188 server and 142 page unit tests pass, and all four real-site Playwright tests pass: the agent walk on one-atlas-jddo, the other three on dzaffren.</p>
+    <p><b>Now:</b> ask-the-trail is Built and reviewed (<a href="#trail-built">section 27</a>); <code>/ship ask-the-trail</code> is next. Review: 13 raw findings, 1 survived (the prompt said a fixed "and 3 more"), fixed in 3.7.0. The Porchlight agent answers "catch me up" and "what's blocking" in Rovo Chat on the demo site, with every ticket linked. 188 server and 142 page unit tests pass, and all four real-site Playwright tests pass: the agent walk on one-atlas-jddo, the other three on dzaffren.</p>
     <p>Porch-status is built and live on development (3.4.0): each person sets their own porch light (Away until or Leaving on a date) on the Team page, and everyone sees it on the rows and the catch-up. Reviewed: 13 raw findings, 3 survived and are fixed (the server no longer trusts the page's time zone, lamps redraw each minute, focus returns to Change). 127 server and 163 page unit tests pass, and all three real-site Playwright tests pass on 3.4.0. Docs marked Shipped on the branch; the PR and merge come next.</p>
     <p>The skeleton is built and live on dzaffren.atlassian.net (development): 58 unit tests (31 server, 27 page) and the real-site Playwright test pass. The idea is shaped and the design system is approved: dark only, the "Lit window" style, a 3D street of windows, and the porch light as presence. See the <a href="design/design-system/">design system</a> and the <a href="design/design-system/street/index.html">street</a>.</p>
     <table>

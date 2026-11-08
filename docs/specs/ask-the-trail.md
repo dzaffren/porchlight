@@ -263,7 +263,7 @@ Daniel asks "Catch me up on Aisha", and two people match:
 | --------------- | ------------------- | ------------------- |
 | No name in the question | "Who should I catch you up on?" | Prompt, part 2 |
 | "Catch me up on me" | The asker's own catch-up | Prompt, part 2; `person: "me"` |
-| Two or more matches | Their full names and a question; more than 5 adds "and 3 more, try the full name" | `several` |
+| Two or more matches | Their full names and a question; more than 5 adds "and N more, try the full name", with N from `more` | `several` |
 | Nobody matches | Nobody with that name is in Jira; try the full name | `none` |
 | Jira does not answer | Could not read their work; ask again. No ticket is named. | `jira-error` |
 | The asker can open none of the person's tickets | The same as nothing in Jira, with the footer | `found`, all parts empty |
@@ -437,6 +437,12 @@ Chunk B owns the lockfile. B and C briefs both name, word for word: agent name `
 | The demo site expires on 2027-02-05 | It is after the deadline of 23 Dec 2026 (D30). Before judging ends, check the date with `forge site provision`. |
 | A slow ask with many clipped tickets | The log line records `ms`. Above about 10 s, cap the top-ups for the agent. |
 
+## Review
+
+2026-11-08 · 13 raw findings, 1 survived, 1 fixed.
+
+- correctness · `porchlight/prompts/porchlight-agent.md:36` · the `several` line says "and N more" with N from `more`, not a fixed "and 3 more"; a test reads the prompt · `cfd2dc5`
+
 ## Open items
 
 | ID | What | Type | Raised at | Owner | Status | Answer |
@@ -462,6 +468,7 @@ Chunk B owns the lockfile. B and C briefs both name, word for word: agent name `
 | O19 | E2e: Rovo's agent picker search ignored the typed name in most runs, so the test could not pick Porchlight | question | build | user | Resolved | Porchlight is a favourite agent on the demo site (set once by a script on 2026-11-08), so the picker lists it first and the test clicks it without searching. Like the seeded tickets, a new demo site needs it set again. 2026-11-08 |
 | O20 | E2e: details of Rovo Chat found on the first real runs | flag | build | user | Decided alone | Chose: the prompt is found by either of its two names ("Ask, @mention, or / for actions", then "Describe what you want to know or do next" once the chat has a message); the cookie banner is left alone, as in the other e2e tests (clicking "Only necessary" in a test did not close it, and the banner does not cover the chat). Other: dismiss the banner with a stored consent cookie. Undo: `e2e/ask-the-trail.spec.js`. 2026-11-08 |
 | O21 | `e2e/login.mjs` (not in the plan) replaced the saved logins with the one site it logged in to, so a demo-site login broke the three dzaffren e2e tests | flag | build | user | Decided alone | Chose: the script adds the new site's cookies to `e2e/.auth/state.json` and keeps the rest; the same name, domain and path means the same cookie, and the fresh one wins. Each site keeps its own `tenant.session.token`. Other: two state files, one per site. Undo: write `fresh` alone in `e2e/login.mjs`. 2026-11-08 |
+| O22 | /review: the approved failure-modes row and the prompt both said "and 3 more, try the full name", a fixed number, for a `several` answer | flag | review | user | Decided alone | Chose: "and N more, try the full name", with N from the action's `more` count, in the failure-modes row and in the prompt (`cfd2dc5`). Other: drop the count and say only "try the full name". Undo: put the fixed text back in both. 2026-11-08 |
 
 _Never delete this section or its rows. See references/ledger.md._
 

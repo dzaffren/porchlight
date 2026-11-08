@@ -14,7 +14,7 @@ Learned while building porch-status, 2026-11-07.
 - **Playwright runs spec files in parallel by default.** Specs that share one real site and one signed-in person need `workers: 1`.
 - **At most 20 subagents run at once.** A large review with three verifiers per finding goes past that. Start the rest as slots free up, with the same prompts.
 - **Do not edit code while verifiers read it.** A fix made mid-verification changes the lines a verifier is judging. Wait for every verdict, then fix.
-- **Tell each verifier the repo root.** Agents start in `hello-forge/`, and the hook blocks `git -C` and `cd`, so several verifiers could not run `git diff` and fell back to reading files.
+- **Tell each verifier the repo root.** Agents start in `hello-forge/`, and the hook blocks `git -C`, `--git-dir` and `cd`, so verifiers cannot run `git diff`. They read the working tree; on a branch where the files are new, that is enough. (`--git-dir` was tried and blocked, 2026-11-08.)
 
 Learned while building ask-the-trail, 2026-11-08.
 
