@@ -31,6 +31,12 @@ jobs:
             porchlight/package-lock.json
             porchlight/static/porchlight-ui/package-lock.json
 
+      # keytar, inside the Forge CLI, downloads a ready-made binary from its GitHub releases.
+      # When that download fails (it answered 504 on 2026-11-08), keytar builds itself from
+      # source, which needs the libsecret headers. With them, npm ci works either way.
+      - name: Install libsecret for keytar's fallback build
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq libsecret-1-dev
+
       - name: Install the app and the page
         run: |
           npm ci
@@ -77,6 +83,10 @@ jobs:
           cache-dependency-path: |
             porchlight/package-lock.json
             porchlight/static/porchlight-ui/package-lock.json
+
+      # The same fallback as in the check job above.
+      - name: Install libsecret for keytar's fallback build
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq libsecret-1-dev
 
       - name: Install and build the page
         run: |
