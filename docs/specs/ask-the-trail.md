@@ -1,6 +1,6 @@
 # Ask the trail
 
-**Version:** v1 · **Status:** Refined · **Type:** Feature · **Project type:** Data/LLM
+**Version:** v1 · **Status:** Built · **Type:** Feature · **Project type:** Data/LLM
 
 **Shape doc:** docs/specs/knowledge-handover/shape.md
 **Depends on:** catch-up-view, porch-status

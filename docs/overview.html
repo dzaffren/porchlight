@@ -98,6 +98,7 @@ th, td { text-align: left; padding: 6px; border-bottom: 1px solid var(--line); v
       <a href="#trail-p1">Ask the trail: scope</a>
       <a href="#trail-p2">Ask the trail: contract</a>
       <a href="#trail-p3">Ask the trail: build plan</a>
+      <a href="#trail-built">Ask the trail: built</a>
     </nav>
   </header>
 
@@ -128,10 +129,11 @@ flowchart LR
   AT --> AT2["pause 2 · the agent's contract<br/>DONE · approved"]
   AT2 --> AT3["/poc O9 · asUser in a Rovo action<br/>DONE · all three yes"]
   AT3 --> AT4["pause 3 · how it's built<br/>DONE · Refined"]
-  AT4 --> AT5["/build ask-the-trail<br/>NEXT"]
+  AT4 --> AT5["/build ask-the-trail<br/>DONE · Built, live on dev 3.6.0"]
+  AT5 --> AT6["/review ask-the-trail<br/>NEXT"]
   O1 -.-> AT
     </pre></div>
-    <p><b>Now:</b> ask-the-trail is Refined (<a href="#trail-p3">section 26</a>); <code>/build ask-the-trail</code> is next. A Porchlight agent in Rovo Chat answers "catch me up on Aisha" from the same Jira trail as the catch-up panel, with every ticket linked. See <a href="#trail-p1">section 24</a>.</p>
+    <p><b>Now:</b> ask-the-trail is Built (<a href="#trail-built">section 27</a>); <code>/review ask-the-trail</code> is next. The Porchlight agent answers "catch me up" and "what's blocking" in Rovo Chat on the demo site, with every ticket linked. 188 server and 142 page unit tests pass, and all four real-site Playwright tests pass: the agent walk on one-atlas-jddo, the other three on dzaffren.</p>
     <p>Porch-status is built and live on development (3.4.0): each person sets their own porch light (Away until or Leaving on a date) on the Team page, and everyone sees it on the rows and the catch-up. Reviewed: 13 raw findings, 3 survived and are fixed (the server no longer trusts the page's time zone, lamps redraw each minute, focus returns to Change). 127 server and 163 page unit tests pass, and all three real-site Playwright tests pass on 3.4.0. Docs marked Shipped on the branch; the PR and merge come next.</p>
     <p>The skeleton is built and live on dzaffren.atlassian.net (development): 58 unit tests (31 server, 27 page) and the real-site Playwright test pass. The idea is shaped and the design system is approved: dark only, the "Lit window" style, a 3D street of windows, and the porch light as presence. See the <a href="design/design-system/">design system</a> and the <a href="design/design-system/street/index.html">street</a>.</p>
     <table>
@@ -907,6 +909,45 @@ flowchart TB
       <li><b>Proof:</b> <code>porchlight.rovo.catchUp result=found tickets=9 ms=1840</code> in <code>forge logs</code>.</li>
       <li><b>Drafted for /build:</b> D29 (anyone in Jira, exact name wins), D30 (both sites), D31 (asUser in the action), D32 (shared src/lib), D33 (30 newest changes).</li>
       <li><b>Riskiest choice:</b> trusting Rovo's model to name only what the action returned. No code can force it; the e2e test fails on any link outside the demo tickets.</li>
+    </ul>
+  </section>
+
+  <section id="trail-built">
+    <div class="num">27 · Build: ask-the-trail</div>
+    <h2>Ask the trail: built</h2>
+    <p class="analogy">Like a building with two keys on one ring. Each Atlassian site gives its own key (a <code>tenant.session.token</code> cookie). The e2e login used to swap the whole ring for one key; now it adds the new key and keeps the rest.</p>
+    <div class="diagram"><pre class="mermaid">
+flowchart LR
+  A["Chunk A<br/>move catch-up code to src/lib<br/>00db936"] --> B["Chunk B<br/>Rovo action, agent, prompt<br/>f83dca4 · 1da3ef8"]
+  A --> C["Chunk C<br/>e2e test on the demo site<br/>0c45d4d"]
+  B --> I["Integrate here<br/>deploy 3.6.0 to dev"]
+  C --> I
+  I --> F1["e2e run 1-6: fixes<br/>picker, prompt name,<br/>cookie banner, login"]
+  F1 --> P["4 of 4 e2e pass<br/>188 + 142 unit tests pass"]
+    </pre></div>
+    <div class="diagram"><pre class="mermaid">
+sequenceDiagram
+  participant T as e2e test
+  participant R as Rovo Chat
+  participant P as porchlight-catch-up
+  participant J as Jira (as the asker)
+  T->>R: pick Porchlight (a favourite, top of the picker)
+  T->>R: "Catch me up on [your name]"
+  R->>P: person = your name
+  P->>J: user search, open work, recent changes
+  J-->>P: only what you can see
+  P-->>R: JSON: found, 8 tickets
+  R-->>T: answer with /browse links
+  T->>T: links are PAY-1, PAY-2, PAY-4, PAY-5 and only seeded keys
+  T->>R: "What's blocking [your name]?"
+  R-->>T: PAY-2 and PAY-4
+    </pre></div>
+    <ul>
+      <li><b>Proof:</b> <code>porchlight.rovo.catchUp result=found tickets=8 ms=867</code> in <code>forge logs -e development</code>.</li>
+      <li><b>Found on the real chat:</b> the picker's search often ignores typed text (fixed by making Porchlight a favourite on the demo site, O19); the prompt changes its name after the first message (O20); clicking the cookie banner in a test did not close it (left alone, O20).</li>
+      <li><b>Not in the plan:</b> <code>e2e/login.mjs</code> now merges logins per site (O21). Other build choices: O13–O18.</li>
+      <li><b>Flag:</b> none (the plan's light rollout: the agent is new and changes nothing else).</li>
+      <li><b>For /review:</b> one full unit run after the chunk B merge had 8 failures that never came back in 5 later runs.</li>
     </ul>
   </section>
 
