@@ -8,6 +8,8 @@
 //    and records every call. A fake Jira that never returns HR-12 is how Jira's own
 //    permissions look from the action: the asker's hidden tickets never arrive.
 //  - @forge/sql: the in-memory database the other tests use (fake-forge-sql.js).
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 // vi.mock runs before the imports, so the fake Jira it uses is built with vi.hoisted.
@@ -441,5 +443,20 @@ describe('catchUp: untrusted inputs', () => {
     for (const line of lines) {
       expect(line).not.toMatch(/Aisha|Daniel|712020/);
     }
+  });
+});
+
+// The agent's prompt is plain text the model follows, so a test can only check its wording.
+// These lines must tell the model to use the numbers in the action's result, never a fixed
+// number: the model copies quoted text as it is.
+describe('the agent prompt', () => {
+  const prompt = readFileSync(fileURLToPath(new URL('../../prompts/porchlight-agent.md', import.meta.url)), 'utf8');
+
+  it('several: the "more" line uses the `more` count, not a fixed number', () => {
+    const several = prompt.split('\n').find((line) => line.startsWith('- `several`'));
+    expect(several).toBeDefined();
+    // 7 matches give more: 2 (the "several" test above), so "and 3 more" would be wrong.
+    expect(several).not.toMatch(/"and \d+ more/);
+    expect(several).toMatch(/"and N more, try the full name", with N as the `more` number/);
   });
 });
