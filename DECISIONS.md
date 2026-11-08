@@ -198,3 +198,38 @@ Why: the resolver cannot ask Jira for a person's time zone (D21), and a zone sen
 Rejected: storing each person's time zone with the status (against D27, and stale after a move), trusting the zone the page sends (anyone can undo Left).
 Source: docs/specs/porch-status.md
 Status: active
+
+## D29 · 2026-11-08 · The agent catches up on anyone in Jira, and asks when a name matches two people
+
+Why: a judge's site starts with an empty team list, and a person asking Rovo does not think about Porchlight's list; a Jira user search as the asker finds anyone they can see, and asking which person stops the agent from reading the wrong person's work; when exactly one match has the typed full name, the asker has already said which person.
+Rejected: only people on the Porchlight team list (a dead end on a new site), preferring the team list when two names match (a silent pick can still be the wrong Aisha), always asking on two matches (a typed full name would still get a question).
+Source: docs/specs/ask-the-trail.md
+Status: active
+
+## D30 · 2026-11-08 · Install Porchlight on both dzaffren and the Rovo demo site
+
+Why: only the demo site one-atlas-jddo.atlassian.net has Rovo Chat (shape O1), and dzaffren already holds the Team and Notes demo data and their passing e2e tests; the demo site gets the same made-up PAY and OPS tickets for the agent's e2e test and the video.
+Rejected: moving everything to the demo site (moves three working e2e tests and CI to a site that expires 2027-02-05), the agent alone on the demo site with its own data (two sets of demo data that differ).
+Source: docs/specs/ask-the-trail.md
+Status: active
+
+## D31 · 2026-11-08 · The Rovo action reads Jira with asUser(), as the person chatting
+
+Why: the answer must name only tickets the asker can open; the /poc on the demo site proved that `api.asUser()` in a Rovo action calls Jira as the person chatting, so Jira's own permissions apply with no checks of our own. D21 still holds for the page, which has `requestJira`; the action has no page.
+Rejected: `asApp()` with our own permission checks (the app sees every ticket, and one missed check leaks a hidden ticket into an answer).
+Source: docs/specs/ask-the-trail.md
+Status: active
+
+## D32 · 2026-11-08 · The catch-up rules and Jira reads live in src/lib, shared by the page and the action
+
+Why: the agent must give the same four parts as the panel by the same rules (D18, D22, D23); the page already imports shared rules from `src/lib` as `@lib`, and each read takes a `jira(path, body)` function, so the page passes `requestJira` and the action passes `asUser()`.
+Rejected: a second copy of the reads and rules in the backend (two copies drift), the backend importing the page's `api.js` (it loads `@forge/bridge`, which runs only inside Jira's frame).
+Source: docs/specs/ask-the-trail.md
+Status: active
+
+## D33 · 2026-11-08 · The agent gets at most the 30 newest latest changes
+
+Why: 20 busy tickets can give more than 100 status moves and comments, which slows the model and buries the answer; 30 covers a normal two weeks, and the count of the rest points to the Team page.
+Rejected: no cap, the same as the panel (long, slow answers for busy people).
+Source: docs/specs/ask-the-trail.md
+Status: active

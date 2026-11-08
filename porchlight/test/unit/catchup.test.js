@@ -1,8 +1,8 @@
 // Tests for the catch-up rules (decision D18), with Aisha Rahman's tickets from
 // scenario 3 in docs/specs/catch-up-view.md. The fixture is shaped like Jira's own
-// answers to the two searches in api.js, so these tests need neither Jira nor React.
+// answers to the two searches in catchup-jira.js, so these tests need neither Jira nor React.
 import { describe, it, expect } from 'vitest';
-import { adfToText, fourteenDaysBefore, toBlockers, toChanges, toNextSteps, toOpenWork } from './catchup.js';
+import { adfToText, fourteenDaysBefore, toBlockers, toChanges, toNextSteps, toOpenWork } from '../../src/lib/catchup.js';
 
 const AISHA = '712020:aisha-rahman';
 const DANIEL = '712020:daniel-tan';

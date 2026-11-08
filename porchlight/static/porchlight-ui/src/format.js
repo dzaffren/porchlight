@@ -1,4 +1,9 @@
 // Small formatting helpers for what the page shows.
+import { parseJiraTime } from '@lib/catchup.js';
+
+// parseJiraTime lives with the catch-up rules in the backend's src/lib, because those
+// rules need it too. It is exported again here, so page code keeps one place to import from.
+export { parseJiraTime };
 
 const timeFormat = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit' });
 const dateFormat = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -33,13 +38,6 @@ export function initials(name) {
 export const formatNumber = (n) => n.toLocaleString('en-GB');
 
 const dayFormat = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' });
-
-/**
- * Jira writes times as "2026-11-06T08:30:00.000+0000". Some browsers only read the
- * offset with a colon ("+00:00"), so add one before parsing.
- * @returns {number} milliseconds since 1970, like Date.parse
- */
-export const parseJiraTime = (value) => Date.parse(value.replace(/([+-]\d\d)(\d\d)$/, '$1:$2'));
 
 /** A Jira time as the viewer's day: "6 Nov". Used for ticket dates and "Added by … · 6 Nov". */
 export const formatDay = (value) => dayFormat.format(new Date(parseJiraTime(value)));

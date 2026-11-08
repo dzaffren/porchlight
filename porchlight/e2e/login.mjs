@@ -15,9 +15,12 @@
 // e2e/.auth/, which is git-ignored. Never commit or share them.
 //
 // Run: npm run e2e:login   (a .mjs file, so Node reads it as an ES module)
+// For the demo site (ask-the-trail e2e), in bash:
+//   PL_SITE=https://one-atlas-jddo.atlassian.net npm run e2e:login
+// Each run adds that site's login to state.json and keeps the other site's.
 import { chromium } from '@playwright/test';
 import { spawn } from 'node:child_process';
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const SITE = process.env.PL_SITE ?? 'https://dzaffren.atlassian.net';
@@ -106,9 +109,21 @@ await wait(3000);
 // Keep Atlassian's cookies only. The Google sign-in also leaves Google cookies in this
 // profile; the test does not need them, so they never go into state.json.
 const isAtlassian = (domain) => /(^|\.)atlassian\.(net|com)$/.test(domain.replace(/^\./, ''));
-const cookies = (await context.cookies()).filter((cookie) => isAtlassian(cookie.domain));
+const fresh = (await context.cookies()).filter((cookie) => isAtlassian(cookie.domain));
+
+// Each Atlassian site keeps its own login cookie (tenant.session.token on that site's
+// domain), and the e2e tests use two sites. So add to the saved cookies instead of
+// replacing them: a login on the demo site keeps the saved login for dzaffren, and the
+// other way round. A cookie is the same cookie when its name, domain and path match;
+// the fresh one wins.
+const cookieId = (cookie) => `${cookie.name}|${cookie.domain}|${cookie.path}`;
+const saved = existsSync(STATE_FILE) ? JSON.parse(readFileSync(STATE_FILE, 'utf8')).cookies : [];
+const merged = new Map(saved.map((cookie) => [cookieId(cookie), cookie]));
+for (const cookie of fresh) merged.set(cookieId(cookie), cookie);
+const cookies = [...merged.values()];
+
 writeFileSync(STATE_FILE, JSON.stringify({ cookies, origins: [] }, null, 2));
-console.log(`Saved ${cookies.length} login cookies to e2e/.auth/state.json. Chrome closes now.`);
+console.log(`Saved ${fresh.length} login cookies from ${SITE} to e2e/.auth/state.json (${cookies.length} in all). Chrome closes now.`);
 
 await browser.close();
 chrome.kill();
