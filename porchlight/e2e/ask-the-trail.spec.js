@@ -109,12 +109,9 @@ test('the Porchlight agent catches you up in Rovo Chat, and answers a narrow que
   // in playwright.config.js.
   test.setTimeout(240_000);
 
-  // Atlassian's cookie banner can cover the chat at any moment. When its "Only necessary"
-  // button shows, Playwright clicks it (the choice that shares the least data) before the
-  // next step. Without the banner, nothing happens.
-  await page.addLocatorHandler(page.getByRole('button', { name: 'Only necessary', exact: true }), async (button) => {
-    await button.click();
-  });
+  // Atlassian's cookie banner may show across the top of the page. The test leaves it
+  // alone, as the other e2e tests do: it does not cover Rovo Chat, which opens at the
+  // bottom right. (Clicking its "Only necessary" button in a test did not close it.)
 
   // Who is logged in? page.request sends the saved login's cookies, and the relative
   // address goes to the demo site in baseURL. Jira answers with the person's account.
@@ -126,7 +123,10 @@ test('the Porchlight agent catches you up in Rovo Chat, and answers a narrow que
 
   // The elements of Rovo Chat. It sits in Jira's own page, not in a frame.
   const openChat = page.getByRole('button', { name: 'Open Rovo Chat', exact: true });
-  const prompt = page.getByRole('textbox', { name: 'Ask, @mention, or / for actions', exact: true });
+  // The prompt changes its name once a chat has a message in it, so accept both names.
+  const prompt = page.getByRole('textbox', {
+    name: /^(Ask, @mention, or \/ for actions|Describe what you want to know or do next)$/,
+  });
   const agentPicker = page.getByRole('button', { name: /^Change agent - / });
 
   // Step 1, scenario 1: open Rovo Chat. The panel may still be open from an earlier visit,
@@ -144,14 +144,15 @@ test('the Porchlight agent catches you up in Rovo Chat, and answers a narrow que
   // so the last one is the innermost.
   const panel = prompt.locator('xpath=ancestor::div').filter({ has: agentPicker }).last();
 
-  // Pick the Porchlight agent through the picker and its search, as a person would.
-  // The search box may be named by a label or only by its placeholder, so try both.
+  // Pick the Porchlight agent through the picker, as a person would. On the demo site,
+  // Porchlight is a favourite agent (set once, like the seeded tickets), so the picker
+  // lists it first. The picker's search is not used: in most runs it ignored the typed
+  // name and the list never loaded past Rovo's own agents.
   await agentPicker.click();
-  await page.getByLabel('Search agents').or(page.getByPlaceholder('Search agents')).first().fill('Porchlight');
-  await page
-    .getByRole('list', { name: 'agent list' })
-    .getByRole('listitem', { name: 'Porchlight', exact: true })
-    .click();
+  // Each agent in the list is a button named "<agent> <agent> <heart button's name>".
+  // The name must start with "Porchlight", which leaves out the heart button inside it
+  // ("Remove Porchlight from favourites").
+  await page.getByRole('button', { name: /^Porchlight\b/ }).click();
   await expect(agentPicker, 'the chat now talks to the Porchlight agent').toHaveAccessibleName('Change agent - Porchlight');
 
   /**
